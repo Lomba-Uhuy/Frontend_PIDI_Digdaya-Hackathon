@@ -74,8 +74,8 @@ export default function CompliancePage() {
         {/* Page Header & Stepper */}
         <div className="flex flex-col gap-4 border-b border-outline-variant pb-6">
           <div>
-            <h2 className="text-2xl font-bold text-on-surface">Deal Readiness & Compliance Checker</h2>
-            <p className="text-sm text-on-surface-variant mt-1 font-medium">Reviewing Export Transaction: <span className="font-bold text-primary">#TRX-892-IDN</span></p>
+            <h2 className="text-2xl font-bold text-on-surface">Pemeriksa Kesiapan Transaksi & Kepatuhan</h2>
+            <p className="text-sm text-on-surface-variant mt-1 font-medium">Meninjau Transaksi Ekspor: <span className="font-bold text-primary">#TRX-892-IDN</span></p>
           </div>
           
           {/* Wizard Progress Stepper */}
@@ -88,7 +88,7 @@ export default function CompliancePage() {
               <div className="w-8 h-8 rounded-full bg-secondary-container text-on-secondary-container border border-secondary flex items-center justify-center shadow-inner">
                 <span className="material-symbols-outlined text-[18px]">check</span>
               </div>
-              <span className="text-[10px] font-bold uppercase text-on-surface tracking-wider">Documents</span>
+              <span className="text-[10px] font-bold uppercase text-on-surface tracking-wider">Dokumen Utama</span>
             </div>
             
             {/* Step 2: Active */}
@@ -96,7 +96,7 @@ export default function CompliancePage() {
               <div className="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-md border-4 border-surface-bright">
                 <span className="text-sm font-bold">2</span>
               </div>
-              <span className="text-[10px] font-bold uppercase text-primary tracking-wider">Pricing</span>
+              <span className="text-[10px] font-bold uppercase text-primary tracking-wider">Penetapan Harga</span>
             </div>
             
             {/* Step 3: Pending */}
@@ -104,7 +104,7 @@ export default function CompliancePage() {
               <div className="w-8 h-8 rounded-full bg-surface-container-high border border-outline-variant text-on-surface-variant flex items-center justify-center">
                 <span className="text-sm font-bold">3</span>
               </div>
-              <span className="text-[10px] font-bold uppercase text-on-surface-variant tracking-wider">Red Flags</span>
+              <span className="text-[10px] font-bold uppercase text-on-surface-variant tracking-wider">Indikator Risiko</span>
             </div>
           </div>
         </div>
@@ -120,26 +120,26 @@ export default function CompliancePage() {
               <div className="flex justify-between items-center mb-4 border-b border-outline-variant/50 pb-3">
                 <h3 className="text-lg font-bold text-on-surface flex items-center gap-2">
                   <span className="material-symbols-outlined text-primary text-[20px]">folder_managed</span>
-                  Step 1: Core Docs
+                  Langkah 1: Dokumen Utama
                 </h3>
               </div>
               <div className="space-y-3">
                 <div className="flex items-center justify-between p-2.5 rounded-lg bg-surface border border-outline-variant shadow-sm">
-                  <span className="text-sm font-semibold text-on-surface">NIB (Business License)</span>
+                  <span className="text-sm font-semibold text-on-surface">NIB (Nomor Induk Berusaha)</span>
                   <span className="bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded text-[10px] font-bold uppercase flex items-center gap-1 border border-secondary-fixed-dim">
                     <span className="material-symbols-outlined text-[14px]">verified</span> Valid
                   </span>
                 </div>
                 <div className="flex items-center justify-between p-2.5 rounded-lg bg-surface border border-outline-variant shadow-sm">
-                  <span className="text-sm font-semibold text-on-surface">HS Code Validation</span>
+                  <span className="text-sm font-semibold text-on-surface">Validasi Kode HS</span>
                   <span className="bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded text-[10px] font-bold uppercase flex items-center gap-1 border border-secondary-fixed-dim">
                     <span className="material-symbols-outlined text-[14px]">verified</span> 0901.11
                   </span>
                 </div>
                 <div className="flex items-center justify-between p-2.5 rounded-lg bg-surface border border-outline-variant shadow-sm">
-                  <span className="text-sm font-semibold text-on-surface">BPOM / Halal Cert</span>
+                  <span className="text-sm font-semibold text-on-surface">Sertifikasi BPOM / Halal</span>
                   <span className="bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded text-[10px] font-bold uppercase flex items-center gap-1 border border-secondary-fixed-dim">
-                    <span className="material-symbols-outlined text-[14px]">verified</span> Cleared
+                    <span className="material-symbols-outlined text-[14px]">verified</span> Disetujui
                   </span>
                 </div>
               </div>
@@ -149,9 +149,9 @@ export default function CompliancePage() {
             <section className="bg-surface-container-low border border-outline-variant border-dashed rounded-xl p-5 opacity-80">
               <div className="flex items-center gap-2 text-on-surface-variant">
                 <span className="material-symbols-outlined text-[20px]">policy</span>
-                <span className="text-base font-bold">Next: Scanner</span>
+                <span className="text-base font-bold">Berikutnya: Pemindai Risiko</span>
               </div>
-              <p className="text-xs text-on-surface-variant mt-2 leading-relaxed font-medium">Awaiting price finalization to run comprehensive OFAC & Route risk analysis.</p>
+              <p className="text-xs text-on-surface-variant mt-2 leading-relaxed font-medium">Menunggu finalisasi harga untuk menjalankan analisis risiko OFAC & Rute secara komprehensif.</p>
             </section>
             
           </div>
@@ -165,12 +165,12 @@ export default function CompliancePage() {
                 <div>
                   <h3 className="text-xl font-bold text-on-surface flex items-center gap-2">
                     <span className="material-symbols-outlined text-primary text-[24px]">calculate</span>
-                    Export Price Calculator
+                    Kalkulator Harga Ekspor
                   </h3>
-                  <p className="text-xs text-on-surface-variant mt-1 font-medium">Convert Ex-Works base cost to standard international incoterms (FOB/CIF).</p>
+                  <p className="text-xs text-on-surface-variant mt-1 font-medium">Konversi biaya dasar Ex-Works ke incoterm internasional standar (FOB/CIF).</p>
                 </div>
                 <div className="bg-primary-container/10 text-primary px-3 py-1 rounded text-[10px] font-bold uppercase border border-primary/20 tracking-wider">
-                  Currency: USD
+                  Mata Uang: USD
                 </div>
               </div>
               
@@ -182,14 +182,14 @@ export default function CompliancePage() {
                   {/* Group 1: Base Costs */}
                   <div className="space-y-4">
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Base Product Cost (Ex-Works)</label>
+                      <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Biaya Dasar Produk (Ex-Works)</label>
                       <div className="relative">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant font-medium">$</span>
                         <input className="w-full pl-7 pr-3 py-2 border border-outline-variant rounded-md bg-surface-container-low text-on-surface-variant text-sm font-bold outline-none shadow-inner" type="text" readOnly value={formatCurrency(coffeeTotal * 0.77).replace('$', '')}/>
                       </div>
                     </div>
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Target Margin (%)</label>
+                      <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Margin Target (%)</label>
                       <div className="relative">
                         <input className="w-full pl-3 pr-8 py-2 border border-outline-variant rounded-md bg-surface-container-low text-on-surface-variant text-sm font-bold outline-none shadow-inner" type="text" readOnly value="23.00"/>
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant font-medium">%</span>
@@ -200,14 +200,14 @@ export default function CompliancePage() {
                   {/* Group 2: Logistics */}
                   <div className="space-y-4">
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Local Handling & Transport (to Port)</label>
+                      <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Penanganan & Transportasi Lokal (ke Pelabuhan)</label>
                       <div className="relative">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant font-medium">$</span>
-                        <input className="w-full pl-7 pr-3 py-2 border border-outline-variant rounded-md bg-surface-container-low text-on-surface-variant text-sm font-bold outline-none shadow-inner" type="text" readOnly value="0.00 (Incl. in FOB)"/>
+                        <input className="w-full pl-7 pr-3 py-2 border border-outline-variant rounded-md bg-surface-container-low text-on-surface-variant text-sm font-bold outline-none shadow-inner" type="text" readOnly value="0.00 (Termasuk dalam FOB)"/>
                       </div>
                     </div>
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Ocean Freight & Insurance (Est)</label>
+                      <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Pengangkutan Laut & Asuransi (Estimasi)</label>
                       <div className="relative">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant font-medium">$</span>
                         <input className="w-full pl-7 pr-3 py-2 border border-outline-variant rounded-md bg-surface text-sm font-bold text-on-surface outline-none shadow-inner" type="text" readOnly value={formatCurrency(shippingTotal).replace('$', '')}/>
@@ -222,11 +222,11 @@ export default function CompliancePage() {
                 <div className="bg-surface p-5 rounded-xl border border-outline-variant grid grid-cols-2 gap-4 relative overflow-hidden shadow-sm">
                   <div className="absolute inset-0 bg-gradient-to-br from-surface to-surface-container-low opacity-50 pointer-events-none"></div>
                   <div className="relative z-10 flex flex-col">
-                    <span className="text-[10px] font-bold text-on-surface-variant uppercase mb-1 tracking-wider">FOB Value (Free On Board)</span>
+                    <span className="text-[10px] font-bold text-on-surface-variant uppercase mb-1 tracking-wider">Nilai FOB (Free On Board)</span>
                     <span className="text-3xl font-black text-on-surface tracking-tight">{formatCurrency(coffeeTotal)}</span>
                   </div>
                   <div className="relative z-10 flex flex-col border-l border-outline-variant pl-5">
-                    <span className="text-[10px] font-bold text-on-surface-variant uppercase mb-1 tracking-wider">CIF Value (Cost, Insurance, Freight)</span>
+                    <span className="text-[10px] font-bold text-on-surface-variant uppercase mb-1 tracking-wider">Nilai CIF (Cost, Insurance, Freight)</span>
                     <span className="text-3xl font-black text-primary tracking-tight">{formatCurrency(grandTotal)}</span>
                   </div>
                 </div>
@@ -237,9 +237,9 @@ export default function CompliancePage() {
                     <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>smart_toy</span>
                   </div>
                   <div>
-                    <h4 className="text-sm font-bold text-primary mb-1">AI Mentor: Price Compliance</h4>
+                    <h4 className="text-sm font-bold text-primary mb-1">Mentor AI: Kepatuhan Harga</h4>
                     <p className="text-xs text-on-surface-variant leading-relaxed font-medium">
-                      Your finalized price of <strong>{formatCurrency(agreedPrice)}/kg</strong> is securely within your parameters. This maintains a healthy 15%+ profit margin. Compliance and shipping routes are ready to be scanned!
+                      Harga final Anda sebesar <strong>{formatCurrency(agreedPrice)}/kg</strong> aman berada dalam parameter Anda. Ini menjaga margin keuntungan yang sehat sebesar 15%+. Kepatuhan dan rute pengiriman siap untuk dipindai!
                     </p>
                   </div>
                 </div>
@@ -247,9 +247,9 @@ export default function CompliancePage() {
               
               {/* Footer Actions */}
               <div className="bg-surface-container-low p-4 border-t border-outline-variant flex justify-end gap-3 bg-surface-container-low">
-                <button className="px-5 py-2 rounded-md border border-outline-variant text-on-surface text-sm font-bold hover:bg-surface transition-colors shadow-sm bg-surface-container-lowest">Recalculate</button>
+                <button className="px-5 py-2 rounded-md border border-outline-variant text-on-surface text-sm font-bold hover:bg-surface transition-colors shadow-sm bg-surface-container-lowest">Hitung Ulang</button>
                 <button onClick={handleStartScan} className="px-5 py-2 rounded-md bg-primary text-on-primary text-sm font-bold hover:bg-surface-tint transition-colors flex items-center gap-2 shadow-sm">
-                  Run AI Compliance & Generate PO
+                  Jalankan Kepatuhan AI & Buat PO
                   <span className="material-symbols-outlined text-[18px]">request_quote</span>
                 </button>
               </div>
@@ -274,8 +274,8 @@ export default function CompliancePage() {
               <span className="material-symbols-outlined text-emerald-500 text-4xl animate-pulse">security</span>
             </div>
 
-            <h3 className="text-xl font-bold text-[#070235] mb-1">AI Deal Compliance Scanner</h3>
-            <p className="text-xs text-on-surface-variant mb-6 uppercase tracking-wider font-bold">Fase 6: Deal Readiness & Red Flag Checker</p>
+            <h3 className="text-xl font-bold text-[#070235] mb-1">Pemindai Kepatuhan Transaksi AI</h3>
+            <p className="text-xs text-on-surface-variant mb-6 uppercase tracking-wider font-bold">Fase 6: Kesiapan Transaksi & Pemeriksa Bendera Merah</p>
 
             {/* Scanning Checks */}
             <div className="w-full space-y-4 mb-6">
@@ -284,7 +284,7 @@ export default function CompliancePage() {
                 <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${scanStep >= 2 ? 'bg-emerald-500 text-slate-950 border-none' : 'bg-surface-variant animate-pulse text-on-surface-variant'}`}>
                   {scanStep >= 2 ? '✓' : '1'}
                 </div>
-                <span className={`text-xs font-semibold ${scanStep >= 1 ? 'text-[#070235]' : 'text-on-surface-variant'}`}>Scanning legal credentials against OSS & INATRADE</span>
+                <span className={`text-xs font-semibold ${scanStep >= 1 ? 'text-[#070235]' : 'text-on-surface-variant'}`}>Memindai kredensial hukum terhadap OSS & INATRADE</span>
               </div>
 
               {/* Check 2 */}
@@ -292,7 +292,7 @@ export default function CompliancePage() {
                 <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${scanStep >= 3 ? 'bg-emerald-500 text-slate-950 border-none' : 'bg-surface-variant animate-pulse text-on-surface-variant'}`}>
                   {scanStep >= 3 ? '✓' : '2'}
                 </div>
-                <span className={`text-xs font-semibold ${scanStep >= 2 ? 'text-[#070235]' : 'text-on-surface-variant'}`}>Analyzing GlobalTech regional shipping & default history</span>
+                <span className={`text-xs font-semibold ${scanStep >= 2 ? 'text-[#070235]' : 'text-on-surface-variant'}`}>Menganalisis pengiriman regional & riwayat wanprestasi GlobalTech</span>
               </div>
 
               {/* Check 3 */}
@@ -300,7 +300,7 @@ export default function CompliancePage() {
                 <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${scanStep >= 4 ? 'bg-emerald-500 text-slate-950 border-none' : 'bg-surface-variant animate-pulse text-on-surface-variant'}`}>
                   {scanStep >= 4 ? '✓' : '3'}
                 </div>
-                <span className={`text-xs font-semibold ${scanStep >= 3 ? 'text-[#070235]' : 'text-on-surface-variant'}`}>Checking Incoterms, HPP conversions & under-pricing</span>
+                <span className={`text-xs font-semibold ${scanStep >= 3 ? 'text-[#070235]' : 'text-on-surface-variant'}`}>Memeriksa Incoterms, konversi HPP & harga terlalu rendah (under-pricing)</span>
               </div>
 
               {/* Check 4 */}
@@ -308,7 +308,7 @@ export default function CompliancePage() {
                 <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${scanStep >= 5 ? 'bg-emerald-500 text-slate-950 border-none' : 'bg-surface-variant animate-pulse text-on-surface-variant'}`}>
                   {scanStep >= 5 ? '✓' : '4'}
                 </div>
-                <span className={`text-xs font-semibold ${scanStep >= 4 ? 'text-[#070235]' : 'text-on-surface-variant'}`}>Running NLP red flags scan on payment contracts</span>
+                <span className={`text-xs font-semibold ${scanStep >= 4 ? 'text-[#070235]' : 'text-on-surface-variant'}`}>Menjalankan pemindaian bendera merah NLP pada kontrak pembayaran</span>
               </div>
             </div>
 
@@ -322,7 +322,7 @@ export default function CompliancePage() {
             {scanStep === 4 && (
               <div className="mt-4 text-emerald-600 text-xs font-bold flex items-center gap-1 animate-bounce">
                 <span className="material-symbols-outlined text-[16px]">verified_user</span>
-                100% Cleared! Generating Secure Purchase Order...
+                100% Bersih! Membuat Purchase Order Aman...
               </div>
             )}
           </div>

@@ -51,7 +51,7 @@ export default function DashboardPage() {
         
         {/* Header Section */}
         <div>
-          <h1 className="text-2xl font-bold text-on-surface">Ringkasan Ekspor <span className="text-lg font-normal text-on-surface-variant">(Export Overview)</span></h1>
+          <h1 className="text-2xl font-bold text-on-surface">Ringkasan Ekspor</h1>
           <p className="text-sm text-on-surface-variant mt-1">Pantau metrik utama dan peluang global Anda hari ini.</p>
         </div>
 
@@ -65,7 +65,7 @@ export default function DashboardPage() {
                 <div className="w-8 h-8 rounded bg-primary-fixed-dim text-primary flex items-center justify-center">
                   <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
                 </div>
-                <h2 className="text-base font-semibold text-on-surface">Wawasan Mentor <span className="font-normal text-on-surface-variant text-sm">(Mentor Insights)</span></h2>
+                <h2 className="text-base font-semibold text-on-surface">Wawasan Mentor AI</h2>
               </div>
               <p className="text-sm text-on-surface-variant leading-relaxed">
                 "Sertifikasi Halal untuk produk rempah Anda telah divalidasi. Permintaan dari pembeli di Timur Tengah (UEA, Arab Saudi) meningkat <strong className="text-secondary">14% minggu ini</strong>. Pertimbangkan untuk memperbarui katalog bahasa Inggris Anda untuk mempercepat pencocokan AI."
@@ -79,7 +79,7 @@ export default function DashboardPage() {
           {/* Readiness Score */}
           <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 shadow-sm flex flex-col items-center justify-center text-center">
             <h2 className="text-sm font-bold text-on-surface mb-1">Skor Kesiapan</h2>
-            <p className="text-[10px] text-on-surface-variant font-bold uppercase tracking-widest mb-6">Export Readiness</p>
+            <p className="text-[10px] text-on-surface-variant font-bold uppercase tracking-widest mb-6">Kesiapan Ekspor</p>
             
             <div className="relative w-28 h-28 mb-4">
               <svg className="w-full h-full transform -rotate-90">
@@ -101,7 +101,7 @@ export default function DashboardPage() {
         {/* AI Buyer Matches */}
         <div>
           <div className="flex justify-between items-end mb-4">
-            <h2 className="text-lg font-bold text-on-surface">Pencocokan Pembeli AI <span className="text-sm font-normal text-on-surface-variant">(AI Matches)</span></h2>
+            <h2 className="text-lg font-bold text-on-surface">Pencocokan Pembeli AI</h2>
             <button className="text-xs font-medium text-primary hover:underline">Lihat Semua</button>
           </div>
           
@@ -148,7 +148,7 @@ export default function DashboardPage() {
         {/* Active Negotiations */}
         <div className="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm overflow-hidden">
           <div className="px-6 py-4 border-b border-outline-variant flex justify-between items-center bg-surface-container-lowest">
-            <h2 className="text-base font-bold text-on-surface">Negosiasi Aktif <span className="text-sm font-normal text-on-surface-variant">(Active Negotiations)</span></h2>
+            <h2 className="text-base font-bold text-on-surface">Negosiasi Aktif</h2>
             <button className="text-on-surface-variant hover:text-primary">
               <span className="material-symbols-outlined">filter_list</span>
             </button>
@@ -170,25 +170,25 @@ export default function DashboardPage() {
                       <h3 className="font-bold text-on-surface text-base">GlobalTech Imports GmbH</h3>
                       {currentStep === "po_signed" ? (
                         <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700 border border-emerald-300">
-                          Deal Closed 🎉
+                          Transaksi Selesai 🎉
                         </span>
                       ) : currentStep === "po_sent" ? (
                         <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-700 border border-amber-300 animate-pulse">
-                          Awaiting Buyer Sign
+                          Menunggu Tanda Tangan Pembeli
                         </span>
                       ) : (
                         <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-primary-container text-primary border border-primary/20">
-                          Active Chat
+                          Percakapan Aktif
                         </span>
                       )}
                     </div>
                     <p className="text-xs text-on-surface-variant font-medium">
                       Klaus Weber: <span className="italic">
                         {currentStep === "po_signed" 
-                          ? "Purchase Order signed. Exciting partnership ahead!" 
+                          ? "Purchase Order ditandatangani. Kerja sama yang menyenangkan menanti!" 
                           : currentStep === "po_sent" 
-                            ? "I am reviewing the Purchase Order document." 
-                            : "We request a revised quotation at $2.75/kg..."}
+                            ? "Saya sedang meninjau dokumen Purchase Order." 
+                            : "Kami mengajukan penawaran harga sebesar $2.75/kg..."}
                       </span>
                     </p>
                   </div>
