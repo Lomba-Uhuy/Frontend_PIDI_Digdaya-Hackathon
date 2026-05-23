@@ -185,15 +185,6 @@ export default function BuyerDiscoveryPage() {
               </button>
             </div>
           </div>
-          <div className="mt-4 pt-4 border-t border-outline-variant flex flex-wrap gap-2">
-            <span className="px-3 py-1 bg-surface-container rounded-full text-on-surface-variant text-xs font-semibold flex items-center gap-1.5 border border-outline-variant/50">
-              Kecocokan Semantik &gt; 80% <span className="material-symbols-outlined text-[14px] cursor-pointer hover:text-error">close</span>
-            </span>
-            <span className="px-3 py-1 bg-surface-container rounded-full text-on-surface-variant text-xs font-semibold flex items-center gap-1.5 border border-outline-variant/50">
-              Kredibilitas &gt; 70 <span className="material-symbols-outlined text-[14px] cursor-pointer hover:text-error">close</span>
-            </span>
-            <button className="text-primary text-xs font-bold hover:underline ml-2">Bersihkan Semua</button>
-          </div>
         </div>
 
         {/* Bento/Grid Content Area */}
