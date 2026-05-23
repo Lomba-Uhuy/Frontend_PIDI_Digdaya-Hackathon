@@ -72,8 +72,8 @@ export default function NegotiationHubPage() {
         setMessages([
           {
             sender: "buyer",
-            text: `Dear TradeConnect Supplier,\n\nWe have reviewed your initial catalog for the robusta coffee beans. We are highly interested in proceeding with a trial container (approx. 18 metric tons) for Q3 delivery to Hamburg port.\n\nHowever, your listed CIF price is currently $2.85/kg. Given current market fluctuations and to establish a long-term partnership, we request a revised quotation at $2.50/kg. Please advise on feasibility and provide an updated proforma invoice if acceptable.`,
-            time: "09:42 AM",
+            text: `Kepada Rekan Pemasok TradeConnect,\n\nKami telah meninjau katalog awal Anda untuk biji kopi robusta. Kami sangat tertarik untuk memesan satu kontainer uji coba (sekitar 18 metrik ton) untuk pengiriman Kuartal 3 (Q3) ke pelabuhan Hamburg.\n\nNamun, harga CIF yang Anda tawarkan saat ini adalah $2,85/kg. Mengingat fluktuasi pasar saat ini dan demi membangun kemitraan jangka panjang, kami mengajukan revisi penawaran harga sebesar $2,50/kg. Mohon beri saran mengenai kelayakan harga tersebut dan berikan proforma invoice terbaru jika Anda setuju.`,
+            time: "09:42",
           }
         ]);
         setJourneyStep("negotiating");
@@ -85,8 +85,8 @@ export default function NegotiationHubPage() {
       setMessages([
         {
           sender: "buyer",
-          text: `Dear TradeConnect Supplier,\n\nWe have reviewed your initial catalog for the robusta coffee beans. We are highly interested in proceeding with a trial container (approx. 18 metric tons) for Q3 delivery to Hamburg port.\n\nHowever, your listed CIF price is currently $2.85/kg. Given current market fluctuations and to establish a long-term partnership, we request a revised quotation at $2.50/kg. Please advise on feasibility and provide an updated proforma invoice if acceptable.`,
-          time: "09:42 AM",
+          text: `Kepada Rekan Pemasok TradeConnect,\n\nKami telah meninjau katalog awal Anda untuk biji kopi robusta. Kami sangat tertarik untuk memesan satu kontainer uji coba (sekitar 18 metrik ton) untuk pengiriman Kuartal 3 (Q3) ke pelabuhan Hamburg.\n\nNamun, harga CIF yang Anda tawarkan saat ini adalah $2,85/kg. Mengingat fluktuasi pasar saat ini dan demi membangun kemitraan jangka panjang, kami mengajukan revisi penawaran harga sebesar $2,50/kg. Mohon beri saran mengenai kelayakan harga tersebut dan berikan proforma invoice terbaru jika Anda setuju.`,
+          time: "09:42",
         }
       ]);
     }
@@ -117,7 +117,7 @@ export default function NegotiationHubPage() {
           ...newMsgs,
           {
             sender: "buyer",
-            text: `Thank you for your response and the reasonable proposal. We value PT Nusantara's reputation and agree to meet in the middle at $2.75/kg CIF Hamburg Port with the proposed 30% DP and 70% LC structure. \n\nPlease generate the official Purchase Order so we can proceed with signing and the legal compliance check.`,
+            text: `Terima kasih atas tanggapan Anda dan proposal jalan tengah yang sangat wajar. Kami menghargai reputasi kualitas PT Nusantara dan setuju untuk menutup kesepakatan di harga $2,75/kg CIF Pelabuhan Hamburg dengan struktur pembayaran 30% DP dan 70% LC sesuai usulan Anda.\n\nSilakan buat Purchase Order resmi di sistem agar kita dapat segera melakukan penandatanganan dokumen dan pemeriksaan kepatuhan hukum ekspor.`,
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           }
         ]);
@@ -152,7 +152,7 @@ export default function NegotiationHubPage() {
           ...newMsgs,
           {
             sender: "buyer",
-            text: `Thank you for your response and the reasonable proposal. We value PT Nusantara's reputation and agree to meet in the middle at $2.75/kg CIF Hamburg Port with the proposed 30% DP and 70% LC structure. \n\nPlease generate the official Purchase Order so we can proceed with signing and the legal compliance check.`,
+            text: `Terima kasih atas tanggapan Anda dan proposal jalan tengah yang sangat wajar. Kami menghargai reputasi kualitas PT Nusantara dan setuju untuk menutup kesepakatan di harga $2,75/kg CIF Pelabuhan Hamburg dengan struktur pembayaran 30% DP dan 70% LC sesuai usulan Anda.\n\nSilakan buat Purchase Order resmi di sistem agar kita dapat segera melakukan penandatanganan dokumen dan pemeriksaan kepatuhan hukum ekspor.`,
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           }
         ]);
@@ -171,15 +171,15 @@ export default function NegotiationHubPage() {
           <div className="w-16 h-16 bg-indigo-50 text-[#070235] border border-outline-variant rounded-full flex items-center justify-center mb-4">
             <span className="material-symbols-outlined text-4xl">mail_lock</span>
           </div>
-          <h2 className="text-xl font-bold text-[#070235] mb-2">No Active Negotiation Threads</h2>
+          <h2 className="text-xl font-bold text-[#070235] mb-2">Tidak Ada Negosiasi Aktif</h2>
           <p className="text-sm text-on-surface-variant mb-6">
-            You haven't initiated contact with any buyers yet. Please go to <strong>Buyer Discovery</strong> to find matched importers and send your first AI-drafted introduction pitch.
+            Anda belum memulai komunikasi dengan pembeli mana pun. Silakan buka menu <strong>Pencarian Pembeli</strong> untuk menemukan importir yang cocok dan kirimkan draf email perkenalan AI pertama Anda.
           </p>
           <button 
             onClick={() => router.push('/buyer-discovery')}
             className="bg-primary text-on-primary px-6 py-2.5 rounded-lg text-sm font-bold hover:bg-surface-tint transition-colors flex items-center gap-2 shadow-sm"
           >
-            Go to Buyer Discovery
+            Buka Pencarian Pembeli
             <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
           </button>
         </div>
@@ -201,10 +201,10 @@ export default function NegotiationHubPage() {
               <div className="flex items-center gap-2">
                 <h2 className="text-lg font-semibold text-on-surface">GlobalTech Imports GmbH</h2>
                 <span className="flex items-center gap-1 bg-surface-container-high px-2 py-0.5 rounded text-[10px] font-bold text-on-surface-variant uppercase">
-                  <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span> Online
+                  <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span> Aktif
                 </span>
               </div>
-              <p className="text-sm text-on-surface-variant">Frankfurt, Germany • UID: DE123456789</p>
+              <p className="text-sm text-on-surface-variant">Frankfurt, Jerman • UID: DE123456789</p>
             </div>
           </div>
           <div className="flex gap-2 items-center">
@@ -220,12 +220,12 @@ export default function NegotiationHubPage() {
             {(currentStep === "compliance" || getStep() === "po_sent" || getStep() === "po_signed") && (
               <button onClick={() => router.push('/compliance')} className="bg-[#070235] text-[#85f8c4] px-4 py-2 rounded-lg flex items-center gap-1.5 hover:bg-surface-tint hover:text-white transition-colors shadow-md animate-pulse">
                 <span className="material-symbols-outlined text-[18px]">fact_check</span>
-                <span className="text-[10px] font-bold uppercase tracking-wider">Proceed to Deal Readiness</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider">Lanjutkan ke Deal Readiness</span>
               </button>
             )}
             <div className="bg-tertiary-container text-on-tertiary-container px-3 py-1.5 rounded-full flex items-center gap-1 border border-tertiary-fixed-dim">
               <span className="material-symbols-outlined text-[16px]">inventory_2</span>
-              <span className="text-[10px] font-bold uppercase">RFQ: Bulk Order</span>
+              <span className="text-[10px] font-bold uppercase">RFQ: Pembelian Massal</span>
             </div>
           </div>
         </div>
@@ -234,16 +234,16 @@ export default function NegotiationHubPage() {
         <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6 bg-surface-bright pb-32">
           {/* Timestamp */}
           <div className="text-center">
-            <span className="bg-surface-container-low px-3 py-1 rounded-full font-mono text-on-surface-variant text-[11px] font-medium tracking-wide">Today, 09:42 AM</span>
+            <span className="bg-surface-container-low px-3 py-1 rounded-full font-mono text-on-surface-variant text-[11px] font-medium tracking-wide">Hari Ini, 09:42</span>
           </div>
 
           {/* Outbound Pitch Alert (Fase 2) */}
           <div className="bg-indigo-50/50 border border-primary/20 p-4 rounded-xl max-w-2xl text-left shadow-sm self-start flex gap-3 animate-in fade-in duration-500">
             <span className="material-symbols-outlined text-primary text-[24px] shrink-0 mt-0.5">forward_to_inbox</span>
             <div>
-              <div className="text-[10px] font-bold uppercase tracking-widest text-[#070235] mb-1">AI Outbound Email Sent</div>
+              <div className="text-[10px] font-bold uppercase tracking-widest text-[#070235] mb-1">Email Penawaran AI Terkirim</div>
               <p className="text-xs text-on-surface-variant font-medium leading-relaxed">
-                Official introduction B2B pitch email registered and sent to <strong className="text-primary">klaus.weber@globaltech.de</strong> at 09:42 AM.
+                Email penawaran resmi untuk <strong className="text-primary">Biji Kopi Robusta Premium Grade 1 (HS 0901.11)</strong> telah dikirim secara otomatis ke alamat importir <strong className="text-primary">klaus.weber@globaltech.de</strong> pada pukul 09:42.
               </p>
             </div>
           </div>
@@ -252,7 +252,7 @@ export default function NegotiationHubPage() {
           {messages.map((msg, idx) => (
             <div key={idx} className={`flex flex-col gap-1 max-w-2xl ${msg.sender === 'me' ? 'self-end' : 'self-start animate-in fade-in slide-in-from-bottom-2 duration-300'}`}>
               <span className={`text-[10px] font-bold uppercase text-on-surface-variant ${msg.sender === 'me' ? 'mr-1 text-right' : 'ml-1'}`}>
-                {msg.sender === 'me' ? 'You • Supplier' : 'Klaus Weber • GlobalTech'}
+                {msg.sender === 'me' ? 'Anda • Eksportir' : 'Klaus Weber • GlobalTech'}
               </span>
               <div className={`p-4 rounded-xl shadow-sm ${msg.sender === 'me' ? 'bg-primary text-on-primary rounded-tr-sm' : 'bg-surface-container-lowest border border-outline-variant rounded-tl-sm'}`}>
                 <p className="text-sm leading-relaxed whitespace-pre-line">{msg.text}</p>
@@ -279,7 +279,7 @@ export default function NegotiationHubPage() {
                 <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce"></span>
                 <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce [animation-delay:0.2s]"></span>
                 <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce [animation-delay:0.4s]"></span>
-                <span className="text-xs text-on-surface-variant ml-2 font-medium">Klaus Weber is writing email reply...</span>
+                <span className="text-xs text-on-surface-variant ml-2 font-medium">Klaus Weber sedang menulis email balasan...</span>
               </div>
             </div>
           )}
@@ -292,7 +292,7 @@ export default function NegotiationHubPage() {
                 className="bg-[#070235] text-white hover:bg-surface-tint shadow-xl px-8 py-4 rounded-xl font-bold text-sm flex items-center gap-2 hover:-translate-y-1 transition-all active:translate-y-0 shadow-[0_0_20px_rgba(7,2,53,0.2)] animate-pulse"
               >
                 <span className="material-symbols-outlined">fact_check</span>
-                PROCEED TO DEAL READINESS CHECKER
+                LANJUTKAN KE PEMERIKSAAN KEPATUHAN (DEAL READINESS)
               </button>
             </div>
           )}
@@ -306,7 +306,7 @@ export default function NegotiationHubPage() {
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               className="w-full bg-transparent border-none focus:ring-0 resize-none p-3 text-sm text-on-surface min-h-[80px] outline-none" 
-              placeholder={currentStep === "compliance" ? "Deal reached! Press Proceed above to move forward." : "Type your response in English..."}
+              placeholder={currentStep === "compliance" ? "Kesepakatan tercapai! Tekan tombol Lanjutkan di atas untuk melangkah maju." : "Ketik balasan Anda dalam bahasa Indonesia..."}
               disabled={currentStep === "compliance"}
             ></textarea>
             <div className="px-3 py-2 border-t border-outline-variant flex justify-between items-center bg-surface-container-lowest">
@@ -323,15 +323,15 @@ export default function NegotiationHubPage() {
                 disabled={!inputValue.trim() || currentStep === "compliance"}
                 className="bg-[#070235] text-white font-semibold text-sm py-1.5 px-6 rounded-md flex items-center gap-2 hover:bg-surface-tint transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
               >
-                Send <span className="material-symbols-outlined text-[16px]">send</span>
+                Kirim <span className="material-symbols-outlined text-[16px]">send</span>
               </button>
             </div>
           </div>
           <div className="mt-2 flex justify-between items-center px-1">
             <span className="text-[10px] font-bold uppercase text-on-surface-variant flex items-center gap-1">
-              <span className="material-symbols-outlined text-[14px]">translate</span> Auto-translating to English
+              <span className="material-symbols-outlined text-[14px]">translate</span> Diterjemahkan secara otomatis oleh TradeConnect AI
             </span>
-            <span className="font-mono text-on-surface-variant text-[10px]">Secure Connection</span>
+            <span className="font-mono text-on-surface-variant text-[10px]">Koneksi Aman</span>
           </div>
         </div>
       </section>
@@ -427,32 +427,32 @@ export default function NegotiationHubPage() {
                     <span className="bg-surface-container-low text-on-surface-variant text-[9px] px-2 py-0.5 rounded font-mono font-bold border border-outline-variant/60">DRAFT 1</span>
                   </div>
                   <p className="text-xs text-on-surface-variant leading-relaxed">
-                    "Thank you for your interest. Unfortunately, due to strict quality controls, $2.50 is below our sustainable threshold. We can offer a compromise at $2.75/kg, assuming a 30% DP and 70% LC payment structure. Let me know if this works."
+                    "Terima kasih atas ketertarikan Anda. Sayangnya, karena kontrol kualitas yang ketat, harga $2,50/kg berada di bawah batas keberlanjutan minimum kami. Kami dapat menawarkan jalan tengah di harga $2,75/kg, dengan struktur pembayaran 30% DP dan 70% LC. Mohon informasikan jika usulan ini dapat diterima."
                   </p>
                   
-                  {/* NEW: Interactive Approve, Edit, Reject Action Buttons */}
+                  {/* Interactive Approve, Edit, Reject Action Buttons */}
                   {currentStep !== "compliance" && (
                     <div className="grid grid-cols-3 gap-2 pt-2 border-t border-outline-variant/60 shrink-0">
                       <button 
-                        onClick={() => handleApproveDraft("Thank you for your interest. Unfortunately, due to strict quality controls, $2.50 is below our sustainable threshold. We can offer a compromise at $2.75/kg, assuming a 30% DP and 70% LC payment structure. Let me know if this works.")}
+                        onClick={() => handleApproveDraft("Terima kasih atas ketertarikan Anda. Sayangnya, karena kontrol kualitas yang ketat, harga $2,50/kg berada di bawah batas keberlanjutan minimum kami. Kami dapat menawarkan jalan tengah di harga $2,75/kg, dengan struktur pembayaran 30% DP dan 70% LC. Mohon informasikan jika usulan ini dapat diterima.")}
                         className="px-2.5 py-1.5 bg-[#85f8c4]/30 hover:bg-[#85f8c4]/50 text-emerald-800 rounded text-[10px] font-bold transition-colors flex items-center justify-center gap-1"
-                        title="Approve and send immediately"
+                        title="Setujui dan kirim balasan langsung"
                       >
                         <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
                         Approve
                       </button>
                       <button 
-                        onClick={() => handleDraftSelect("Thank you for your interest. Unfortunately, due to strict quality controls, $2.50 is below our sustainable threshold. We can offer a compromise at $2.75/kg, assuming a 30% DP and 70% LC payment structure. Let me know if this works.")}
+                        onClick={() => handleDraftSelect("Terima kasih atas ketertarikan Anda. Sayangnya, karena kontrol kualitas yang ketat, harga $2,50/kg berada di bawah batas keberlanjutan minimum kami. Kami dapat menawarkan jalan tengah di harga $2,75/kg, dengan struktur pembayaran 30% DP and 70% LC. Mohon informasikan jika usulan ini dapat diterima.")}
                         className="px-2.5 py-1.5 bg-[#070235]/10 hover:bg-[#070235]/20 text-[#070235] rounded text-[10px] font-bold transition-colors flex items-center justify-center gap-1"
-                        title="Insert into chat input to edit"
+                        title="Salin teks draf ke kolom input untuk diedit"
                       >
                         <span className="material-symbols-outlined text-[12px]">edit</span>
                         Edit
                       </button>
                       <button 
-                        onClick={() => { setHideDraft1(true); alert("AI Draft 1 suggestion ignored."); }}
+                        onClick={() => { setHideDraft1(true); alert("Saran draf AI 1 diabaikan."); }}
                         className="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 rounded text-[10px] font-bold transition-colors flex items-center justify-center gap-1"
-                        title="Reject/Ignore this suggestion"
+                        title="Tolak saran draf ini"
                       >
                         <span className="material-symbols-outlined text-[12px]">cancel</span>
                         Reject
@@ -470,32 +470,32 @@ export default function NegotiationHubPage() {
                     <span className="bg-surface-container-low text-on-surface-variant text-[9px] px-2 py-0.5 rounded font-mono font-bold border border-outline-variant/60">DRAFT 2</span>
                   </div>
                   <p className="text-xs text-on-surface-variant leading-relaxed">
-                    "We value the potential partnership. While we must maintain the $2.85/kg price to ensure premium quality, we are willing to offer more favorable payment terms such as 20% DP and 80% upon delivery. Please advise."
+                    "Kami sangat menghargai peluang kemitraan ini. Meskipun kami harus mempertahankan harga $2,85/kg untuk menjamin kualitas robusta premium kami, kami bersedia menawarkan termin pembayaran yang lebih bersahabat seperti 20% DP dan sisa 80% dibayarkan saat barang tiba di tujuan. Silakan beri saran."
                   </p>
                   
-                  {/* NEW: Interactive Approve, Edit, Reject Action Buttons */}
+                  {/* Interactive Approve, Edit, Reject Action Buttons */}
                   {currentStep !== "compliance" && (
                     <div className="grid grid-cols-3 gap-2 pt-2 border-t border-outline-variant/60 shrink-0">
                       <button 
-                        onClick={() => handleApproveDraft("We value the potential partnership. While we must maintain the $2.85/kg price to ensure premium quality, we are willing to offer more favorable payment terms such as 20% DP and 80% upon delivery. Please advise.")}
+                        onClick={() => handleApproveDraft("Kami sangat menghargai peluang kemitraan ini. Meskipun kami harus mempertahankan harga $2,85/kg untuk menjamin kualitas robusta premium kami, kami bersedia menawarkan termin pembayaran yang lebih bersahabat seperti 20% DP dan sisa 80% dibayarkan saat barang tiba di tujuan. Silakan beri saran.")}
                         className="px-2.5 py-1.5 bg-[#85f8c4]/30 hover:bg-[#85f8c4]/50 text-emerald-800 rounded text-[10px] font-bold transition-colors flex items-center justify-center gap-1"
-                        title="Approve and send immediately"
+                        title="Setujui dan kirim balasan langsung"
                       >
                         <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
                         Approve
                       </button>
                       <button 
-                        onClick={() => handleDraftSelect("We value the potential partnership. While we must maintain the $2.85/kg price to ensure premium quality, we are willing to offer more favorable payment terms such as 20% DP and 80% upon delivery. Please advise.")}
+                        onClick={() => handleDraftSelect("Kami sangat menghargai peluang kemitraan ini. Meskipun kami harus mempertahankan harga $2,85/kg untuk menjamin kualitas robusta premium kami, kami bersedia menawarkan termin pembayaran yang lebih bersahabat seperti 20% DP dan sisa 80% dibayarkan saat barang tiba di tujuan. Silakan beri saran.")}
                         className="px-2.5 py-1.5 bg-[#070235]/10 hover:bg-[#070235]/20 text-[#070235] rounded text-[10px] font-bold transition-colors flex items-center justify-center gap-1"
-                        title="Insert into chat input to edit"
+                        title="Salin teks draf ke kolom input untuk diedit"
                       >
                         <span className="material-symbols-outlined text-[12px]">edit</span>
                         Edit
                       </button>
                       <button 
-                        onClick={() => { setHideDraft2(true); alert("AI Draft 2 suggestion ignored."); }}
+                        onClick={() => { setHideDraft2(true); alert("Saran draf AI 2 diabaikan."); }}
                         className="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 rounded text-[10px] font-bold transition-colors flex items-center justify-center gap-1"
-                        title="Reject/Ignore this suggestion"
+                        title="Tolak saran draf ini"
                       >
                         <span className="material-symbols-outlined text-[12px]">cancel</span>
                         Reject

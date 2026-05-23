@@ -63,80 +63,80 @@ export default function PurchaseOrderPage() {
     }).format(val);
   };
 
-  // Export Documents metadata
+  // Export Documents metadata (Translated)
   const exportDocs: ExportDocument[] = [
     {
       id: "invoice",
-      name: "Commercial Invoice",
+      name: "Commercial Invoice (Faktur Dagang)",
       type: "INVOICE-GLB-2605-001",
-      description: "Official trade billing containing itemized product rates, banking instructions, and payment conditions.",
+      description: "Tagihan perdagangan resmi yang memuat rincian harga barang, instruksi perbankan, dan syarat pembayaran.",
       fileSize: "148 KB",
       icon: "receipt_long",
       content: `PT Nusantara Global Coffee
 Jakarta, Indonesia
 NIB: 1234567890123
 
-BILLED TO:
+DITAGIHKAN KEPADA:
 GlobalTech Imports GmbH
-Frankfurt, Germany
+Frankfurt, Jerman
 UID: DE123456789
 
-DESCRIPTION: Premium Robusta Coffee Beans (Grade 1)
-HS Code: 0901.11
-Quantity: 18.00 Metric Tons
-Unit Price: $2,750.00 / MT
-Logistics Term: CIF Hamburg Port
-Grand Total: $51,600.00
+DESKRIPSI BARANG: Biji Kopi Robusta Premium (Grade 1)
+Kode HS: 0901.11
+Kuantitas: 18,00 Metrik Ton
+Harga Satuan: $2.750,00 / Metrik Ton
+Termin Logistik: CIF Pelabuhan Hamburg
+Total Tagihan: $51.600,00
 
-PAYMENT METHOD: Letter of Credit (L/C) at Sight
-Escrow Bank: Bank Mandiri (Persero) Tbk, Jakarta`
+METODE PEMBAYARAN: Letter of Credit (L/C) at Sight
+Bank Escrow Pembayar: Bank Mandiri (Persero) Tbk, Jakarta`
     },
     {
       id: "packing_list",
-      name: "Packing List (CBM)",
+      name: "Packing List (Rincian Kemasan CBM)",
       type: "PL-GLB-2605-001",
-      description: "Detailed description of container cargo dimensions, net weight, gross weight, and packaging seals.",
+      description: "Deskripsi rinci mengenai dimensi kargo kontainer, berat bersih, berat kotor, dan nomor segel kemasan.",
       fileSize: "92 KB",
       icon: "inventory_2",
-      content: `PACKING LIST
-Shipment Ref: PO-GLB-2605-001
-Carrier: Maersk Line V.29A
+      content: `DAFTAR KEMASAN (PACKING LIST)
+Referensi Pengiriman: PO-GLB-2605-001
+Perusahaan Pelayaran: Maersk Line V.29A
 
-CARGO DESCRIPTION:
-Product: Premium Robusta Coffee Beans Grade 1
-Packaging: 300 Double-ply Jute Bags (60 kg net weight each)
-Total Bags: 300 Bags
-Net Weight: 18,000.00 Kgs (18 MT)
-Gross Weight: 18,150.00 Kgs
-Container: 1 x 20ft FCL (Full Container Load)
-Seal Number: MAERSK-ID-992182
-Volume: 24.2 CBM`
+DESKRIPSI KARGO:
+Produk: Biji Kopi Robusta Premium Grade 1
+Kemasan: 300 Karung Rami Lapis Ganda (masing-masing berat bersih 60 kg)
+Total Karung: 300 Karung
+Berat Bersih: 18.000,00 Kg (18 Metrik Ton)
+Berat Kotor: 18.150,00 Kg
+Spesifikasi Kontainer: 1 x 20ft FCL (Full Container Load)
+Nomor Segel Kontainer: MAERSK-ID-992182
+Volume Kargo: 24.2 CBM`
     },
     {
       id: "bl",
-      name: "Draft Bill of Lading (B/L)",
+      name: "Draft Bill of Lading (Konosemen B/L)",
       type: "BL-MAERSK-90021",
-      description: "Sea freight carriage contract issued by Maersk Line confirming logistics routes and consignee instructions.",
+      description: "Kontrak pengangkutan laut resmi yang diterbitkan oleh Maersk Line yang menegaskan rute logistik dan instruksi penerima.",
       fileSize: "210 KB",
       icon: "directions_boat",
-      content: `BILL OF LADING (DRAFT)
-Carrier: Maersk Line A/S
-B/L Number: MAEU90881920
+      content: `BILL OF LADING (DRAFT KONOSEMEN)
+Operator Pelayaran: Maersk Line A/S
+Nomor B/L: MAEU90881920
 
-SHIPPER: PT Nusantara Global Coffee, Jakarta, Indonesia
-CONSIGNEE: GlobalTech Imports GmbH, Frankfurt, Germany
-NOTIFY PARTY: Commerzbank AG, Frankfurt Branch
+PENGIRIM (SHIPPER): PT Nusantara Global Coffee, Jakarta, Indonesia
+PENERIMA (CONSIGNEE): GlobalTech Imports GmbH, Frankfurt, Jerman
+PIHAK NOTIFIKASI: Commerzbank AG, Kantor Cabang Frankfurt
 
-PORT OF LOADING: Port of Tanjung Priok (IDTPP), Jakarta
-PORT OF DISCHARGE: Port of Hamburg (DEHAM), Germany
-VESSEL NAME: Maersk Mc-Kinney Moller V.2605
-FREIGHT STATUS: Prepaid under CIF Terms`
+PELABUHAN MUAT: Pelabuhan Tanjung Priok (IDTPP), Jakarta
+PELABUHAN BONGKAR: Pelabuhan Hamburg (DEHAM), Jerman
+NAMA KAPAL: Maersk Mc-Kinney Moller V.2605
+STATUS BIAYA: Prabayar berdasarkan Syarat CIF`
     },
     {
       id: "peb",
-      name: "Pemberitahuan Ekspor Barang",
+      name: "Pemberitahuan Ekspor Barang (PEB)",
       type: "PEB-INSW-099281",
-      description: "Official customs export declaration registered and cleared via INSW (Indonesia National Single Window).",
+      description: "Pernyataan ekspor bea cukai resmi yang terdaftar dan dinyatakan bersih via INSW (Indonesia National Single Window).",
       fileSize: "312 KB",
       icon: "gavel",
       content: `REPUBLIK INDONESIA - DIREKTORAT JENDERAL BEA DAN CUKAI
@@ -145,33 +145,33 @@ Nomor Pengajuan: 099281-20260523-000192
 
 Eksportir: PT Nusantara Global Coffee (NIB: 1234567890123)
 Penerima: GlobalTech Imports GmbH, Jerman
-KBLI Utama: 46311 (Wholesale Coffee)
+KBLI Utama: 46311 (Perdagangan Besar Kopi, Teh, dan Kakao)
 
 Komoditas: Kopi Robusta Premium (Roasted)
-Kode HS: 0901.11 (Coffee, roasted, decaffeinated)
-Valuta: USD ($51,600.00)
-Kantor Bea Cukai Pemuatan: KPU Tanjung Priok
-Status Kelulusan Lartas: BEBAS LARTAS (100% Cleared)`
+Kode HS: 0901.11 (Kopi, dipanggang, didekafein)
+Valuta Ekspor: USD ($51.600,00)
+Kantor Bea Cukai Pemuatan: KPU Tanjung Priok, Jakarta
+Status Kelulusan Lartas: BEBAS LARTAS (100% Bersih & Disetujui)`
     },
     {
       id: "coo",
-      name: "Certificate of Origin (COO)",
+      name: "Certificate of Origin (Surat Keterangan Asal COO)",
       type: "COO-KADIN-00129",
-      description: "Chamber of Commerce certificate confirming 100% authentic Indonesian origin for tariff reduction eligibility.",
+      description: "Sertifikat Kamar Dagang dan Industri yang menegaskan 100% keaslian asal Indonesia demi kelayakan potongan tarif bea masuk.",
       fileSize: "185 KB",
       icon: "workspace_premium",
-      content: `INDONESIAN CHAMBER OF COMMERCE AND INDUSTRY (KADIN)
-CERTIFICATE OF ORIGIN (FORM B-2-B)
-Reference No: COO-KADIN-00129
+      content: `KAMAR DAGANG DAN INDUSTRI INDONESIA (KADIN)
+SURAT KETERANGAN ASAL (CERTIFICATE OF ORIGIN - FORM B-2-B)
+Nomor Referensi: COO-KADIN-00129
 
-We hereby certify that the goods described below are of Indonesian origin:
-Exporter: PT Nusantara Global Coffee, Jakarta
-Consignee: GlobalTech Imports GmbH, Frankfurt
+Dengan ini kami menyatakan bahwa barang yang dijelaskan di bawah ini adalah asli berasal dari Indonesia:
+Eksportir: PT Nusantara Global Coffee, Jakarta, Indonesia
+Penerima: GlobalTech Imports GmbH, Frankfurt, Jerman
 
-Item: 300 Bags Premium Robusta Coffee Beans Grade 1
-Source Origin: Banyumas & Lampung Highlands, Indonesia
-Authority Seal: Chamber of Commerce West Jakarta Division
-Verification Status: Genuine & Active`
+Barang: 300 Karung Biji Kopi Robusta Premium Grade 1
+Asal Dataran Tinggi: Perkebunan Banyumas & Lampung, Indonesia
+Stempel Otoritas: Kamar Dagang dan Industri Divisi Jakarta Barat
+Status Verifikasi: Aktif & Terverifikasi Asli`
     }
   ];
 
@@ -193,7 +193,7 @@ Verification Status: Genuine & Active`
             </div>
             <h1 className="text-3xl md:text-5xl font-extrabold mb-3 z-10 tracking-tight">Transaksi Ekspor Berhasil!</h1>
             <p className="text-white/80 text-base z-10 max-w-lg leading-relaxed">
-              Klaus Weber telah menandatangani Purchase Order. Seluruh berkas ekspor telah diterbitkan oleh TradeConnect AI.
+              Klaus Weber telah menandatangani Purchase Order secara digital. Seluruh berkas ekspor resmi telah diterbitkan secara instan oleh TradeConnect AI.
             </p>
           </div>
 
@@ -217,7 +217,7 @@ Verification Status: Genuine & Active`
                 </div>
               </div>
               <p className="text-xs text-on-surface-variant leading-relaxed mt-2">
-                Selamat! Rekam jejak sukses perdana Anda telah menaikkan kredibilitas ekspor Anda. Akses pencocokan dengan **Buyer Premium (Tier 1)** kini terbuka secara eksklusif!
+                Selamat! Transaksi ekspor perdana Anda yang sukses telah menaikkan kredibilitas profil ekspor Anda. Akses pencocokan dengan **Buyer Premium (Tier 1)** kini terbuka secara eksklusif!
               </p>
             </div>
 
@@ -225,7 +225,7 @@ Verification Status: Genuine & Active`
             <div className="md:col-span-7 space-y-4">
               <h3 className="text-sm font-bold text-on-surface-variant uppercase tracking-wider flex items-center gap-1.5">
                 <span className="material-symbols-outlined text-[18px] text-primary">folder_zip</span>
-                Export Document Package (Fase 8)
+                Paket Dokumen Resmi Ekspor (Fase 8)
               </h3>
               
               <div className="grid grid-cols-1 gap-3">
@@ -245,7 +245,7 @@ Verification Status: Genuine & Active`
                       </div>
                     </div>
                     <span className="text-[10px] font-mono font-bold bg-[#85f8c4]/30 text-emerald-800 border border-[#85f8c4] px-2 py-0.5 rounded flex items-center gap-1">
-                      <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span> Ready
+                      <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span> Siap
                     </span>
                   </div>
                 ))}
@@ -300,7 +300,7 @@ Verification Status: Genuine & Active`
                 </button>
                 <button 
                   onClick={() => {
-                    alert(`Mengunduh Berkas ${selectedDoc.name} (${selectedDoc.fileSize}) dari database INSW...`);
+                    alert(`Mengunduh Berkas ${selectedDoc.name} (${selectedDoc.fileSize}) secara aman dari pabean INSW...`);
                     setSelectedDoc(null);
                   }}
                   className="px-6 py-2 bg-primary text-on-primary hover:bg-surface-tint rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 shadow-md"
@@ -326,7 +326,7 @@ Verification Status: Genuine & Active`
         <div className="absolute top-4 w-full max-w-2xl bg-amber-50 border border-amber-200 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-center gap-3 shadow-md z-15 animate-bounce">
           <div className="flex items-center gap-2 text-amber-800">
             <span className="material-symbols-outlined text-[22px] animate-pulse">auto_awesome</span>
-            <span className="text-xs font-semibold"><strong>DEMO TOOL:</strong> Klaus Weber has received the PO link via email!</span>
+            <span className="text-xs font-semibold"><strong>DEMO HELPER:</strong> Klaus Weber telah menerima tautan PO digital via email!</span>
           </div>
           <button 
             onClick={() => window.open('/signing-board?token=klaus-weber-9918', '_blank')}
@@ -345,32 +345,32 @@ Verification Status: Genuine & Active`
           </div>
 
           <div>
-            <h2 className="text-2xl font-black text-[#070235] mb-2 tracking-tight">PO Sent & Awaiting Signature</h2>
+            <h2 className="text-2xl font-black text-[#070235] mb-2 tracking-tight">PO Terkirim & Menunggu Tanda Tangan</h2>
             <p className="text-xs text-on-surface-variant font-bold uppercase tracking-widest mb-4">Fase 7 — Menunggu Persetujuan Pembeli</p>
             <p className="text-sm text-on-surface-variant leading-relaxed max-w-sm mx-auto">
-              Purchase Order **PO-GLB-2605-001** has been generated and securely emailed to Klaus Weber at **GlobalTech Imports GmbH**.
+              Purchase Order **PO-GLB-2605-001** telah berhasil dibuat secara resmi dan dikirimkan secara aman ke email Klaus Weber di **GlobalTech Imports GmbH**.
             </p>
           </div>
 
           <div className="bg-surface p-4 rounded-xl border border-outline-variant text-left space-y-2 w-full text-xs text-on-surface-variant shadow-inner">
             <div className="flex justify-between">
-              <span>Secure Token Link</span>
+              <span>Tautan Token Aman</span>
               <span className="font-mono text-primary font-bold">/signing-board?token=klaus...</span>
             </div>
             <div className="flex justify-between">
-              <span>CIF Contract Price</span>
+              <span>Nilai Kontrak CIF</span>
               <span className="font-bold text-on-surface">{formatCurrency(grandTotal)}</span>
             </div>
             <div className="flex justify-between">
-              <span>Status</span>
+              <span>Status Dokumen</span>
               <span className="text-amber-600 font-bold uppercase flex items-center gap-0.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping"></span> Waiting Signature
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping"></span> Menunggu Tanda Tangan
               </span>
             </div>
           </div>
 
           <p className="text-[11px] text-on-surface-variant max-w-xs leading-normal">
-            This dashboard will **automatically unlock** immediately when the buyer clicks and signs the purchase order in the tab above!
+            Dasbor eksportir Anda akan **terbuka otomatis secara instan** tepat saat pembeli membubuhkan tanda tangan digital pada tab di atas!
           </p>
         </div>
       </div>
@@ -385,8 +385,8 @@ Verification Status: Genuine & Active`
         {/* Page Header */}
         <div className="flex justify-between items-end border-b border-outline-variant pb-6">
           <div>
-            <h2 className="text-2xl font-bold text-on-surface">Purchase Order Finalization</h2>
-            <p className="text-sm text-on-surface-variant mt-1 font-medium font-medium">Review and issue the finalized PO generated from your negotiations.</p>
+            <h2 className="text-2xl font-bold text-on-surface">Finalisasi Dokumen Purchase Order</h2>
+            <p className="text-sm text-on-surface-variant mt-1 font-medium">Tinjau dan terbitkan dokumen PO resmi yang telah dihasilkan dari kesepakatan negosiasi Anda.</p>
           </div>
           <button className="text-primary text-sm font-bold flex items-center gap-2 border border-outline-variant px-4 py-2 rounded hover:bg-surface-container-low transition-colors shadow-sm bg-surface-container-lowest">
             <span className="material-symbols-outlined text-[20px]">download</span>
@@ -406,15 +406,15 @@ Verification Status: Genuine & Active`
             <div className="flex justify-between items-start">
               <div>
                 <h1 className="text-3xl font-black text-primary mb-2 tracking-tight">PURCHASE ORDER</h1>
-                <p className="text-sm text-on-surface-variant font-medium">PO Number: <span className="text-on-surface font-bold">PO-GLB-2605-001</span></p>
-                <p className="text-sm text-on-surface-variant font-medium">Date: <span className="text-on-surface font-bold">23 May 2026</span></p>
+                <p className="text-sm text-on-surface-variant font-medium">Nomor PO: <span className="text-on-surface font-bold">PO-GLB-2605-001</span></p>
+                <p className="text-sm text-on-surface-variant font-medium">Tanggal: <span className="text-on-surface font-bold">23 Mei 2026</span></p>
               </div>
               <div className="text-right">
                 <div className="w-12 h-12 bg-tertiary-container border border-outline-variant text-on-tertiary-container rounded-xl flex items-center justify-center ml-auto mb-2 shadow-inner">
                   <span className="material-symbols-outlined text-2xl">domain</span>
                 </div>
                 <h3 className="text-base font-bold text-on-surface">GlobalTech Imports GmbH</h3>
-                <p className="text-xs text-on-surface-variant">Frankfurt, Germany</p>
+                <p className="text-xs text-on-surface-variant">Frankfurt, Jerman</p>
                 <p className="text-xs text-on-surface-variant font-mono">UID: DE123456789</p>
               </div>
             </div>
@@ -424,16 +424,16 @@ Verification Status: Genuine & Active`
             {/* Vendor Details */}
             <div className="grid grid-cols-2 gap-8">
               <div>
-                <h4 className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider mb-2">Vendor (Supplier)</h4>
+                <h4 className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider mb-2">Penjual (Eksportir UMKM)</h4>
                 <h3 className="text-sm font-bold text-on-surface">PT Nusantara Global Coffee</h3>
                 <p className="text-xs text-on-surface-variant">Jakarta, Indonesia</p>
                 <p className="text-xs text-on-surface-variant font-mono">NIB: 1234567890123</p>
               </div>
               <div>
-                <h4 className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider mb-2">Shipping & Logistics</h4>
-                <p className="text-xs text-on-surface-variant mb-0.5"><span className="font-semibold text-on-surface">Incoterms:</span> CIF Hamburg Port</p>
-                <p className="text-xs text-on-surface-variant mb-0.5"><span className="font-semibold text-on-surface">Expected Delivery:</span> 15 Aug 2026</p>
-                <p className="text-xs text-on-surface-variant"><span className="font-semibold text-on-surface">Payment:</span> 30% DP, 70% LC at Sight</p>
+                <h4 className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider mb-2">Rincian Pengapalan & Logistik</h4>
+                <p className="text-xs text-on-surface-variant mb-0.5"><span className="font-semibold text-on-surface">Syarat Incoterms:</span> CIF Pelabuhan Hamburg</p>
+                <p className="text-xs text-on-surface-variant mb-0.5"><span className="font-semibold text-on-surface">Estimasi Pengiriman:</span> 15 Agustus 2026</p>
+                <p className="text-xs text-on-surface-variant"><span className="font-semibold text-on-surface">Struktur Pembayaran:</span> 30% DP, 70% LC at Sight</p>
               </div>
             </div>
 
@@ -442,29 +442,29 @@ Verification Status: Genuine & Active`
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b-2 border-outline-variant text-xs text-on-surface-variant font-bold uppercase tracking-wider">
-                    <th className="pb-3">Description</th>
-                    <th className="pb-3 text-center">HS Code</th>
-                    <th className="pb-3 text-center">Qty (MT)</th>
-                    <th className="pb-3 text-right">Unit Price</th>
-                    <th className="pb-3 text-right">Total</th>
+                    <th className="pb-3">Deskripsi Produk</th>
+                    <th className="pb-3 text-center">Kode HS</th>
+                    <th className="pb-3 text-center">Volume (MT)</th>
+                    <th className="pb-3 text-right">Harga Satuan</th>
+                    <th className="pb-3 text-right">Total Nilai</th>
                   </tr>
                 </thead>
                 <tbody className="text-sm">
                   <tr className="border-b border-outline-variant/50">
                     <td className="py-4">
-                      <div className="font-bold text-on-surface">Premium Robusta Coffee Beans (Grade 1)</div>
+                      <div className="font-bold text-on-surface">Biji Kopi Robusta Premium (Grade 1)</div>
                     </td>
                     <td className="py-4 text-center text-on-surface-variant font-mono">0901.11</td>
-                    <td className="py-4 text-center text-on-surface font-semibold">18.00</td>
+                    <td className="py-4 text-center text-on-surface font-semibold">18,00</td>
                     <td className="py-4 text-right text-on-surface font-mono">{formatCurrency(agreedPrice * 1000)}</td>
                     <td className="py-4 text-right font-black text-on-surface font-mono">{formatCurrency(itemTotal)}</td>
                   </tr>
                   <tr className="border-b border-outline-variant/50">
                     <td className="py-4">
-                      <div className="font-bold text-on-surface">CIF Logistics & Handling (to Hamburg)</div>
+                      <div className="font-bold text-on-surface">Biaya Penanganan Logistik CIF (ke Hamburg)</div>
                     </td>
                     <td className="py-4 text-center text-on-surface-variant font-mono">-</td>
-                    <td className="py-4 text-center text-on-surface font-semibold">1 FCL</td>
+                    <td className="py-4 text-center text-on-surface font-semibold">1 FCL (20ft)</td>
                     <td className="py-4 text-right text-on-surface font-mono">{formatCurrency(shippingTotal)}</td>
                     <td className="py-4 text-right font-black text-on-surface font-mono">{formatCurrency(shippingTotal)}</td>
                   </tr>
@@ -482,20 +482,20 @@ Verification Status: Genuine & Active`
             {/* Signatures */}
             <div className="grid grid-cols-2 gap-8 mt-8 border-t border-outline-variant pt-8">
               <div className="flex flex-col items-center">
-                <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider mb-8">Authorized Buyer</span>
+                <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider mb-8">Pihak Pembeli (Buyer)</span>
                 <div className="w-48 h-12 border-b border-outline-variant flex items-center justify-center">
-                  <span className="text-xs text-on-surface-variant/40 font-semibold italic">Waiting for signature</span>
+                  <span className="text-xs text-on-surface-variant/40 font-semibold italic">Menunggu tanda tangan</span>
                 </div>
                 <span className="text-xs font-semibold text-on-surface mt-2">Klaus Weber (GlobalTech)</span>
               </div>
               <div className="flex flex-col items-center">
-                <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider mb-8">Authorized Supplier (You)</span>
+                <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider mb-8">Pihak Penjual (Supplier)</span>
                 <div className="w-48 h-12 border-b-2 border-primary border-dashed flex items-end justify-center pb-1">
                   <span className="text-[10px] text-primary/75 font-bold uppercase tracking-widest flex items-center gap-1 animate-pulse">
-                    <span className="material-symbols-outlined text-[14px]">draw</span> Sign on Approval
+                    <span className="material-symbols-outlined text-[14px]">draw</span> Tanda Tangani Persetujuan
                   </span>
                 </div>
-                <span className="text-xs font-semibold text-on-surface mt-2">You (PT Nusantara Coffee)</span>
+                <span className="text-xs font-semibold text-on-surface mt-2">Anda (PT Nusantara Coffee)</span>
               </div>
             </div>
 
@@ -509,7 +509,7 @@ Verification Status: Genuine & Active`
             className="bg-[#070235] text-white shadow-xl px-8 py-4 rounded-xl text-lg font-bold flex items-center gap-3 hover:bg-[#5b598c] hover:-translate-y-1 transition-all active:translate-y-0 shadow-[0_0_20px_rgba(7,2,53,0.25)]"
           >
             <span className="material-symbols-outlined text-[24px]">send_and_archive</span>
-            Approve & Send PO for Buyer Sign
+            Setujui & Kirim PO ke Pembeli
           </button>
         </div>
 

@@ -62,46 +62,46 @@ export default function BuyerDiscoveryPage() {
       id: "globaltech",
       name: "GlobalTech Imports GmbH",
       logo: "G",
-      location: "Frankfurt, Germany",
-      category: "Global Commodities & Foodstuffs",
+      location: "Frankfurt, Jerman",
+      category: "Komoditas Global & Bahan Pangan",
       score: 94,
-      lastShipment: "4 Days Ago",
+      lastShipment: "4 Hari yang Lalu",
       origin: "Indonesia",
-      avgVolume: "18.0 TEU / mo",
+      avgVolume: "18.0 TEU / bulan",
       hsCodes: "0901.11, 0901.21",
-      confidence: "98% Confidence",
-      rationale: "This German B2B importer is actively searching for robusta coffee bean suppliers to Q3 Hamburg port. They have stable container shipment demands (avg 18 TEUs monthly) and match PT Nusantara's capacity perfectly.",
+      confidence: "Tingkat Keyakinan 98%",
+      rationale: "Importir B2B asal Jerman ini sedang aktif mencari pemasok biji kopi robusta untuk pengapalan Kuartal 3 (Q3) ke pelabuhan Hamburg. Mereka memiliki permintaan pengapalan kontainer yang sangat stabil (rata-rata 18 TEU per bulan) dan sangat cocok dengan kapasitas PT Nusantara.",
       details: {
         established: "2008",
-        importRecords: "1,240 successful shipments",
-        preferredPorts: "Port of Hamburg (DEHAM), Port of Bremen (DEBRE)",
+        importRecords: "1.240 pengiriman sukses",
+        preferredPorts: "Pelabuhan Hamburg (DEHAM), Pelabuhan Bremen (DEBRE)",
         certifications: "ISO 9001, Fairtrade Imp., Rainforest Alliance",
-        complianceHistory: "100% Clean Manifest Records (No Customs Holds)",
-        contactPerson: "Klaus Weber (Director of Global Sourcing)",
-        financialScore: "A+ (Dun & Bradstreet Rated)",
+        complianceHistory: "100% Catatan Manifest Bersih (Bebas Hambatan Pabean)",
+        contactPerson: "Klaus Weber (Direktur Pengadaan Global)",
+        financialScore: "A+ (Peringkat Kredit Dun & Bradstreet)",
       }
     },
     {
       id: "eurocafe",
       name: "EuroCafé Logistics Group",
       logo: "E",
-      location: "Hamburg, Germany",
-      category: "Wholesale Distribution",
+      location: "Hamburg, Jerman",
+      category: "Distribusi Grosir",
       score: 82,
-      lastShipment: "45 Days Ago",
-      origin: "Brazil / Vietnam",
-      avgVolume: "12 TEU / mo",
+      lastShipment: "45 Hari yang Lalu",
+      origin: "Brasil / Vietnam",
+      avgVolume: "12 TEU / bulan",
       hsCodes: "0901.21, 1801.00",
-      confidence: "85% Confidence",
-      rationale: "Strong volume match for your capacity. However, bill of lading history shows they primarily source bulk unroasted beans (HS 0901.11) rather than your roasted specification. Proceed with a tailored pitch highlighting your roasting quality.",
+      confidence: "Tingkat Keyakinan 85%",
+      rationale: "Kecocokan volume pengiriman yang kuat dengan kapasitas Anda. Namun, riwayat data bill of lading menunjukkan mereka utamanya mengimpor biji kopi mentah curah (HS 0901.11) dibandingkan spesifikasi kopi panggang Anda. Silakan lanjutkan dengan draf penawaran khusus yang menonjolkan kualitas penyangraian Anda.",
       details: {
         established: "2012",
-        importRecords: "850 successful shipments",
-        preferredPorts: "Port of Hamburg (DEHAM), Port of Rotterdam (NLROT)",
-        certifications: "IFS Broker Certificate, Organic EU Importer",
-        complianceHistory: "Excellent (Minor delays cleared in 2024)",
-        contactPerson: "Dr. Elena Brandt (Head of Supply Chain)",
-        financialScore: "A- Rated",
+        importRecords: "850 pengiriman sukses",
+        preferredPorts: "Pelabuhan Hamburg (DEHAM), Pelabuhan Rotterdam (NLROT)",
+        certifications: "IFS Broker Certificate, Importir Organik Resmi Uni Eropa",
+        complianceHistory: "Sangat Baik (Keterlambatan kecil diselesaikan di 2024)",
+        contactPerson: "Dr. Elena Brandt (Kepala Rantai Pasok)",
+        financialScore: "Peringkat A- Rated",
       }
     }
   ];
@@ -114,19 +114,19 @@ export default function BuyerDiscoveryPage() {
           <div>
             <div className="flex items-center gap-2 mb-2">
               <span className="material-symbols-outlined text-[20px] text-surface-tint">auto_awesome</span>
-              <span className="text-xs font-bold text-surface-tint tracking-widest uppercase">AI Semantic Match Engine</span>
+              <span className="text-xs font-bold text-surface-tint tracking-widest uppercase">Mesin Pencocokan Semantik AI</span>
             </div>
-            <h2 className="text-3xl font-bold text-primary mb-2">Global Buyer Discovery</h2>
-            <p className="text-base text-on-surface-variant max-w-2xl">Analyzing billions of global Bill of Lading records and public manifests to find high-probability importers for your specific MSME catalog.</p>
+            <h2 className="text-3xl font-bold text-primary mb-2">Pencarian Pembeli Global</h2>
+            <p className="text-base text-on-surface-variant max-w-2xl">Menganalisis miliaran data Bill of Lading global dan manifest pabean publik untuk menemukan importir potensial yang paling cocok untuk katalog produk UMKM Anda.</p>
           </div>
           <div className="flex gap-3">
             <button className="px-4 py-2 border border-outline-variant rounded-md bg-surface-container-lowest text-on-surface text-sm font-semibold hover:bg-surface-container-low transition-colors flex items-center gap-2 shadow-sm">
               <span className="material-symbols-outlined text-[18px]">download</span>
-              Export CSV
+              Ekspor CSV
             </button>
             <button className="px-4 py-2 bg-primary text-on-primary rounded-md text-sm font-semibold hover:bg-surface-tint transition-colors flex items-center gap-2 shadow-sm">
               <span className="material-symbols-outlined text-[18px]">add_alert</span>
-              Create Alert
+              Buat Pengingat
             </button>
           </div>
         </div>
@@ -138,42 +138,42 @@ export default function BuyerDiscoveryPage() {
               <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Target HS Code</label>
               <div className="relative">
                 <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">inventory_2</span>
-                <input className="w-full pl-9 pr-3 py-2 bg-surface border border-outline-variant rounded-md text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none" type="text" defaultValue="0901.21 (Roasted Coffee)"/>
+                <input className="w-full pl-9 pr-3 py-2 bg-surface border border-outline-variant rounded-md text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none" type="text" defaultValue="0901.21 (Kopi Panggang)"/>
               </div>
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Destination Market</label>
+              <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Negara Tujuan</label>
               <div className="relative">
                 <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">public</span>
                 <select className="w-full pl-9 pr-8 py-2 bg-surface border border-outline-variant rounded-md text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none appearance-none cursor-pointer">
-                  <option>European Union (EU27)</option>
-                  <option>North America</option>
-                  <option>East Asia</option>
+                  <option>Uni Eropa (EU27)</option>
+                  <option>Amerika Utara</option>
+                  <option>Asia Timur</option>
                 </select>
                 <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none text-[18px]">arrow_drop_down</span>
               </div>
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Min. Monthly Volume</label>
+              <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Volume Minimum Bulanan</label>
               <div className="relative">
                 <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">equalizer</span>
                 <select className="w-full pl-9 pr-8 py-2 bg-surface border border-outline-variant rounded-md text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none appearance-none cursor-pointer">
-                  <option>1 TEU / Month</option>
-                  <option>5+ TEU / Month</option>
-                  <option>LCL Freight Only</option>
+                  <option>1 TEU / Bulan</option>
+                  <option>5+ TEU / Bulan</option>
+                  <option>Hanya Kargo LCL</option>
                 </select>
                 <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none text-[18px]">arrow_drop_down</span>
               </div>
             </div>
-            {/* NEW: Sort dropdown (relevance, score, terbaru) */}
+            {/* Sort dropdown (relevance, score, terbaru) */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Sort By</label>
+              <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Urutkan Berdasarkan</label>
               <div className="relative">
                 <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">sort</span>
                 <select className="w-full pl-9 pr-8 py-2 bg-surface border border-outline-variant rounded-md text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none appearance-none cursor-pointer">
-                  <option>Relevance</option>
-                  <option>Match Score</option>
-                  <option>Terbaru (Latest)</option>
+                  <option>Relevansi</option>
+                  <option>Skor Kecocokan</option>
+                  <option>Terbaru</option>
                 </select>
                 <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none text-[18px]">arrow_drop_down</span>
               </div>
@@ -181,18 +181,18 @@ export default function BuyerDiscoveryPage() {
             <div className="flex items-end">
               <button className="w-full h-[38px] bg-primary text-white rounded-md border border-transparent hover:bg-surface-tint transition-colors text-sm font-bold flex items-center justify-center gap-2 shadow-sm">
                 <span className="material-symbols-outlined text-[18px]">filter_list</span>
-                Apply Filters
+                Terapkan Filter
               </button>
             </div>
           </div>
           <div className="mt-4 pt-4 border-t border-outline-variant flex flex-wrap gap-2">
             <span className="px-3 py-1 bg-surface-container rounded-full text-on-surface-variant text-xs font-semibold flex items-center gap-1.5 border border-outline-variant/50">
-              Semantic Match &gt; 80% <span className="material-symbols-outlined text-[14px] cursor-pointer hover:text-error">close</span>
+              Kecocokan Semantik &gt; 80% <span className="material-symbols-outlined text-[14px] cursor-pointer hover:text-error">close</span>
             </span>
             <span className="px-3 py-1 bg-surface-container rounded-full text-on-surface-variant text-xs font-semibold flex items-center gap-1.5 border border-outline-variant/50">
-              Credibility &gt; 70 <span className="material-symbols-outlined text-[14px] cursor-pointer hover:text-error">close</span>
+              Kredibilitas &gt; 70 <span className="material-symbols-outlined text-[14px] cursor-pointer hover:text-error">close</span>
             </span>
-            <button className="text-primary text-xs font-bold hover:underline ml-2">Clear All</button>
+            <button className="text-primary text-xs font-bold hover:underline ml-2">Bersihkan Semua</button>
           </div>
         </div>
 
@@ -212,18 +212,18 @@ export default function BuyerDiscoveryPage() {
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="text-lg font-bold text-primary">GlobalTech Imports GmbH</h3>
                       <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-[#85f8c4]/30 text-emerald-800 flex items-center gap-1 border border-[#85f8c4]">
-                        <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span> Verified
+                        <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span> Terverifikasi
                       </span>
                     </div>
                     <p className="text-xs text-on-surface-variant flex items-center gap-1.5 font-medium">
-                      <span className="material-symbols-outlined text-[16px]">location_on</span> Frankfurt, Germany
+                      <span className="material-symbols-outlined text-[16px]">location_on</span> Frankfurt, Jerman
                       <span className="text-outline-variant">•</span>
-                      Global Commodities & Foodstuffs
+                      Komoditas Global & Bahan Pangan
                     </p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-[10px] font-bold text-on-surface-variant uppercase mb-1 tracking-wider">Credibility Score</div>
+                  <div className="text-[10px] font-bold text-on-surface-variant uppercase mb-1 tracking-wider">Skor Kredibilitas</div>
                   <div className="text-3xl font-black text-secondary flex items-baseline justify-end gap-0.5 leading-none tracking-tight">
                     94<span className="text-sm text-on-surface-variant font-medium">/100</span>
                   </div>
@@ -233,24 +233,24 @@ export default function BuyerDiscoveryPage() {
               <div className="grid grid-cols-3 divide-x divide-outline-variant border-b border-outline-variant bg-surface">
                 <div className="p-4">
                   <div className="text-[10px] font-bold text-on-surface-variant uppercase mb-2 flex items-center gap-1.5 tracking-wider">
-                    <span className="material-symbols-outlined text-[14px]">calendar_today</span> Last Shipment
+                    <span className="material-symbols-outlined text-[14px]">calendar_today</span> Pengiriman Terakhir
                   </div>
-                  <div className="text-sm font-bold text-on-surface">4 Days Ago</div>
-                  <div className="text-xs text-on-surface-variant mt-1 font-semibold text-secondary">Origin: Indonesia</div>
+                  <div className="text-sm font-bold text-on-surface">4 Hari yang Lalu</div>
+                  <div className="text-xs text-on-surface-variant mt-1 font-semibold text-secondary">Asal: Indonesia</div>
                 </div>
                 <div className="p-4">
                   <div className="text-[10px] font-bold text-on-surface-variant uppercase mb-2 flex items-center gap-1.5 tracking-wider">
-                    <span className="material-symbols-outlined text-[14px]">local_shipping</span> Avg. Volume
+                    <span className="material-symbols-outlined text-[14px]">local_shipping</span> Rata-rata Volume
                   </div>
-                  <div className="text-sm font-bold text-on-surface">18.0 TEU / mo</div>
-                  <div className="text-xs text-on-surface-variant mt-1">High demand</div>
+                  <div className="text-sm font-bold text-on-surface">18.0 TEU / bln</div>
+                  <div className="text-xs text-on-surface-variant mt-1">Permintaan tinggi</div>
                 </div>
                 <div className="p-4">
                   <div className="text-[10px] font-bold text-on-surface-variant uppercase mb-2 flex items-center gap-1.5 tracking-wider">
-                    <span className="material-symbols-outlined text-[14px]">category</span> Top HS Codes
+                    <span className="material-symbols-outlined text-[14px]">category</span> Top HS Code
                   </div>
                   <div className="text-sm font-bold text-on-surface">0901.11, 0901.21</div>
-                  <div className="text-xs text-on-surface-variant mt-1">Direct Match</div>
+                  <div className="text-xs text-on-surface-variant mt-1">Sesuai Katalog</div>
                 </div>
               </div>
               
@@ -258,9 +258,9 @@ export default function BuyerDiscoveryPage() {
                 <div className="bg-surface-container-low border-l-4 border-surface-tint p-4 rounded-r-lg flex gap-3 shadow-inner">
                   <span className="material-symbols-outlined text-surface-tint mt-0.5 text-[20px]">auto_awesome</span>
                   <div>
-                    <h4 className="text-sm font-bold text-on-surface mb-1">AI Match Rationale: 98% Confidence</h4>
+                    <h4 className="text-sm font-bold text-on-surface mb-1">Analisis Pencocokan AI: Keyakinan 98%</h4>
                     <p className="text-xs text-on-surface-variant leading-relaxed">
-                      This German B2B importer is actively searching for robusta coffee bean suppliers to Q3 Hamburg port. They have stable container shipment demands (avg 18 TEUs monthly) and match PT Nusantara's capacity perfectly.
+                      Importir B2B asal Jerman ini sedang aktif mencari pemasok biji kopi robusta untuk pengapalan Kuartal 3 (Q3) ke pelabuhan Hamburg. Mereka memiliki permintaan pengapalan kontainer yang sangat stabil (rata-rata 18 TEU per bulan) dan sangat cocok dengan kapasitas PT Nusantara.
                     </p>
                   </div>
                 </div>
@@ -271,11 +271,11 @@ export default function BuyerDiscoveryPage() {
                   onClick={() => setSelectedBuyer(buyers[0])}
                   className="px-4 py-2 border border-outline-variant rounded-md text-on-surface text-sm font-bold hover:bg-surface-container-low transition-colors shadow-sm"
                 >
-                  View Full Profile
+                  Lihat Profil Lengkap
                 </button>
                 <button onClick={() => { setIsPitching(true); setPitchStep(1); }} className="px-4 py-2 bg-primary text-on-primary rounded-md text-sm font-bold hover:bg-surface-tint transition-colors flex items-center gap-2 shadow-sm">
                   <span className="material-symbols-outlined text-[18px]">send</span>
-                  Generate Intro Pitch
+                  Buat Email Penawaran AI
                 </button>
               </div>
             </div>
@@ -292,14 +292,14 @@ export default function BuyerDiscoveryPage() {
                       <h3 className="text-lg font-bold text-primary">EuroCafé Logistics Group</h3>
                     </div>
                     <p className="text-xs text-on-surface-variant flex items-center gap-1.5 font-medium">
-                      <span className="material-symbols-outlined text-[16px]">location_on</span> Hamburg, Germany
+                      <span className="material-symbols-outlined text-[16px]">location_on</span> Hamburg, Jerman
                       <span className="text-outline-variant">•</span>
-                      Wholesale Distribution
+                      Distribusi Grosir
                     </p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-[10px] font-bold text-on-surface-variant uppercase mb-1 tracking-wider">Credibility Score</div>
+                  <div className="text-[10px] font-bold text-on-surface-variant uppercase mb-1 tracking-wider">Skor Kredibilitas</div>
                   <div className="text-3xl font-black text-on-surface flex items-baseline justify-end gap-0.5 leading-none tracking-tight">
                     82<span className="text-sm text-on-surface-variant font-medium">/100</span>
                   </div>
@@ -309,26 +309,26 @@ export default function BuyerDiscoveryPage() {
               <div className="grid grid-cols-3 divide-x divide-outline-variant border-b border-outline-variant bg-surface">
                 <div className="p-4">
                   <div className="text-[10px] font-bold text-on-surface-variant uppercase mb-2 flex items-center gap-1.5 tracking-wider">
-                    <span className="material-symbols-outlined text-[14px]">calendar_today</span> Last Shipment
+                    <span className="material-symbols-outlined text-[14px]">calendar_today</span> Pengiriman Terakhir
                   </div>
-                  <div className="text-sm font-bold text-on-surface">45 Days Ago</div>
+                  <div className="text-sm font-bold text-on-surface">45 Hari yang Lalu</div>
                   <div className="text-xs text-error flex items-center gap-1 mt-1 font-semibold">
-                    <span className="material-symbols-outlined text-[14px]">warning</span> Irregular
+                    <span className="material-symbols-outlined text-[14px]">warning</span> Tidak Teratur
                   </div>
                 </div>
                 <div className="p-4">
                   <div className="text-[10px] font-bold text-on-surface-variant uppercase mb-2 flex items-center gap-1.5 tracking-wider">
-                    <span className="material-symbols-outlined text-[14px]">local_shipping</span> Avg. Volume
+                    <span className="material-symbols-outlined text-[14px]">local_shipping</span> Rata-rata Volume
                   </div>
-                  <div className="text-sm font-bold text-on-surface">12 TEU / mo</div>
-                  <div className="text-xs text-on-surface-variant mt-1">High capacity</div>
+                  <div className="text-sm font-bold text-on-surface">12.0 TEU / bln</div>
+                  <div className="text-xs text-on-surface-variant mt-1">Kapasitas tinggi</div>
                 </div>
                 <div className="p-4">
                   <div className="text-[10px] font-bold text-on-surface-variant uppercase mb-2 flex items-center gap-1.5 tracking-wider">
-                    <span className="material-symbols-outlined text-[14px]">category</span> Top HS Codes
+                    <span className="material-symbols-outlined text-[14px]">category</span> Top HS Code
                   </div>
                   <div className="text-sm font-bold text-on-surface">0901.21, 1801.00</div>
-                  <div className="text-xs text-on-surface-variant mt-1">Mixed commodities</div>
+                  <div className="text-xs text-on-surface-variant mt-1">Komoditas Campuran</div>
                 </div>
               </div>
               
@@ -336,9 +336,9 @@ export default function BuyerDiscoveryPage() {
                 <div className="bg-surface-container-low border-l-4 border-surface-tint p-4 rounded-r-lg flex gap-3 shadow-inner">
                   <span className="material-symbols-outlined text-surface-tint mt-0.5 text-[20px]">auto_awesome</span>
                   <div>
-                    <h4 className="text-sm font-bold text-on-surface mb-1">AI Match Rationale: 85% Confidence</h4>
+                    <h4 className="text-sm font-bold text-on-surface mb-1">Analisis Pencocokan AI: Keyakinan 85%</h4>
                     <p className="text-xs text-on-surface-variant leading-relaxed">
-                      Strong volume match for your capacity. However, bill of lading history shows they primarily source bulk unroasted beans (HS 0901.11) rather than your roasted specification. Proceed with a tailored pitch highlighting your roasting quality.
+                      Kecocokan volume pengiriman yang kuat dengan kapasitas Anda. Namun, riwayat data bill of lading menunjukkan mereka utamanya mengimpor biji kopi mentah curah (HS 0901.11) dibandingkan spesifikasi kopi panggang Anda. Silakan lanjutkan dengan draf penawaran khusus yang menonjolkan kualitas penyangraian Anda.
                     </p>
                   </div>
                 </div>
@@ -349,11 +349,11 @@ export default function BuyerDiscoveryPage() {
                   onClick={() => setSelectedBuyer(buyers[1])}
                   className="px-4 py-2 border border-outline-variant rounded-md text-on-surface text-sm font-bold hover:bg-surface-container-low transition-colors shadow-sm"
                 >
-                  View Full Profile
+                  Lihat Profil Lengkap
                 </button>
-                <button onClick={() => { setIsPitching(true); setPitchStep(1); }} className="px-4 py-2 bg-primary text-on-primary rounded-md text-sm font-bold hover:bg-surface-tint transition-colors flex items-center gap-2 shadow-sm">
+                <button onClick={() => router.push('/negotiation')} className="px-4 py-2 bg-primary text-on-primary rounded-md text-sm font-bold hover:bg-surface-tint transition-colors flex items-center gap-2 shadow-sm">
                   <span className="material-symbols-outlined text-[18px]">send</span>
-                  Generate Intro Pitch
+                  Buat Email Penawaran AI
                 </button>
               </div>
             </div>
@@ -365,7 +365,7 @@ export default function BuyerDiscoveryPage() {
             <div className="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
               <div className="p-4 border-b border-outline-variant bg-surface-container-lowest flex items-center gap-2">
                 <span className="material-symbols-outlined text-on-surface-variant text-[20px]">travel_explore</span>
-                <h3 className="text-base font-bold text-on-surface">Demand Heatmap</h3>
+                <h3 className="text-base font-bold text-on-surface">Peta Panas Permintaan</h3>
               </div>
               <div className="h-48 relative group flex items-center justify-center bg-[#dff3f0]">
                  <div className="absolute inset-0 opacity-80" style={{
@@ -376,13 +376,13 @@ export default function BuyerDiscoveryPage() {
               </div>
               <div className="p-4 bg-surface-container-lowest">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm text-on-surface-variant font-medium">Top Region (HS 0901.21)</span>
-                  <span className="text-sm text-primary font-bold">EU27</span>
+                  <span className="text-sm text-on-surface-variant font-medium">Wilayah Teratas (HS 0901.21)</span>
+                  <span className="text-sm text-primary font-bold">Uni Eropa</span>
                 </div>
                 <div className="w-full bg-surface-variant rounded-full h-1.5 mb-3">
                   <div className="bg-primary h-1.5 rounded-full" style={{ width: "65%" }}></div>
                 </div>
-                <p className="text-xs text-on-surface-variant">EU import volume up 4.2% YoY based on Q3 manifest data.</p>
+                <p className="text-xs text-on-surface-variant">Volume impor Uni Eropa naik 4,2% YoY berdasarkan data pabean manifest Q3.</p>
               </div>
             </div>
 
@@ -390,20 +390,20 @@ export default function BuyerDiscoveryPage() {
             <div className="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
               <div className="p-4 border-b border-outline-variant bg-surface-container-lowest flex items-center gap-2">
                 <span className="material-symbols-outlined text-on-surface-variant text-[20px]">troubleshoot</span>
-                <h3 className="text-base font-bold text-on-surface">Search Diagnostics</h3>
+                <h3 className="text-base font-bold text-on-surface">Diagnostik Pencarian</h3>
               </div>
               <div className="p-0 divide-y divide-outline-variant">
                 <div className="flex justify-between items-center p-4 bg-surface-container-lowest">
-                  <span className="text-sm text-on-surface-variant font-medium">Total Records Scanned</span>
-                  <span className="text-sm text-on-surface font-bold">1.2M+</span>
+                  <span className="text-sm text-on-surface-variant font-medium">Total Rekaman Dipindai</span>
+                  <span className="text-sm text-on-surface font-bold">1,2M+</span>
                 </div>
                 <div className="flex justify-between items-center p-4 bg-surface-container-lowest">
-                  <span className="text-sm text-on-surface-variant font-medium">Active Buyers (30d)</span>
+                  <span className="text-sm text-on-surface-variant font-medium">Pembeli Aktif (30 hari terakhir)</span>
                   <span className="text-sm text-on-surface font-bold">342</span>
                 </div>
                 <div className="flex justify-between items-center p-4 bg-surface-container-lowest">
-                  <span className="text-sm text-on-surface-variant font-medium">High-Probability Matches</span>
-                  <span className="text-sm text-secondary font-black">14</span>
+                  <span className="text-sm text-on-surface-variant font-medium">Kecocokan Probabilitas Tinggi</span>
+                  <span className="text-sm text-secondary font-black">14 Buyer</span>
                 </div>
               </div>
             </div>
@@ -413,10 +413,10 @@ export default function BuyerDiscoveryPage() {
               <div className="flex items-start gap-3">
                 <span className="material-symbols-outlined text-error text-[20px]">gavel</span>
                 <div>
-                  <h4 className="text-sm font-bold text-on-surface mb-1">EU Deforestation Reg (EUDR)</h4>
-                  <p className="text-xs text-on-surface-variant mb-2 leading-relaxed">Ensure your geolocation coordinates for coffee plots are updated before pitching to EU buyers. Strict compliance required.</p>
+                  <h4 className="text-sm font-bold text-on-surface mb-1">Regulasi Deforestasi UE (EUDR)</h4>
+                  <p className="text-xs text-on-surface-variant mb-2 leading-relaxed">Pastikan koordinat geolokasi (GPS) untuk lahan kopi Anda telah diperbarui sebelum menawarkan produk ke pembeli Eropa. Kepatuhan hukum sangat ketat.</p>
                   <button className="text-[11px] font-bold text-primary hover:underline flex items-center gap-1 uppercase tracking-wider">
-                    Update Coordinates <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+                    Perbarui Koordinat <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
                   </button>
                 </div>
               </div>
@@ -426,7 +426,7 @@ export default function BuyerDiscoveryPage() {
 
         {/* Pagination */}
         <div className="mt-8 pt-4 border-t border-outline-variant flex justify-between items-center text-on-surface-variant">
-          <span className="text-xs font-semibold tracking-wide">Showing 1-2 of 14 matches</span>
+          <span className="text-xs font-semibold tracking-wide">Menampilkan 1-2 dari 14 hasil cocok</span>
           <div className="flex gap-1.5">
             <button className="w-8 h-8 flex items-center justify-center border border-outline-variant rounded hover:bg-surface-container-low transition-colors disabled:opacity-50 shadow-sm"><span className="material-symbols-outlined text-[18px]">chevron_left</span></button>
             <button className="w-8 h-8 flex items-center justify-center border border-primary bg-primary text-on-primary rounded text-xs font-bold shadow-sm">1</button>
@@ -464,11 +464,11 @@ export default function BuyerDiscoveryPage() {
                 {/* Score Widget */}
                 <div className="grid grid-cols-2 gap-4 bg-surface p-4 rounded-xl border border-outline-variant shadow-sm shrink-0">
                   <div>
-                    <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider block mb-1">Verified Credibility Score</span>
+                    <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider block mb-1">Skor Kredibilitas Terverifikasi</span>
                     <span className="text-3xl font-black text-secondary">{selectedBuyer.score}<span className="text-sm font-medium text-on-surface-variant">/100</span></span>
                   </div>
                   <div>
-                    <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider block mb-1">Financial Rating</span>
+                    <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider block mb-1">Peringkat Finansial</span>
                     <span className="text-3xl font-black text-primary">{selectedBuyer.details.financialScore}</span>
                   </div>
                 </div>
@@ -476,27 +476,27 @@ export default function BuyerDiscoveryPage() {
                 {/* Import History */}
                 <div>
                   <h4 className="text-xs font-bold text-primary uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-[18px]">history</span> Import History & Manifest Records
+                    <span className="material-symbols-outlined text-[18px]">history</span> Riwayat Impor & Catatan Manifest
                   </h4>
                   <div className="bg-surface-container-low/50 border border-outline-variant rounded-lg p-4 space-y-2 text-xs font-medium">
                     <div className="flex justify-between border-b border-outline-variant/40 pb-2">
-                      <span>Company Established</span>
+                      <span>Perusahaan Didirikan</span>
                       <span className="text-on-surface font-bold">{selectedBuyer.details.established}</span>
                     </div>
                     <div className="flex justify-between border-b border-outline-variant/40 pb-2">
-                      <span>Total Shipments Recorded</span>
+                      <span>Total Pengiriman Sukses</span>
                       <span className="text-on-surface font-bold">{selectedBuyer.details.importRecords}</span>
                     </div>
                     <div className="flex justify-between border-b border-outline-variant/40 pb-2">
-                      <span>Average Monthly Volume</span>
+                      <span>Rata-rata Volume Bulanan</span>
                       <span className="text-on-surface font-bold">{selectedBuyer.avgVolume}</span>
                     </div>
                     <div className="flex justify-between border-b border-outline-variant/40 pb-2">
-                      <span>Destination Ports</span>
+                      <span>Pelabuhan Tujuan</span>
                       <span className="text-on-surface font-bold">{selectedBuyer.details.preferredPorts}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Top Target Commodities</span>
+                      <span>Komoditas Target Utama</span>
                       <span className="font-mono text-primary font-bold">{selectedBuyer.hsCodes}</span>
                     </div>
                   </div>
@@ -505,15 +505,15 @@ export default function BuyerDiscoveryPage() {
                 {/* Compliance & Standards */}
                 <div>
                   <h4 className="text-xs font-bold text-primary uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-[18px]">workspace_premium</span> Global Compliance & Certifications
+                    <span className="material-symbols-outlined text-[18px]">workspace_premium</span> Kepatuhan Global & Sertifikasi
                   </h4>
                   <div className="bg-surface-container-low/50 border border-outline-variant rounded-lg p-4 space-y-2 text-xs font-medium">
                     <div className="flex justify-between border-b border-outline-variant/40 pb-2">
-                      <span>Active Certifications</span>
+                      <span>Sertifikasi Aktif</span>
                       <span className="text-on-surface font-bold">{selectedBuyer.details.certifications}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Customs & Compliance Track</span>
+                      <span>Riwayat Pabean & Kepatuhan</span>
                       <span className="text-emerald-700 font-bold flex items-center gap-1">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> {selectedBuyer.details.complianceHistory}
                       </span>
@@ -524,7 +524,7 @@ export default function BuyerDiscoveryPage() {
                 {/* AI Recommendation Context */}
                 <div>
                   <h4 className="text-xs font-bold text-primary uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-[18px]">auto_awesome</span> TradeConnect Match Analysis
+                    <span className="material-symbols-outlined text-[18px]">auto_awesome</span> Analisis Kecocokan TradeConnect
                   </h4>
                   <div className="bg-[#85f8c4]/10 border-l-4 border-secondary p-4 rounded-r-xl">
                     <p className="text-xs text-on-surface-variant font-medium leading-relaxed italic">
@@ -579,7 +579,7 @@ export default function BuyerDiscoveryPage() {
                   <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${pitchStep >= 2 ? 'bg-secondary text-on-secondary border-none' : 'bg-surface-variant animate-pulse text-on-surface-variant'}`}>
                     {pitchStep >= 2 ? '✓' : '1'}
                   </div>
-                  <span className={`text-xs font-semibold ${pitchStep >= 1 ? 'text-on-surface' : 'text-on-surface-variant'}`}>Analyzing catalog and legal compliance score</span>
+                  <span className={`text-xs font-semibold ${pitchStep >= 1 ? 'text-on-surface' : 'text-on-surface-variant'}`}>Menganalisis kecocokan katalog dan kepatuhan hukum kebun</span>
                 </div>
 
                 {/* Step 2 */}
@@ -587,7 +587,7 @@ export default function BuyerDiscoveryPage() {
                   <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${pitchStep >= 3 ? 'bg-secondary text-on-secondary border-none' : 'bg-surface-variant animate-pulse text-on-surface-variant'}`}>
                     {pitchStep >= 3 ? '✓' : '2'}
                   </div>
-                  <span className={`text-xs font-semibold ${pitchStep >= 2 ? 'text-on-surface' : 'text-on-surface-variant'}`}>Semantic matching with GlobalTech import manifests</span>
+                  <span className={`text-xs font-semibold ${pitchStep >= 2 ? 'text-on-surface' : 'text-on-surface-variant'}`}>Mencocokkan manifest impor pabean GlobalTech</span>
                 </div>
 
                 {/* Step 3 */}
@@ -595,14 +595,14 @@ export default function BuyerDiscoveryPage() {
                   <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${pitchStep >= 4 ? 'bg-secondary text-on-secondary border-none' : 'bg-surface-variant animate-pulse text-on-surface-variant'}`}>
                     {pitchStep >= 4 ? '✓' : '3'}
                   </div>
-                  <span className={`text-xs font-semibold ${pitchStep >= 3 ? 'text-on-surface' : 'text-on-surface-variant'}`}>Drafting professional B2B intro pitch in English</span>
+                  <span className={`text-xs font-semibold ${pitchStep >= 3 ? 'text-on-surface' : 'text-on-surface-variant'}`}>Menyusun surat penawaran B2B formal dalam Bahasa Inggris</span>
                 </div>
 
                 {/* Step 3.5: Preview of the drafted email */}
                 {pitchStep === 3 && (
                   <div className="bg-surface border border-outline-variant p-3.5 rounded-lg text-[10px] font-mono text-on-surface-variant shadow-inner max-h-24 overflow-y-auto animate-in slide-in-from-top-2 duration-300 w-full text-left">
-                    <span className="text-primary font-bold">Subject:</span> B2B Introduction: Premium Robusta Coffee Beans Grade 1<br/>
-                    <span className="text-primary font-bold">To:</span> klaus.weber@globaltech.de<br/>
+                    <span className="text-primary font-bold">Subjek:</span> Perkenalan B2B: Biji Kopi Robusta Premium Grade 1<br/>
+                    <span className="text-primary font-bold">Kpd:</span> klaus.weber@globaltech.de<br/>
                     <span className="text-slate-400">---</span><br/>
                     Dear Mr. Weber,<br/>
                     PT Nusantara Coffee offers Premium Grade 1 Robusta Coffee Beans (HS 0901.11) with moisture content below 12.5%. Our monthly production capacity is 50,000 Units and NIB is fully verified...
@@ -614,7 +614,7 @@ export default function BuyerDiscoveryPage() {
                   <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${pitchStep >= 5 ? 'bg-secondary text-on-secondary border-none' : 'bg-surface-variant animate-pulse text-on-surface-variant'}`}>
                     {pitchStep >= 5 ? '✓' : '4'}
                   </div>
-                  <span className={`text-xs font-semibold ${pitchStep >= 4 ? 'text-on-surface' : 'text-on-surface-variant'}`}>Sending secure outbound email to Klaus Weber</span>
+                  <span className={`text-xs font-semibold ${pitchStep >= 4 ? 'text-on-surface' : 'text-on-surface-variant'}`}>Mengirim email penawaran aman ke Klaus Weber</span>
                 </div>
               </div>
 
