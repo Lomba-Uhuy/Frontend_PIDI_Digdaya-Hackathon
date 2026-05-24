@@ -200,8 +200,8 @@ export default function NegotiationHubPage() {
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-lg font-semibold text-on-surface">GlobalTech Imports GmbH</h2>
-                <span className="flex items-center gap-1 bg-surface-container-high px-2 py-0.5 rounded text-[10px] font-bold text-on-surface-variant uppercase">
-                  <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span> Aktif
+                <span className="flex items-center gap-1 bg-primary-container/10 px-2 py-0.5 rounded text-[10px] font-bold text-primary uppercase border border-primary/20">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span> Terhubung via Email
                 </span>
               </div>
               <p className="text-sm text-on-surface-variant">Frankfurt, Jerman • UID: DE123456789</p>
@@ -215,12 +215,6 @@ export default function NegotiationHubPage() {
               >
                 <span className="material-symbols-outlined text-[16px]">menu_open</span>
                 Buka Asisten Mentor AI
-              </button>
-            )}
-            {(currentStep === "compliance" || getStep() === "po_sent" || getStep() === "po_signed") && (
-              <button onClick={() => router.push('/compliance')} className="bg-[#070235] text-[#85f8c4] px-4 py-2 rounded-lg flex items-center gap-1.5 hover:bg-surface-tint hover:text-white transition-colors shadow-md animate-pulse">
-                <span className="material-symbols-outlined text-[18px]">fact_check</span>
-                <span className="text-[10px] font-bold uppercase tracking-wider">Lanjutkan ke Deal Readiness</span>
               </button>
             )}
             <div className="bg-tertiary-container text-on-tertiary-container px-3 py-1.5 rounded-full flex items-center gap-1 border border-tertiary-fixed-dim">
@@ -274,12 +268,12 @@ export default function NegotiationHubPage() {
           {/* Typing Indicator (Loading State) */}
           {isTyping && (
             <div className="flex flex-col gap-1 max-w-2xl self-start">
-              <span className="text-[10px] font-bold uppercase text-on-surface-variant ml-1">Klaus Weber • GlobalTech</span>
+              <span className="text-[10px] font-bold uppercase text-on-surface-variant ml-1">Koneksi Email • TradeConnect Gateway</span>
               <div className="bg-surface-container-lowest border border-outline-variant p-4 rounded-xl shadow-sm rounded-tl-sm flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce"></span>
                 <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce [animation-delay:0.2s]"></span>
                 <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce [animation-delay:0.4s]"></span>
-                <span className="text-xs text-on-surface-variant ml-2 font-medium">Klaus Weber sedang menulis email balasan...</span>
+                <span className="text-xs text-on-surface-variant ml-2 font-medium">AI sedang mengunduh & menerjemahkan email baru dari Klaus Weber...</span>
               </div>
             </div>
           )}
