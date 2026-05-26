@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getStep, setStep as setJourneyStep, setFinalPrice } from "../../../lib/state";
 import { ChatMessage } from "../../../types";
+import { classifyIntent, generateReply, calculatePrice, DraftReply } from "../../../lib/api";
 
 export default function NegotiationHubPage() {
   const router = useRouter();
@@ -16,9 +17,76 @@ export default function NegotiationHubPage() {
   const [mentorWidth, setMentorWidth] = useState(380);
   const [isResizing, setIsResizing] = useState(false);
 
-  // States for Hiding Draft Suggestions dynamically on Reject
-  const [hideDraft1, setHideDraft1] = useState(false);
-  const [hideDraft2, setHideDraft2] = useState(false);
+  // States for Decoupled Mock Services
+  const [activeBuyerId, setActiveBuyerId] = useState("klaus");
+  const [activeIntent, setActiveIntent] = useState<"inquiry" | "negotiation" | "complaint">("negotiation");
+  const [intentConfidence, setIntentConfidence] = useState(0.95);
+  const [drafts, setDrafts] = useState<DraftReply[]>([]);
+  const [isDraftGenerating, setIsDraftGenerating] = useState(false);
+
+  // States for Mini Export Price Calculator
+  const [hpp, setHpp] = useState(2.00);
+  const [margin, setMargin] = useState(15);
+  const [localHandling, setLocalHandling] = useState(0.15);
+  const [freight, setFreight] = useState(0.20);
+  const [insurance, setInsurance] = useState(0.10);
+
+  // Mock list of buyers for left panel
+  const buyers = [
+    {
+      id: "klaus",
+      name: "Klaus Weber",
+      company: "GlobalTech Imports GmbH",
+      country: "Jerman",
+      flag: "🇩🇪",
+      product: "Biji Kopi Robusta Premium",
+      lastMessage: klausRepliedCount === 1 
+        ? "Silakan buat Purchase Order resmi di sistem..." 
+        : "Kami sangat tertarik untuk memesan satu kontainer...",
+      time: "09:42",
+      unread: false,
+      status: "Aktif"
+    },
+    {
+      id: "indoeuro",
+      name: "Jan de Jong",
+      company: "IndoEuro Trading Ltd",
+      country: "Belanda",
+      flag: "🇳🇱",
+      product: "Kerajinan Bambu Artistik",
+      lastMessage: "Kontrak ditandatangani, terima kasih banyak!",
+      time: "25 Mei",
+      unread: false,
+      status: "Selesai"
+    },
+    {
+      id: "aseanfood",
+      name: "Lim Shen",
+      company: "Asean Food Products",
+      country: "Singapura",
+      flag: "🇸🇬",
+      product: "Keripik Tempe Aneka Rasa",
+      lastMessage: "Pembayaran tahap pertama berhasil diproses.",
+      time: "24 Mei",
+      unread: false,
+      status: "Selesai"
+    },
+    {
+      id: "nippon",
+      name: "Kenji Sato",
+      company: "Nippon Organic Foods",
+      country: "Jepang",
+      flag: "🇯🇵",
+      product: "Teh Hijau Matcha Organik",
+      lastMessage: "Mohon kirimkan sertifikasi bebas pestisida Anda.",
+      time: "23 Mei",
+      unread: true,
+      status: "Menunggu"
+    }
+  ];
+
+  // Derived Export pricing calculations
+  const pricing = calculatePrice(hpp, margin, localHandling, freight, insurance);
 
   const startResizing = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -31,10 +99,8 @@ export default function NegotiationHubPage() {
     const handleMouseMove = (e: MouseEvent) => {
       const newWidth = window.innerWidth - e.clientX;
       if (newWidth < 150) {
-        // Collapse completely if dragged very close to the right edge
         setMentorWidth(0);
       } else if (newWidth > 600) {
-        // Limit max width
         setMentorWidth(600);
       } else {
         setMentorWidth(newWidth);
@@ -45,7 +111,6 @@ export default function NegotiationHubPage() {
       setIsResizing(false);
     };
 
-    // Apply global cursor and user-select rules during resize to prevent flickering
     document.body.style.cursor = "col-resize";
     document.body.style.userSelect = "none";
 
@@ -60,10 +125,30 @@ export default function NegotiationHubPage() {
     };
   }, [isResizing]);
 
+  // Hooking /generate-reply and /classify-intent simulation
+  const fetchDraftsAndIntent = async (text: string) => {
+    setIsDraftGenerating(true);
+    try {
+      const intentRes = await classifyIntent(text);
+      setActiveIntent(intentRes.intent);
+      setIntentConfidence(intentRes.confidence);
+
+      // Floor price checks based on calculated CIF
+      const replyRes = await generateReply(text, "Biji Kopi Robusta Premium", pricing.cif);
+      setDrafts(replyRes.drafts);
+    } catch (err) {
+      console.error("Failed to generate drafts & intents:", err);
+    } finally {
+      setIsDraftGenerating(false);
+    }
+  };
+
   // Sync state on mount
   useEffect(() => {
     const step = getStep();
     setCurrentStep(step);
+
+    const buyerIntroText = `Kepada Rekan Pemasok TradeConnect,\n\nKami telah meninjau katalog awal Anda untuk biji kopi robusta. Kami sangat tertarik untuk memesan satu kontainer uji coba (sekitar 18 metrik ton) untuk pengiriman Kuartal 3 (Q3) ke pelabuhan Hamburg.\n\nNamun, harga CIF yang Anda tawarkan saat ini adalah $2,85/kg. Mengingat fluktuasi pasar saat ini dan demi membangun kemitraan jangka panjang, kami mengajukan revisi penawaran harga sebesar $2,50/kg. Mohon beri saran mengenai kelayakan harga tersebut dan berikan proforma invoice terbaru jika Anda setuju.`;
 
     if (step === "contacted_klaus") {
       setIsTyping(true);
@@ -72,12 +157,13 @@ export default function NegotiationHubPage() {
         setMessages([
           {
             sender: "buyer",
-            text: `Kepada Rekan Pemasok TradeConnect,\n\nKami telah meninjau katalog awal Anda untuk biji kopi robusta. Kami sangat tertarik untuk memesan satu kontainer uji coba (sekitar 18 metrik ton) untuk pengiriman Kuartal 3 (Q3) ke pelabuhan Hamburg.\n\nNamun, harga CIF yang Anda tawarkan saat ini adalah $2,85/kg. Mengingat fluktuasi pasar saat ini dan demi membangun kemitraan jangka panjang, kami mengajukan revisi penawaran harga sebesar $2,50/kg. Mohon beri saran mengenai kelayakan harga tersebut dan berikan proforma invoice terbaru jika Anda setuju.`,
+            text: buyerIntroText,
             time: "09:42",
           }
         ]);
         setJourneyStep("negotiating");
         setCurrentStep("negotiating");
+        fetchDraftsAndIntent(buyerIntroText);
       }, 2000);
       return () => clearTimeout(timer);
     } else if (step !== "onboarding" && step !== "verified") {
@@ -85,10 +171,11 @@ export default function NegotiationHubPage() {
       setMessages([
         {
           sender: "buyer",
-          text: `Kepada Rekan Pemasok TradeConnect,\n\nKami telah meninjau katalog awal Anda untuk biji kopi robusta. Kami sangat tertarik untuk memesan satu kontainer uji coba (sekitar 18 metrik ton) untuk pengiriman Kuartal 3 (Q3) ke pelabuhan Hamburg.\n\nNamun, harga CIF yang Anda tawarkan saat ini adalah $2,85/kg. Mengingat fluktuasi pasar saat ini dan demi membangun kemitraan jangka panjang, kami mengajukan revisi penawaran harga sebesar $2,50/kg. Mohon beri saran mengenai kelayakan harga tersebut dan berikan proforma invoice terbaru jika Anda setuju.`,
+          text: buyerIntroText,
           time: "09:42",
         }
       ]);
+      fetchDraftsAndIntent(buyerIntroText);
     }
   }, []);
 
@@ -111,13 +198,14 @@ export default function NegotiationHubPage() {
     // Simulate Klaus's final reply
     if (klausRepliedCount === 0) {
       setIsTyping(true);
-      setTimeout(() => {
+      setTimeout(async () => {
         setIsTyping(false);
+        const buyerMsg = `Terima kasih atas tanggapan Anda dan proposal jalan tengah yang sangat wajar. Kami menghargai reputasi kualitas PT Nusantara dan setuju untuk menutup kesepakatan di harga $2,75/kg CIF Pelabuhan Hamburg dengan struktur pembayaran 30% DP dan 70% LC sesuai usulan Anda.\n\nSilakan buat Purchase Order resmi di sistem agar kita dapat segera melakukan penandatanganan dokumen dan pemeriksaan kepatuhan hukum ekspor.`;
         setMessages([
           ...newMsgs,
           {
             sender: "buyer",
-            text: `Terima kasih atas tanggapan Anda dan proposal jalan tengah yang sangat wajar. Kami menghargai reputasi kualitas PT Nusantara dan setuju untuk menutup kesepakatan di harga $2,75/kg CIF Pelabuhan Hamburg dengan struktur pembayaran 30% DP dan 70% LC sesuai usulan Anda.\n\nSilakan buat Purchase Order resmi di sistem agar kita dapat segera melakukan penandatanganan dokumen dan pemeriksaan kepatuhan hukum ekspor.`,
+            text: buyerMsg,
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           }
         ]);
@@ -125,6 +213,9 @@ export default function NegotiationHubPage() {
         setJourneyStep("compliance");
         setCurrentStep("compliance");
         setKlausRepliedCount(1);
+        
+        // Dynamic fetch of drafts and intents for this new incoming message
+        fetchDraftsAndIntent(buyerMsg);
       }, 2500);
     }
   };
@@ -143,25 +234,50 @@ export default function NegotiationHubPage() {
     setMessages(newMsgs);
     setInputValue("");
 
-    // Simulate Klaus's final reply
-    if (klausRepliedCount === 0) {
-      setIsTyping(true);
-      setTimeout(() => {
-        setIsTyping(false);
-        setMessages([
-          ...newMsgs,
-          {
-            sender: "buyer",
-            text: `Terima kasih atas tanggapan Anda dan proposal jalan tengah yang sangat wajar. Kami menghargai reputasi kualitas PT Nusantara dan setuju untuk menutup kesepakatan di harga $2,75/kg CIF Pelabuhan Hamburg dengan struktur pembayaran 30% DP dan 70% LC sesuai usulan Anda.\n\nSilakan buat Purchase Order resmi di sistem agar kita dapat segera melakukan penandatanganan dokumen dan pemeriksaan kepatuhan hukum ekspor.`,
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    // Classify intent for high-fidelity responses
+    classifyIntent(userMsg).then((res) => {
+      if (klausRepliedCount === 0) {
+        setIsTyping(true);
+        setTimeout(async () => {
+          setIsTyping(false);
+          const buyerMsg = `Terima kasih atas tanggapan Anda dan proposal jalan tengah yang sangat wajar. Kami menghargai reputasi kualitas PT Nusantara dan setuju untuk menutup kesepakatan di harga $2,75/kg CIF Pelabuhan Hamburg dengan struktur pembayaran 30% DP dan 70% LC sesuai usulan Anda.\n\nSilakan buat Purchase Order resmi di sistem agar kita dapat segera melakukan penandatanganan dokumen dan pemeriksaan kepatuhan hukum ekspor.`;
+          setMessages([
+            ...newMsgs,
+            {
+              sender: "buyer",
+              text: buyerMsg,
+              time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            }
+          ]);
+          setFinalPrice(2.75);
+          setJourneyStep("compliance");
+          setCurrentStep("compliance");
+          setKlausRepliedCount(1);
+          
+          fetchDraftsAndIntent(buyerMsg);
+        }, 2500);
+      }
+    });
+  };
+
+  const handleRejectDraft = (draftId: string) => {
+    setIsDraftGenerating(true);
+    setTimeout(() => {
+      setDrafts((prev) => 
+        prev.map((d) => {
+          if (d.id === draftId) {
+            return {
+              ...d,
+              title: `${d.title} (Alternatif AI)`,
+              strategy: "Draf RAG diregenerasi dengan fokus Incoterms EXW (Ex-Works) untuk memotong ongkos logistik internasional.",
+              text: "Kami sangat menghargai feedback Anda. Terkait harga target $2.50/kg, kami bersedia memprosesnya khusus untuk pesanan trial ini, asalkan klausul Incoterms dialihkan menjadi EXW (Ex-Works) Gudang Surabaya kami. Dengan demikian, biaya pengapalan dan asuransi Hamburg sepenuhnya dikelola oleh pihak Anda. Silakan beri tahu kami jika opsi ini dapat diterima."
+            };
           }
-        ]);
-        setFinalPrice(2.75);
-        setJourneyStep("compliance");
-        setCurrentStep("compliance");
-        setKlausRepliedCount(1);
-      }, 2500);
-    }
+          return d;
+        })
+      );
+      setIsDraftGenerating(false);
+    }, 1000);
   };
 
   if (currentStep === "onboarding" || currentStep === "verified") {
@@ -189,7 +305,80 @@ export default function NegotiationHubPage() {
 
   return (
     <div className="flex-1 flex overflow-hidden h-full">
-      {/* LEFT PANE: Communication Thread */}
+      {/* ========================================================================= */}
+      {/* PANEL 1: LEFT PANE - Conversation List */}
+      {/* ========================================================================= */}
+      <aside className="w-[280px] flex-shrink-0 bg-surface-container-low border-r border-outline-variant flex flex-col h-full overflow-hidden">
+        {/* Sidebar Header */}
+        <div className="p-4 border-b border-outline-variant bg-surface-container-lowest flex flex-col gap-3 flex-shrink-0">
+          <div className="flex justify-between items-center">
+            <h3 className="text-xs font-bold text-[#070235] uppercase tracking-wider">Hub Negosiasi</h3>
+            <span className="bg-primary/10 text-primary text-[10px] font-bold px-2 py-0.5 rounded-full">
+              4 Pembeli
+            </span>
+          </div>
+          {/* Search bar */}
+          <div className="relative flex items-center">
+            <span className="material-symbols-outlined absolute left-2.5 text-on-surface-variant text-[16px]">search</span>
+            <input 
+              type="text" 
+              placeholder="Cari pembeli atau negara..." 
+              className="w-full bg-surface border border-outline-variant rounded-lg pl-8 pr-3 py-1.5 text-xs text-on-surface outline-none focus:border-primary transition-all"
+            />
+          </div>
+        </div>
+        
+        {/* Buyer list */}
+        <div className="flex-1 overflow-y-auto divide-y divide-outline-variant bg-surface">
+          {buyers.map((buyer) => (
+            <div 
+              key={buyer.id}
+              onClick={() => {
+                if (buyer.id !== "klaus") {
+                  alert(`Hubungan dengan ${buyer.company} diarsipkan. Percakapan demo saat ini berfokus pada Klaus Weber.`);
+                }
+              }}
+              className={`p-3.5 flex flex-col gap-1 cursor-pointer transition-all ${
+                buyer.id === activeBuyerId 
+                  ? "bg-primary/5 border-l-4 border-primary" 
+                  : "hover:bg-surface-container-lowest"
+              }`}
+            >
+              <div className="flex justify-between items-start gap-1">
+                <span className="text-xs font-bold text-on-surface truncate flex items-center gap-1.5">
+                  <span>{buyer.flag}</span>
+                  <span className="truncate">{buyer.company}</span>
+                </span>
+                <span className="text-[9px] text-on-surface-variant font-mono whitespace-nowrap">{buyer.time}</span>
+              </div>
+              <div className="text-[10px] text-on-surface-variant font-medium truncate">
+                {buyer.product}
+              </div>
+              <p className="text-[11px] text-on-surface-variant truncate mt-0.5 font-normal">
+                {buyer.lastMessage}
+              </p>
+              <div className="flex justify-between items-center mt-1.5">
+                <span className={`text-[9px] px-2 py-0.5 rounded font-extrabold uppercase border ${
+                  buyer.status === "Aktif" 
+                    ? "bg-primary-container text-on-primary-container border-primary/20"
+                    : buyer.status === "Selesai"
+                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                    : "bg-surface-container-high text-on-surface-variant border-outline-variant"
+                }`}>
+                  {buyer.status}
+                </span>
+                {buyer.unread && (
+                  <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </aside>
+
+      {/* ========================================================================= */}
+      {/* PANEL 2: MIDDLE PANE - Communication Thread & Chat */}
+      {/* ========================================================================= */}
       <section className="flex-1 flex flex-col bg-surface border-r border-outline-variant relative h-full overflow-hidden">
         {/* Thread Header */}
         <div className="px-6 py-4 border-b border-outline-variant bg-surface-container-lowest flex justify-between items-center flex-shrink-0">
@@ -198,15 +387,29 @@ export default function NegotiationHubPage() {
               <span className="material-symbols-outlined text-2xl">domain</span>
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-lg font-semibold text-on-surface">GlobalTech Imports GmbH</h2>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-base font-bold text-on-surface">GlobalTech Imports GmbH</h2>
                 <span className="flex items-center gap-1 bg-primary-container/10 px-2 py-0.5 rounded text-[10px] font-bold text-primary uppercase border border-primary/20">
                   <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span> Terhubung via Email
                 </span>
+                {/* INTENT BADGE */}
+                <span className={`flex items-center gap-1 px-2.5 py-0.5 rounded text-[10px] font-extrabold uppercase border shadow-sm ${
+                  activeIntent === "negotiation"
+                    ? "bg-amber-50 text-amber-700 border-amber-200"
+                    : activeIntent === "inquiry"
+                    ? "bg-blue-50 text-blue-700 border-blue-200"
+                    : "bg-rose-50 text-rose-700 border-rose-200"
+                }`}>
+                  <span className="material-symbols-outlined text-[12px]">
+                    {activeIntent === "negotiation" ? "payments" : activeIntent === "inquiry" ? "help" : "warning"}
+                  </span>
+                  Intent: {activeIntent === "negotiation" ? "Negosiasi" : activeIntent === "inquiry" ? "Pertanyaan" : "Keluhan"} ({Math.round(intentConfidence * 100)}%)
+                </span>
               </div>
-              <p className="text-sm text-on-surface-variant">Frankfurt, Jerman • UID: DE123456789</p>
+              <p className="text-xs text-on-surface-variant">Frankfurt, Jerman • UID: DE123456789</p>
             </div>
           </div>
+          
           <div className="flex gap-2 items-center">
             {mentorWidth === 0 && (
               <button 
@@ -224,14 +427,14 @@ export default function NegotiationHubPage() {
           </div>
         </div>
 
-        {/* Thread Content - Flex child with pb-32 to prevent overlaps */}
+        {/* Thread Content */}
         <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6 bg-surface-bright pb-32">
           {/* Timestamp */}
           <div className="text-center">
             <span className="bg-surface-container-low px-3 py-1 rounded-full font-mono text-on-surface-variant text-[11px] font-medium tracking-wide">Hari Ini, 09:42</span>
           </div>
 
-          {/* Outbound Pitch Alert (Fase 2) */}
+          {/* Outbound Pitch Alert */}
           <div className="bg-indigo-50/50 border border-primary/20 p-4 rounded-xl max-w-2xl text-left shadow-sm self-start flex gap-3 animate-in fade-in duration-500">
             <span className="material-symbols-outlined text-primary text-[24px] shrink-0 mt-0.5">forward_to_inbox</span>
             <div>
@@ -265,15 +468,15 @@ export default function NegotiationHubPage() {
             </div>
           ))}
 
-          {/* Typing Indicator (Loading State) */}
+          {/* Typing Indicator */}
           {isTyping && (
-            <div className="flex flex-col gap-1 max-w-2xl self-start">
+            <div className="flex flex-col gap-1 max-w-2xl self-start animate-pulse">
               <span className="text-[10px] font-bold uppercase text-on-surface-variant ml-1">Koneksi Email • TradeConnect Gateway</span>
               <div className="bg-surface-container-lowest border border-outline-variant p-4 rounded-xl shadow-sm rounded-tl-sm flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce"></span>
                 <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce [animation-delay:0.2s]"></span>
                 <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce [animation-delay:0.4s]"></span>
-                <span className="text-xs text-on-surface-variant ml-2 font-medium">AI sedang mengunduh & menerjemahkan email baru dari Klaus Weber...</span>
+                <span className="text-xs text-on-surface-variant ml-2 font-semibold">AI sedang mengunduh & menerjemahkan email baru dari Klaus Weber...</span>
               </div>
             </div>
           )}
@@ -293,7 +496,7 @@ export default function NegotiationHubPage() {
           {currentStep === "compliance" && <div className="h-16 shrink-0" />}
         </div>
 
-        {/* Input Area - Placed as standard flex child so it never overlaps */}
+        {/* Input Area */}
         <div className="p-4 border-t border-outline-variant bg-surface-container-lowest flex-shrink-0 w-full z-10">
           <div className="border border-outline-variant rounded-lg bg-surface focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all flex flex-col overflow-hidden shadow-sm">
             <textarea 
@@ -330,12 +533,14 @@ export default function NegotiationHubPage() {
         </div>
       </section>
 
-      {/* RIGHT PANE: Mentor Sidebar - resizable & collapsible */}
+      {/* ========================================================================= */}
+      {/* PANEL 3: RIGHT PANE - Asisten Mentor AI & Kalkulator Ekspor */}
+      {/* ========================================================================= */}
       <aside 
         style={{ width: mentorWidth > 0 ? `${mentorWidth}px` : '0px', display: mentorWidth > 0 ? 'flex' : 'none' }}
         className="flex-shrink-0 bg-surface-container-low flex flex-col overflow-y-auto border-l-[4px] border-primary h-full relative animate-in slide-in-from-right duration-300"
       >
-        {/* Visual Resize Handle Bar on the left border */}
+        {/* Resize Handle */}
         <div 
           onMouseDown={startResizing}
           className={`absolute left-0 top-0 bottom-0 w-3 -ml-1.5 cursor-col-resize z-30 transition-all flex items-center justify-center ${
@@ -343,15 +548,15 @@ export default function NegotiationHubPage() {
               ? 'bg-[#85f8c4]/30 border-l-2 border-[#85f8c4]' 
               : 'hover:bg-primary/10 hover:border-l-2 hover:border-primary'
           }`}
-          title="Geser ke kanan untuk menutup (Drag right to close)"
+          title="Geser ke kanan untuk menutup"
         >
-          {/* Grabber indicator */}
           <div className={`w-[2px] h-12 rounded-full transition-all ${
             isResizing ? 'bg-[#85f8c4]' : 'bg-[#070235]/30'
           }`} />
         </div>
 
-        <div className="p-4 border-b border-outline-variant flex justify-between items-center bg-surface-container-lowest sticky top-0 z-10 pl-6">
+        {/* Sidebar Header */}
+        <div className="p-4 border-b border-outline-variant flex justify-between items-center bg-surface-container-lowest sticky top-0 z-10 pl-6 flex-shrink-0">
           <div className="flex items-center gap-3">
             <span className="material-symbols-outlined text-primary text-[32px]" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
             <div>
@@ -368,27 +573,186 @@ export default function NegotiationHubPage() {
           </button>
         </div>
 
+        {/* Sidebar Scrollable Body */}
         <div className="p-4 flex flex-col gap-6 pl-6">
-          {/* Floor Price Guardrail Warning */}
-          <div className="bg-error-container border border-error rounded-xl p-4 shadow-sm relative overflow-hidden animate-in fade-in duration-300">
-            <div className="absolute top-0 left-0 w-1.5 h-full bg-error"></div>
-            <div className="flex items-start gap-3">
-              <span className="material-symbols-outlined text-on-error-container">warning</span>
-              <div>
-                <h4 className="text-xs font-bold text-on-error-container mb-1 uppercase tracking-wider">PERINGATAN HARGA DASAR</h4>
-                <p className="text-xs text-on-error-container leading-relaxed">
-                  Pembeli meminta harga <strong>$2.50/kg</strong>. Harga dasar (floor price) Anda untuk menjaga margin minimal 15% adalah <strong>$2.68/kg</strong>.
-                  <br/><br/>
-                  Menerima tawaran ini akan menyebabkan kerugian margin operasional.
-                </p>
+          {/* ========================================================================= */}
+          {/* A. MINI EXPORT PRICE CALCULATOR */}
+          {/* ========================================================================= */}
+          <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 shadow-sm flex flex-col gap-4">
+            <div className="flex items-center justify-between border-b border-outline-variant pb-2">
+              <h4 className="text-[11px] font-extrabold text-[#070235] uppercase tracking-wider flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-[18px] text-primary">calculate</span> Kalkulator Harga Ekspor
+              </h4>
+              <span className={`text-[9px] font-bold px-2 py-0.5 rounded uppercase border ${
+                pricing.status === "competitive" 
+                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                  : pricing.status === "high"
+                  ? "bg-rose-50 text-rose-700 border-rose-200"
+                  : "bg-blue-50 text-blue-700 border-blue-200"
+              }`}>
+                {pricing.status === "competitive" ? "Kompetitif BPS" : pricing.status === "high" ? "Terlalu Tinggi" : "Terlalu Murah"}
+              </span>
+            </div>
+
+            {/* Pricing Input Fields */}
+            <div className="flex flex-col gap-3">
+              {/* Ex-Works / HPP */}
+              <div className="flex flex-col gap-1">
+                <div className="flex justify-between text-xs">
+                  <span className="font-semibold text-on-surface-variant">HPP Kopi (Ex-Works)</span>
+                  <span className="font-mono text-primary font-bold">${hpp.toFixed(2)}/kg</span>
+                </div>
+                <input 
+                  type="range" 
+                  min="1.00" 
+                  max="3.00" 
+                  step="0.05"
+                  value={hpp}
+                  onChange={(e) => setHpp(parseFloat(e.target.value))}
+                  className="w-full h-1 bg-surface-container-high rounded-lg appearance-none cursor-pointer accent-primary"
+                />
               </div>
+
+              {/* Profit Margin */}
+              <div className="flex flex-col gap-1">
+                <div className="flex justify-between text-xs">
+                  <span className="font-semibold text-on-surface-variant">Profit Margin</span>
+                  <span className="font-mono text-primary font-bold">{margin}%</span>
+                </div>
+                <input 
+                  type="range" 
+                  min="5" 
+                  max="40" 
+                  step="1"
+                  value={margin}
+                  onChange={(e) => setMargin(parseInt(e.target.value))}
+                  className="w-full h-1 bg-surface-container-high rounded-lg appearance-none cursor-pointer accent-primary"
+                />
+              </div>
+
+              {/* Ocean Freight */}
+              <div className="flex flex-col gap-1">
+                <div className="flex justify-between text-xs">
+                  <span className="font-semibold text-on-surface-variant">Ocean Freight (Hamburg)</span>
+                  <span className="font-mono text-primary font-bold">${freight.toFixed(2)}/kg</span>
+                </div>
+                <input 
+                  type="range" 
+                  min="0.05" 
+                  max="0.50" 
+                  step="0.01"
+                  value={freight}
+                  onChange={(e) => setFreight(parseFloat(e.target.value))}
+                  className="w-full h-1 bg-surface-container-high rounded-lg appearance-none cursor-pointer accent-primary"
+                />
+              </div>
+
+              {/* Local Port Handling & Sea Insurance grid */}
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div className="flex flex-col gap-1 bg-surface-bright p-2 border border-outline-variant rounded-lg">
+                  <span className="font-semibold text-[10px] text-on-surface-variant uppercase">Port Handling</span>
+                  <div className="flex items-center justify-between mt-1">
+                    <span className="font-mono text-primary font-bold">${localHandling.toFixed(2)}</span>
+                    <button 
+                      onClick={() => setLocalHandling((prev) => parseFloat((prev === 0.15 ? 0.10 : 0.15).toFixed(2)))}
+                      className="text-[9px] font-bold text-on-surface-variant hover:text-primary transition-all border border-outline-variant px-1.5 py-0.5 rounded bg-surface"
+                    >
+                      Ubah
+                    </button>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1 bg-surface-bright p-2 border border-outline-variant rounded-lg">
+                  <span className="font-semibold text-[10px] text-on-surface-variant uppercase">Asuransi Laut</span>
+                  <div className="flex items-center justify-between mt-1">
+                    <span className="font-mono text-primary font-bold">${insurance.toFixed(2)}</span>
+                    <button 
+                      onClick={() => setInsurance((prev) => parseFloat((prev === 0.10 ? 0.05 : 0.10).toFixed(2)))}
+                      className="text-[9px] font-bold text-on-surface-variant hover:text-primary transition-all border border-outline-variant px-1.5 py-0.5 rounded bg-surface"
+                    >
+                      Ubah
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Calculations Output */}
+            <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 flex flex-col gap-2">
+              <div className="flex justify-between text-xs font-semibold text-on-surface">
+                <span>1. FOB Value (Free on Board)</span>
+                <span className="font-mono text-primary">${pricing.fob.toFixed(2)}/kg</span>
+              </div>
+              <div className="flex justify-between text-xs font-semibold text-on-surface">
+                <span>2. CFR Value (Cost & Freight)</span>
+                <span className="font-mono text-primary">${pricing.cfr.toFixed(2)}/kg</span>
+              </div>
+              <div className="flex justify-between text-xs font-bold text-[#070235] border-t border-outline-variant/60 pt-1.5">
+                <span>3. CIF Hamburg (Total Cost)</span>
+                <span className="font-mono text-primary">${pricing.cif.toFixed(2)}/kg</span>
+              </div>
+              <div className="flex justify-between text-[10px] text-on-surface-variant font-medium font-mono pt-1">
+                <span>Est. IDR (kurs 16.000)</span>
+                <span>Rp {(pricing.cif * 16000).toLocaleString("id-ID")}/kg</span>
+              </div>
+            </div>
+
+            {/* BPS market average note */}
+            <div className="text-[10px] text-on-surface-variant leading-normal flex gap-1.5 border-t border-outline-variant/40 pt-2">
+              <span className="material-symbols-outlined text-[16px] text-primary">analytics</span>
+              <p>
+                Rata-rata ekspor BPS: <strong>${pricing.marketAvg.toFixed(2)}/kg</strong>. 
+                {pricing.cif === 2.75 
+                  ? " Harga Anda sama persis dengan kesepakatan final!"
+                  : pricing.status === "competitive" 
+                  ? " Harga penawaran Anda sangat kompetitif untuk pasar Eropa."
+                  : pricing.status === "high"
+                  ? " Harga CIF melebihi rata-rata pasar. Siapkan opsi konsesi."
+                  : " Harga terlalu murah, verifikasi profitabilitas Anda."}
+              </p>
             </div>
           </div>
 
-          {/* RAG Tactical Annotations */}
+          {/* ========================================================================= */}
+          {/* B. FLOOR PRICE GUARDRAIL WARNING */}
+          {/* ========================================================================= */}
+          {pricing.cif > 2.50 ? (
+            <div className="bg-error-container border border-error rounded-xl p-4 shadow-sm relative overflow-hidden animate-in fade-in duration-300">
+              <div className="absolute top-0 left-0 w-1.5 h-full bg-error"></div>
+              <div className="flex items-start gap-3">
+                <span className="material-symbols-outlined text-on-error-container text-error">warning</span>
+                <div>
+                  <h4 className="text-xs font-bold text-on-error-container mb-1 uppercase tracking-wider text-error-800">PERINGATAN HARGA DASAR</h4>
+                  <p className="text-xs text-on-error-container leading-relaxed">
+                    Pembeli meminta harga <strong>$2.50/kg</strong>. Estimasi harga CIF minimal Anda saat ini adalah <strong>${pricing.cif.toFixed(2)}/kg</strong>.
+                    <br/><br/>
+                    Menerima tawaran $2.50/kg akan menekan margin operasional di bawah target keuntungan Anda.
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-emerald-50 border border-emerald-300 rounded-xl p-4 shadow-sm relative overflow-hidden animate-in fade-in duration-300">
+              <div className="absolute top-0 left-0 w-1.5 h-full bg-emerald-500"></div>
+              <div className="flex items-start gap-3">
+                <span className="material-symbols-outlined text-emerald-600">check_circle</span>
+                <div>
+                  <h4 className="text-xs font-bold text-emerald-800 mb-1 uppercase tracking-wider">HARGA DASAR AMAN</h4>
+                  <p className="text-xs text-emerald-700 leading-relaxed">
+                    Estimasi CIF Anda saat ini adalah <strong>${pricing.cif.toFixed(2)}/kg</strong>, berada di bawah atau sama dengan tawaran pembeli ($2.50/kg).
+                    <br/><br/>
+                    Tingkat profitabilitas Anda sangat terjamin untuk negosiasi ini!
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* C. RAG TACTICAL ANNOTATIONS */}
+          {/* ========================================================================= */}
           <div>
             <h4 className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-3 flex items-center gap-2">
-              <span className="material-symbols-outlined text-[16px]">analytics</span> Analisis Taktis
+              <span className="material-symbols-outlined text-[16px]">analytics</span> Analisis Taktis RAG
             </h4>
             <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 flex flex-col gap-4 shadow-sm">
               <div className="flex gap-3">
@@ -401,104 +765,77 @@ export default function NegotiationHubPage() {
               <div className="flex gap-3">
                 <span className="material-symbols-outlined text-primary text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>lightbulb</span>
                 <p className="text-xs text-on-surface leading-relaxed">
-                  <strong>Strategi:</strong> Tolak secara halus permintaan $2.50. Tawarkan kompromi di $2.75/kg, atau pertahankan $2.85/kg dengan menawarkan termin pembayaran yang lebih fleksibel (misal: 30% DP, 70% LC).
+                  <strong>Strategi RAG:</strong> Tolak secara halus permintaan $2.50. Tawarkan kompromi di $2.75/kg, atau pertahankan $2.85/kg dengan menawarkan termin pembayaran yang lebih fleksibel (misal: 30% DP, 70% LC).
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Automated Draft Suggestions */}
+          {/* ========================================================================= */}
+          {/* D. AUTOMATED DRAFT SUGGESTIONS */}
+          {/* ========================================================================= */}
           <div>
             <h4 className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-3 flex items-center gap-2">
               <span className="material-symbols-outlined text-[16px]">edit_document</span> Draft Balasan Otomatis
             </h4>
-            <div className="flex flex-col gap-3">
-              {/* Draft Option 1 */}
-              {!hideDraft1 && (
-                <div className="text-left bg-surface-container-lowest border border-outline-variant rounded-xl p-4 hover:border-primary hover:shadow-md transition-all group flex flex-col gap-3 shadow-sm animate-in fade-in duration-300">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-semibold text-on-surface group-hover:text-primary transition-colors">Tolak Halus (Kompromi $2.75)</span>
-                    <span className="bg-surface-container-low text-on-surface-variant text-[9px] px-2 py-0.5 rounded font-mono font-bold border border-outline-variant/60">DRAFT 1</span>
-                  </div>
-                  <p className="text-xs text-on-surface-variant leading-relaxed">
-                    "Terima kasih atas ketertarikan Anda. Sayangnya, karena kontrol kualitas yang ketat, harga $2,50/kg berada di bawah batas keberlanjutan minimum kami. Kami dapat menawarkan jalan tengah di harga $2,75/kg, dengan struktur pembayaran 30% DP dan 70% LC. Mohon informasikan jika usulan ini dapat diterima."
-                  </p>
-                  
-                  {/* Interactive Approve, Edit, Reject Action Buttons */}
-                  {currentStep !== "compliance" && (
-                    <div className="grid grid-cols-3 gap-2 pt-2 border-t border-outline-variant/60 shrink-0">
-                      <button 
-                        onClick={() => handleApproveDraft("Terima kasih atas ketertarikan Anda. Sayangnya, karena kontrol kualitas yang ketat, harga $2,50/kg berada di bawah batas keberlanjutan minimum kami. Kami dapat menawarkan jalan tengah di harga $2,75/kg, dengan struktur pembayaran 30% DP dan 70% LC. Mohon informasikan jika usulan ini dapat diterima.")}
-                        className="px-2.5 py-1.5 bg-[#85f8c4]/30 hover:bg-[#85f8c4]/50 text-emerald-800 rounded text-[10px] font-bold transition-colors flex items-center justify-center gap-1"
-                        title="Setujui dan kirim balasan langsung"
-                      >
-                        <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
-                        Approve
-                      </button>
-                      <button 
-                        onClick={() => handleDraftSelect("Terima kasih atas ketertarikan Anda. Sayangnya, karena kontrol kualitas yang ketat, harga $2,50/kg berada di bawah batas keberlanjutan minimum kami. Kami dapat menawarkan jalan tengah di harga $2,75/kg, dengan struktur pembayaran 30% DP and 70% LC. Mohon informasikan jika usulan ini dapat diterima.")}
-                        className="px-2.5 py-1.5 bg-[#070235]/10 hover:bg-[#070235]/20 text-[#070235] rounded text-[10px] font-bold transition-colors flex items-center justify-center gap-1"
-                        title="Salin teks draf ke kolom input untuk diedit"
-                      >
-                        <span className="material-symbols-outlined text-[12px]">edit</span>
-                        Edit
-                      </button>
-                      <button 
-                        onClick={() => { setHideDraft1(true); alert("Saran draf AI 1 diabaikan."); }}
-                        className="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 rounded text-[10px] font-bold transition-colors flex items-center justify-center gap-1"
-                        title="Tolak saran draf ini"
-                      >
-                        <span className="material-symbols-outlined text-[12px]">cancel</span>
-                        Reject
-                      </button>
+            
+            {isDraftGenerating ? (
+              <div className="flex flex-col items-center justify-center p-8 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm gap-2">
+                <span className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></span>
+                <span className="text-xs text-on-surface-variant font-medium">Menganalisis RAG & membuat draf...</span>
+              </div>
+            ) : drafts.length === 0 ? (
+              <div className="text-center p-6 bg-surface-container-lowest border border-outline-variant rounded-xl text-xs text-on-surface-variant font-medium">
+                Belum ada draf balasan. Kirim atau terima pesan untuk men-generate draf balasan RAG otomatis.
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {drafts.map((draft, idx) => (
+                  <div key={draft.id} className="text-left bg-surface-container-lowest border border-outline-variant rounded-xl p-4 hover:border-primary hover:shadow-md transition-all group flex flex-col gap-3 shadow-sm animate-in fade-in duration-300">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-semibold text-on-surface group-hover:text-primary transition-colors">{draft.title}</span>
+                      <span className="bg-surface-container-low text-on-surface-variant text-[9px] px-2 py-0.5 rounded font-mono font-bold border border-outline-variant/60">DRAFT {idx + 1}</span>
                     </div>
-                  )}
-                </div>
-              )}
-
-              {/* Draft Option 2 */}
-              {!hideDraft2 && (
-                <div className="text-left bg-surface-container-lowest border border-outline-variant rounded-xl p-4 hover:border-primary hover:shadow-md transition-all group flex flex-col gap-3 shadow-sm animate-in fade-in duration-300">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-semibold text-on-surface group-hover:text-primary transition-colors">Pertahankan Harga (Ubah Termin)</span>
-                    <span className="bg-surface-container-low text-on-surface-variant text-[9px] px-2 py-0.5 rounded font-mono font-bold border border-outline-variant/60">DRAFT 2</span>
-                  </div>
-                  <p className="text-xs text-on-surface-variant leading-relaxed">
-                    "Kami sangat menghargai peluang kemitraan ini. Meskipun kami harus mempertahankan harga $2,85/kg untuk menjamin kualitas robusta premium kami, kami bersedia menawarkan termin pembayaran yang lebih bersahabat seperti 20% DP dan sisa 80% dibayarkan saat barang tiba di tujuan. Silakan beri saran."
-                  </p>
-                  
-                  {/* Interactive Approve, Edit, Reject Action Buttons */}
-                  {currentStep !== "compliance" && (
-                    <div className="grid grid-cols-3 gap-2 pt-2 border-t border-outline-variant/60 shrink-0">
-                      <button 
-                        onClick={() => handleApproveDraft("Kami sangat menghargai peluang kemitraan ini. Meskipun kami harus mempertahankan harga $2,85/kg untuk menjamin kualitas robusta premium kami, kami bersedia menawarkan termin pembayaran yang lebih bersahabat seperti 20% DP dan sisa 80% dibayarkan saat barang tiba di tujuan. Silakan beri saran.")}
-                        className="px-2.5 py-1.5 bg-[#85f8c4]/30 hover:bg-[#85f8c4]/50 text-emerald-800 rounded text-[10px] font-bold transition-colors flex items-center justify-center gap-1"
-                        title="Setujui dan kirim balasan langsung"
-                      >
-                        <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
-                        Approve
-                      </button>
-                      <button 
-                        onClick={() => handleDraftSelect("Kami sangat menghargai peluang kemitraan ini. Meskipun kami harus mempertahankan harga $2,85/kg untuk menjamin kualitas robusta premium kami, kami bersedia menawarkan termin pembayaran yang lebih bersahabat seperti 20% DP dan sisa 80% dibayarkan saat barang tiba di tujuan. Silakan beri saran.")}
-                        className="px-2.5 py-1.5 bg-[#070235]/10 hover:bg-[#070235]/20 text-[#070235] rounded text-[10px] font-bold transition-colors flex items-center justify-center gap-1"
-                        title="Salin teks draf ke kolom input untuk diedit"
-                      >
-                        <span className="material-symbols-outlined text-[12px]">edit</span>
-                        Edit
-                      </button>
-                      <button 
-                        onClick={() => { setHideDraft2(true); alert("Saran draf AI 2 diabaikan."); }}
-                        className="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 rounded text-[10px] font-bold transition-colors flex items-center justify-center gap-1"
-                        title="Tolak saran draf ini"
-                      >
-                        <span className="material-symbols-outlined text-[12px]">cancel</span>
-                        Reject
-                      </button>
+                    <p className="text-xs text-on-surface-variant leading-relaxed font-medium">
+                      "{draft.text}"
+                    </p>
+                    <div className="bg-primary/5 p-2.5 rounded-lg text-[10px] text-on-surface-variant leading-normal border border-primary/10">
+                      <strong>Strategi AI:</strong> {draft.strategy}
                     </div>
-                  )}
-                </div>
-              )}
-            </div>
+                    
+                    {/* Interactive Approve, Edit, Reject Action Buttons */}
+                    {currentStep !== "compliance" && (
+                      <div className="grid grid-cols-3 gap-2 pt-2 border-t border-outline-variant/60 shrink-0">
+                        <button 
+                          onClick={() => handleApproveDraft(draft.text)}
+                          className="px-2 py-1.5 bg-[#85f8c4]/30 hover:bg-[#85f8c4]/50 text-emerald-800 rounded text-[10px] font-extrabold transition-colors flex items-center justify-center gap-1"
+                          title="Setujui dan kirim balasan langsung"
+                        >
+                          <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                          Approve
+                        </button>
+                        <button 
+                          onClick={() => handleDraftSelect(draft.text)}
+                          className="px-2 py-1.5 bg-[#070235]/10 hover:bg-[#070235]/20 text-[#070235] rounded text-[10px] font-extrabold transition-colors flex items-center justify-center gap-1"
+                          title="Salin teks draf ke kolom input untuk diedit"
+                        >
+                          <span className="material-symbols-outlined text-[12px]">edit</span>
+                          Edit
+                        </button>
+                        <button 
+                          onClick={() => handleRejectDraft(draft.id)}
+                          className="px-2 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded text-[10px] font-extrabold transition-colors flex items-center justify-center gap-1"
+                          title="Tolak & buat draf alternatif baru"
+                        >
+                          <span className="material-symbols-outlined text-[12px]">sync</span>
+                          Reject
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </aside>
