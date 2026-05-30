@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getStep, setStep as setJourneyStep, setFinalPrice } from "../../../lib/state";
 import { ChatMessage } from "../../../types";
-import { classifyIntent, generateReply, calculatePrice, DraftReply } from "../../../lib/api";
+import { classifyIntent, generateReply, calculatePrice, DraftReply, checkRedFlag, getCredibilityDimensions, RedFlagReport } from "../../../lib/api";
 
 export default function NegotiationHubPage() {
   const router = useRouter();
@@ -30,6 +30,13 @@ export default function NegotiationHubPage() {
   const [localHandling, setLocalHandling] = useState(0.15);
   const [freight, setFreight] = useState(0.20);
   const [insurance, setInsurance] = useState(0.10);
+
+  // States for B2B Risk & Credibility Intelligence
+  const [redFlagReport, setRedFlagReport] = useState<RedFlagReport | null>(null);
+  const [isLoadingRisk, setIsLoadingRisk] = useState(false);
+
+  // Collapsible Left Conversation Panel
+  const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(true);
 
   // Mock list of buyers for left panel
   const buyers = [
@@ -179,6 +186,15 @@ export default function NegotiationHubPage() {
     }
   }, []);
 
+  // Fetch B2B risk analysis when active buyer changes
+  useEffect(() => {
+    setIsLoadingRisk(true);
+    checkRedFlag(activeBuyerId).then((report) => {
+      setRedFlagReport(report);
+      setIsLoadingRisk(false);
+    });
+  }, [activeBuyerId]);
+
   const handleDraftSelect = (draftText: string) => {
     setInputValue(draftText);
   };
@@ -306,9 +322,12 @@ export default function NegotiationHubPage() {
   return (
     <div className="flex-1 flex overflow-hidden h-full">
       {/* ========================================================================= */}
-      {/* PANEL 1: LEFT PANE - Conversation List */}
+      {/* PANEL 1: LEFT PANE - Conversation List (Collapsible) */}
       {/* ========================================================================= */}
-      <aside className="w-[280px] flex-shrink-0 bg-surface-container-low border-r border-outline-variant flex flex-col h-full overflow-hidden">
+      <aside 
+        style={{ width: isLeftPanelOpen ? "280px" : "0px", display: isLeftPanelOpen ? "flex" : "none" }}
+        className="flex-shrink-0 bg-surface-container-low border-r border-outline-variant flex flex-col h-full overflow-hidden transition-all duration-300 animate-in slide-in-from-left"
+      >
         {/* Sidebar Header */}
         <div className="p-4 border-b border-outline-variant bg-surface-container-lowest flex flex-col gap-3 flex-shrink-0">
           <div className="flex justify-between items-center">
@@ -381,48 +400,62 @@ export default function NegotiationHubPage() {
       {/* ========================================================================= */}
       <section className="flex-1 flex flex-col bg-surface border-r border-outline-variant relative h-full overflow-hidden">
         {/* Thread Header */}
-        <div className="px-6 py-4 border-b border-outline-variant bg-surface-container-lowest flex justify-between items-center flex-shrink-0">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded bg-tertiary-container flex items-center justify-center text-on-tertiary-container shadow-inner border border-outline-variant">
-              <span className="material-symbols-outlined text-2xl">domain</span>
-            </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-base font-bold text-on-surface">GlobalTech Imports GmbH</h2>
-                <span className="flex items-center gap-1 bg-primary-container/10 px-2 py-0.5 rounded text-[10px] font-bold text-primary uppercase border border-primary/20">
+        <div className="px-5 py-3 border-b border-outline-variant bg-surface-container-lowest flex justify-between items-center flex-shrink-0">
+          <div className="flex items-center gap-2 min-w-0">
+            {/* TOGGLE LEFT PANEL BUTTON */}
+            <button 
+              onClick={() => setIsLeftPanelOpen(!isLeftPanelOpen)}
+              className="text-on-surface-variant hover:text-primary p-1.5 rounded-lg hover:bg-surface-container-low transition-colors shrink-0 mr-1"
+              title={isLeftPanelOpen ? "Tutup Hub Negosiasi" : "Buka Hub Negosiasi"}
+            >
+              <span className="material-symbols-outlined text-[20px]">
+                {isLeftPanelOpen ? "menu_open" : "menu"}
+              </span>
+            </button>
+
+            <div className="flex flex-col gap-0.5 min-w-0">
+              <h2 className="text-sm md:text-base font-bold text-on-surface truncate">GlobalTech Imports GmbH</h2>
+              <div className="flex items-center gap-2 flex-wrap text-[10px] text-on-surface-variant font-medium">
+                {/* Status Terhubung */}
+                <span className="flex items-center gap-1 bg-primary-container/10 px-2 py-0.5 rounded text-[9px] font-bold text-primary uppercase border border-primary/20 shrink-0">
                   <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span> Terhubung via Email
                 </span>
-                {/* INTENT BADGE */}
-                <span className={`flex items-center gap-1 px-2.5 py-0.5 rounded text-[10px] font-extrabold uppercase border shadow-sm ${
+
+                {/* INTENT BADGE (compact) */}
+                <span className={`flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-extrabold uppercase border shadow-sm shrink-0 ${
                   activeIntent === "negotiation"
                     ? "bg-amber-50 text-amber-700 border-amber-200"
                     : activeIntent === "inquiry"
                     ? "bg-blue-50 text-blue-700 border-blue-200"
                     : "bg-rose-50 text-rose-700 border-rose-200"
                 }`}>
-                  <span className="material-symbols-outlined text-[12px]">
+                  <span className="material-symbols-outlined text-[10px]">
                     {activeIntent === "negotiation" ? "payments" : activeIntent === "inquiry" ? "help" : "warning"}
                   </span>
                   Intent: {activeIntent === "negotiation" ? "Negosiasi" : activeIntent === "inquiry" ? "Pertanyaan" : "Keluhan"} ({Math.round(intentConfidence * 100)}%)
                 </span>
+
+                {/* Alamat Muted */}
+                <span className="hidden sm:inline-block text-on-surface-variant/80">•</span>
+                <span className="text-[10px] text-on-surface-variant/80 font-medium truncate">Frankfurt, Jerman • UID: DE123456789</span>
               </div>
-              <p className="text-xs text-on-surface-variant">Frankfurt, Jerman • UID: DE123456789</p>
             </div>
           </div>
           
-          <div className="flex gap-2 items-center">
+          <div className="flex gap-2 items-center shrink-0">
             {mentorWidth === 0 && (
               <button 
                 onClick={() => setMentorWidth(380)}
-                className="bg-[#070235] text-[#85f8c4] border border-[#85f8c4]/30 px-3.5 py-1.5 rounded-lg text-[10px] font-extrabold uppercase flex items-center gap-1.5 hover:bg-[#070235]/80 transition-all shadow-md animate-in fade-in duration-300 mr-2"
+                className="bg-[#070235] text-[#85f8c4] border border-[#85f8c4]/30 px-3 py-1.5 rounded-lg text-[10px] font-extrabold uppercase flex items-center gap-1.5 hover:bg-[#070235]/80 transition-all shadow-md animate-in fade-in duration-300"
               >
                 <span className="material-symbols-outlined text-[16px]">menu_open</span>
-                Buka Asisten Mentor AI
+                Asisten AI
               </button>
             )}
-            <div className="bg-tertiary-container text-on-tertiary-container px-3 py-1.5 rounded-full flex items-center gap-1 border border-tertiary-fixed-dim">
-              <span className="material-symbols-outlined text-[16px]">inventory_2</span>
-              <span className="text-[10px] font-bold uppercase">RFQ: Pembelian Massal</span>
+            <div className="bg-surface-container-low text-on-surface-variant px-2.5 py-1 rounded-md flex items-center gap-1.5 border border-outline-variant text-[10px] font-bold uppercase shrink-0">
+              <span className="material-symbols-outlined text-[15px] text-primary">inventory_2</span>
+              <span className="hidden sm:inline">RFQ: Pembelian Massal</span>
+              <span className="sm:hidden">RFQ</span>
             </div>
           </div>
         </div>
@@ -575,6 +608,94 @@ export default function NegotiationHubPage() {
 
         {/* Sidebar Scrollable Body */}
         <div className="p-4 flex flex-col gap-6 pl-6">
+          {/* ========================================================================= */}
+          {/* E. CREDIBILITY BREAKDOWN BARS */}
+          {/* ========================================================================= */}
+          <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 shadow-sm flex flex-col gap-3 animate-in fade-in duration-300">
+            <div className="flex justify-between items-center border-b border-outline-variant pb-2">
+              <h4 className="text-[11px] font-extrabold text-[#070235] uppercase tracking-wider flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-[18px] text-primary">military_tech</span> Kredibilitas Pembeli
+              </h4>
+              <span className="bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-bold px-2 py-0.5 rounded font-mono">
+                Skor: {activeBuyerId === "klaus" ? "92/100" : activeBuyerId === "nippon" ? "71/100" : "80/100"}
+              </span>
+            </div>
+
+            <div className="flex flex-col gap-3 mt-1">
+              {getCredibilityDimensions(activeBuyerId).map((dim, idx) => (
+                <div key={idx} className="flex flex-col gap-1 bg-surface-bright/40 p-2.5 border border-outline-variant/40 rounded-lg">
+                  <div className="flex justify-between text-[11px] font-bold text-on-surface">
+                    <span className="truncate">{dim.name}</span>
+                    <span className="font-mono text-primary">{dim.score}%</span>
+                  </div>
+                  <div className="w-full h-1.5 bg-surface-container-high rounded-full overflow-hidden mt-0.5">
+                    <div 
+                      className={`h-full rounded-full transition-all duration-1000 ${
+                        dim.score >= 80 
+                          ? "bg-emerald-500" 
+                          : dim.score >= 50 
+                          ? "bg-amber-500" 
+                          : "bg-rose-500"
+                      }`}
+                      style={{ width: `${dim.score}%` }}
+                    ></div>
+                  </div>
+                  <p className="text-[10px] text-on-surface-variant leading-relaxed font-medium mt-1">
+                    {dim.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ========================================================================= */}
+          {/* F. RED FLAG PANEL */}
+          {/* ========================================================================= */}
+          {isLoadingRisk ? (
+            <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 shadow-sm flex flex-col items-center justify-center gap-2">
+              <span className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></span>
+              <span className="text-[11px] text-on-surface-variant font-medium">Menganalisis riwayat komunikasi & profiling buyer...</span>
+            </div>
+          ) : redFlagReport && (
+            <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 shadow-sm flex flex-col gap-3 animate-in fade-in duration-300">
+              <div className="flex justify-between items-center border-b border-outline-variant pb-2">
+                <h4 className="text-[11px] font-extrabold text-[#070235] uppercase tracking-wider flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-[18px] text-primary">security</span> Laporan Risiko Keamanan
+                </h4>
+                <span className={`text-[9px] font-bold px-2 py-0.5 rounded uppercase border ${
+                  redFlagReport.riskLevel === "LOW"
+                    ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                    : redFlagReport.riskLevel === "MEDIUM"
+                    ? "bg-amber-50 text-amber-800 border-amber-200 animate-pulse"
+                    : "bg-rose-50 text-rose-800 border-rose-200 animate-bounce"
+                }`}>
+                  Risiko: {redFlagReport.riskLevel === "LOW" ? "Rendah" : redFlagReport.riskLevel === "MEDIUM" ? "Sedang" : "Tinggi"}
+                </span>
+              </div>
+
+              <div className="flex flex-col gap-3 mt-1">
+                {redFlagReport.flags.map((flag, idx) => (
+                  <div key={idx} className="flex gap-2.5 items-start bg-surface-bright/40 p-2.5 border border-outline-variant/40 rounded-lg">
+                    <span className={`material-symbols-outlined text-[18px] shrink-0 mt-0.5 ${
+                      redFlagReport.riskLevel === "LOW" ? "text-emerald-600" : "text-amber-600"
+                    }`}>
+                      {flag.icon || "warning"}
+                    </span>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-xs font-bold text-on-surface flex items-center gap-1">
+                        {flag.title}
+                        {redFlagReport.riskLevel !== "LOW" && <span className="text-amber-600 font-bold">⚠️</span>}
+                      </span>
+                      <p className="text-[10px] text-on-surface-variant leading-relaxed font-medium">
+                        {flag.description}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* ========================================================================= */}
           {/* A. MINI EXPORT PRICE CALCULATOR */}
           {/* ========================================================================= */}

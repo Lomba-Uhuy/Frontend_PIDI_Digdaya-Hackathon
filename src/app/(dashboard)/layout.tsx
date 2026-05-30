@@ -18,6 +18,7 @@ export default function DashboardLayout({
     { name: "Dashboard", path: "/dashboard", icon: "dashboard" },
     { name: "Intelijen Pasar", path: "/market-intelligence", icon: "bar_chart" },
     { name: "Pencarian Pembeli", path: "/buyer-discovery", icon: "person_search" },
+    { name: "Kalkulator Ekspor", path: "/calculator", icon: "calculate" },
     { name: "Pusat Negosiasi", path: "/negotiation", icon: "forum" },
     { name: "Kepatuhan Hukum", path: "/compliance", icon: "fact_check" },
     { name: "Purchase Order (PO)", path: "/purchase-order", icon: "request_quote" },

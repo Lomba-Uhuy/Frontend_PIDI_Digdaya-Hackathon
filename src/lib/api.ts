@@ -192,3 +192,84 @@ export function calculatePrice(
     status
   };
 }
+
+// 4. B2B RISK & RED FLAG INTELLIGENCE SERVICE
+export interface RedFlagReport {
+  riskLevel: "LOW" | "MEDIUM" | "HIGH";
+  flags: { icon: string; title: string; description: string }[];
+}
+
+export async function checkRedFlag(buyerId: string): Promise<RedFlagReport> {
+  if (API_CONFIG.mode === "live") {
+    try {
+      const res = await fetch(`${API_CONFIG.baseUrl}/check-red-flag`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ buyer_id: buyerId }),
+      });
+      if (res.ok) return await res.json();
+    } catch (e) {
+      console.warn("Live backend failed, falling back to mock red flag checker:", e);
+    }
+  }
+
+  // High-Fidelity Mock Risk Intelligence
+  if (buyerId === "klaus") {
+    return {
+      riskLevel: "LOW",
+      flags: [
+        { icon: "verified_user", title: "Profil Bisnis Terverifikasi", description: "GlobalTech Imports GmbH terdaftar secara resmi di Frankfurt, Jerman (UID: DE123456789) tanpa riwayat sengketa dagang." },
+        { icon: "payments", title: "Rekam Jejak Pembayaran Bersih", description: "Tidak ada keluhan gagal bayar atau keterlambatan Letter of Credit (L/C) dalam 24 bulan terakhir." },
+        { icon: "eco", title: "Kepatuhan EUDR Sesuai Regulasi", description: "Buyer secara aktif mendukung pelacakan koordinat geo-lokasi kebun kopi sesuai aturan deforestasi Uni Eropa." }
+      ]
+    };
+  } else if (buyerId === "nippon") {
+    return {
+      riskLevel: "MEDIUM",
+      flags: [
+        { icon: "schedule", title: "Pola Komunikasi Terburu-buru", description: "Buyer mendesak pengiriman sampel teh hijau dalam waktu 3 hari sebelum penandatanganan LOI/Kontrak." },
+        { icon: "gavel", title: "Risiko Regulasi Ekstra Yokohama", description: "Diperlukan sertifikasi karantina tanaman dan fitosanitasi ekstra ketat untuk pengiriman komoditas pertanian ke Jepang." }
+      ]
+    };
+  } else {
+    return {
+      riskLevel: "LOW",
+      flags: [
+        { icon: "verified", title: "Profil Importir Terdaftar", description: "Profil importir ini telah tervalidasi secara komersial oleh atase perdagangan Indonesia di negara setempat." }
+      ]
+    };
+  }
+}
+
+// 5. B2B CREDIBILITY BREAKDOWN SERVICE
+export interface CredibilityDimension {
+  name: string;
+  score: number;
+  description: string;
+}
+
+export function getCredibilityDimensions(buyerId: string): CredibilityDimension[] {
+  if (buyerId === "klaus") {
+    return [
+      { name: "Sejarah Impor (Import History)", score: 92, description: "Memiliki riwayat impor reguler kopi robusta dari Indonesia & Vietnam dalam 3 tahun terakhir." },
+      { name: "Konsistensi Volume (Volume Consistency)", score: 85, description: "Rata-rata pesanan bulanan stabil pada kisaran 15-20 metrik ton (1 kontainer penuh)." },
+      { name: "Risiko Negara (Country Safety)", score: 95, description: "Jerman memiliki rating risiko transaksi komersial terendah di Uni Eropa (Grade AA+)." },
+      { name: "Responsivitas (Responsiveness)", score: 90, description: "Rata-rata waktu tanggapan komunikasi email negosiasi di bawah 4 jam kerja." }
+    ];
+  } else if (buyerId === "nippon") {
+    return [
+      { name: "Sejarah Impor (Import History)", score: 60, description: "Baru memulai diversifikasi komoditas organik teh dan kopi dari Asia Tenggara." },
+      { name: "Konsistensi Volume (Volume Consistency)", score: 70, description: "Pesanan bervariasi tergantung musim panen lokal di Jepang." },
+      { name: "Risiko Negara (Country Safety)", score: 98, description: "Jepang memiliki tingkat jaminan hukum dagang internasional yang sangat tinggi." },
+      { name: "Responsivitas (Responsiveness)", score: 55, description: "Perbedaan zona waktu memicu waktu tunda komunikasi rata-rata 12 jam." }
+    ];
+  } else {
+    return [
+      { name: "Sejarah Impor", score: 80, description: "Riwayat perdagangan komersial yang cukup aktif." },
+      { name: "Konsistensi Volume", score: 75, description: "Volume impor rata-rata stabil." },
+      { name: "Risiko Negara", score: 85, description: "Rating risiko komersial stabil." },
+      { name: "Responsivitas", score: 80, description: "Komunikasi rata-rata di bawah 12 jam." }
+    ];
+  }
+}
+
