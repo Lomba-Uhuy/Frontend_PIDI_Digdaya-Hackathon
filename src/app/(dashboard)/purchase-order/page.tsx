@@ -11,6 +11,11 @@ export default function PurchaseOrderPage() {
   const [score, setScore] = useState(85);
   const [selectedDoc, setSelectedDoc] = useState<ExportDocument | null>(null);
 
+  const [companyName, setCompanyName] = useState("PT Nusantara Global Coffee");
+  const [productName, setProductName] = useState("Biji Kopi Robusta Premium");
+  const [productType, setProductType] = useState("coffee");
+  const [nib, setNib] = useState("1234567890123");
+
   // Sync state and price
   useEffect(() => {
     setCurrentStep(getStep());
@@ -26,6 +31,16 @@ export default function PurchaseOrderPage() {
     return () => {
       window.removeEventListener("tradeconnect_state_change", handleStateChange);
     };
+  }, []);
+
+  // Load profile values on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setCompanyName(localStorage.getItem("tradeconnect_company_name") || "PT Nusantara Global Coffee");
+      setProductName(localStorage.getItem("tradeconnect_product_name") || "Biji Kopi Robusta Premium");
+      setProductType(localStorage.getItem("tradeconnect_product_type") || "coffee");
+      setNib(localStorage.getItem("tradeconnect_nib") || "1234567890123");
+    }
   }, []);
 
   // Score count-up effect in Fase 8
@@ -51,9 +66,12 @@ export default function PurchaseOrderPage() {
     setCurrentStep("po_sent");
   };
 
-  const itemTotal = agreedPrice * 18 * 1000;
+  const isRattan = productType === "rattan";
+  const itemTotal = isRattan ? (agreedPrice * 150) : (agreedPrice * 18 * 1000);
   const shippingTotal = 2100;
   const grandTotal = itemTotal + shippingTotal;
+
+  const poNumber = isRattan ? "PO-JPR-2605-001" : "PO-GLB-2605-001";
 
   const formatCurrency = (val: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -63,54 +81,54 @@ export default function PurchaseOrderPage() {
     }).format(val);
   };
 
-  // Export Documents metadata (Translated)
+  // Export Documents metadata (Dinamis)
   const exportDocs: ExportDocument[] = [
     {
       id: "invoice",
       name: "Commercial Invoice (Faktur Dagang)",
-      type: "INVOICE-GLB-2605-001",
+      type: isRattan ? "INVOICE-JPR-2605-001" : "INVOICE-GLB-2605-001",
       description: "Tagihan perdagangan resmi yang memuat rincian harga barang, instruksi perbankan, dan syarat pembayaran.",
       fileSize: "148 KB",
       icon: "receipt_long",
-      content: `PT Nusantara Global Coffee
-Jakarta, Indonesia
-NIB: 1234567890123
+      content: `${companyName}
+${isRattan ? "Semarang, Jawa Tengah, Indonesia" : "Jakarta, Indonesia"}
+NIB: ${nib}
 
 DITAGIHKAN KEPADA:
 GlobalTech Imports GmbH
 Frankfurt, Jerman
 UID: DE123456789
 
-DESKRIPSI BARANG: Biji Kopi Robusta Premium (Grade 1)
-Kode HS: 0901.11
-Kuantitas: 18,00 Metrik Ton
-Harga Satuan: $2.750,00 / Metrik Ton
+DESKRIPSI BARANG: ${productName}
+Kode HS: ${isRattan ? "9401.52" : "0901.11"}
+Kuantitas: ${isRattan ? "150 Pcs" : "18,00 Metrik Ton"}
+Harga Satuan: ${isRattan ? `${formatCurrency(agreedPrice)} / Pcs` : `${formatCurrency(agreedPrice * 1000)} / Metrik Ton`}
 Termin Logistik: CIF Pelabuhan Hamburg
-Total Tagihan: $51.600,00
+Total Tagihan: ${formatCurrency(itemTotal)}
 
 METODE PEMBAYARAN: Letter of Credit (L/C) at Sight
-Bank Escrow Pembayar: Bank Mandiri (Persero) Tbk, Jakarta`
+Bank Escrow Pembayar: Bank Mandiri (Persero) Tbk, Semarang`
     },
     {
       id: "packing_list",
       name: "Packing List (Rincian Kemasan CBM)",
-      type: "PL-GLB-2605-001",
+      type: isRattan ? "PL-JPR-2605-001" : "PL-GLB-2605-001",
       description: "Deskripsi rinci mengenai dimensi kargo kontainer, berat bersih, berat kotor, dan nomor segel kemasan.",
       fileSize: "92 KB",
       icon: "inventory_2",
       content: `DAFTAR KEMASAN (PACKING LIST)
-Referensi Pengiriman: PO-GLB-2605-001
+Referensi Pengiriman: ${isRattan ? "PO-JPR-2605-001" : "PO-GLB-2605-001"}
 Perusahaan Pelayaran: Maersk Line V.29A
 
 DESKRIPSI KARGO:
-Produk: Biji Kopi Robusta Premium Grade 1
-Kemasan: 300 Karung Rami Lapis Ganda (masing-masing berat bersih 60 kg)
-Total Karung: 300 Karung
-Berat Bersih: 18.000,00 Kg (18 Metrik Ton)
-Berat Kotor: 18.150,00 Kg
+Produk: ${productName}
+Kemasan: ${isRattan ? "150 Unit Karton Pengaman Ekspor (Bungkus Bubble Wrap)" : "300 Karung Rami Lapis Ganda (masing-masing berat bersih 60 kg)"}
+Total Karung/Karton: ${isRattan ? "150 Box" : "300 Karung"}
+Berat Bersih: ${isRattan ? "1.200,00 Kg (1.2 Metrik Ton)" : "18.000,00 Kg (18 Metrik Ton)"}
+Berat Kotor: ${isRattan ? "1.350,00 Kg" : "18.150,00 Kg"}
 Spesifikasi Kontainer: 1 x 20ft FCL (Full Container Load)
 Nomor Segel Kontainer: MAERSK-ID-992182
-Volume Kargo: 24.2 CBM`
+Volume Kargo: ${isRattan ? "26.8 CBM" : "24.2 CBM"}`
     },
     {
       id: "bl",
@@ -123,11 +141,11 @@ Volume Kargo: 24.2 CBM`
 Operator Pelayaran: Maersk Line A/S
 Nomor B/L: MAEU90881920
 
-PENGIRIM (SHIPPER): PT Nusantara Global Coffee, Jakarta, Indonesia
+PENGIRIM (SHIPPER): ${companyName}, ${isRattan ? "Semarang" : "Jakarta"}, Indonesia
 PENERIMA (CONSIGNEE): GlobalTech Imports GmbH, Frankfurt, Jerman
 PIHAK NOTIFIKASI: Commerzbank AG, Kantor Cabang Frankfurt
 
-PELABUHAN MUAT: Pelabuhan Tanjung Priok (IDTPP), Jakarta
+PELABUHAN MUAT: ${isRattan ? "Pelabuhan Tanjung Emas (IDSRG), Semarang" : "Pelabuhan Tanjung Priok (IDTPP), Jakarta"}
 PELABUHAN BONGKAR: Pelabuhan Hamburg (DEHAM), Jerman
 NAMA KAPAL: Maersk Mc-Kinney Moller V.2605
 STATUS BIAYA: Prabayar berdasarkan Syarat CIF`
@@ -143,14 +161,14 @@ STATUS BIAYA: Prabayar berdasarkan Syarat CIF`
 PEMBERITAHUAN EKSPOR BARANG (PEB)
 Nomor Pengajuan: 099281-20260523-000192
 
-Eksportir: PT Nusantara Global Coffee (NIB: 1234567890123)
+Eksportir: ${companyName} (NIB: ${nib})
 Penerima: GlobalTech Imports GmbH, Jerman
-KBLI Utama: 46311 (Perdagangan Besar Kopi, Teh, dan Kakao)
+KBLI Utama: ${isRattan ? "31001 (Industri Mebel Kayu dan Rotan)" : "46311 (Perdagangan Besar Kopi, Teh, dan Kakao)"}
 
-Komoditas: Kopi Robusta Premium (Roasted)
-Kode HS: 0901.11 (Kopi, dipanggang, didekafein)
-Valuta Ekspor: USD ($51.600,00)
-Kantor Bea Cukai Pemuatan: KPU Tanjung Priok, Jakarta
+Komoditas: ${isRattan ? "Kursi Anyaman Rotan Premium (Mebel)" : "Kopi Robusta Premium (Roasted)"}
+Kode HS: ${isRattan ? "9401.52 (Kursi anyaman rotan)" : "0901.11 (Kopi, dipanggang, didekafein)"}
+Valuta Ekspor: USD (${formatCurrency(itemTotal)})
+Kantor Bea Cukai Pemuatan: ${isRattan ? "KPPBC Tanjung Emas, Semarang" : "KPU Tanjung Priok, Jakarta"}
 Status Kelulusan Lartas: BEBAS LARTAS (100% Bersih & Disetujui)`
     },
     {
@@ -165,12 +183,12 @@ SURAT KETERANGAN ASAL (CERTIFICATE OF ORIGIN - FORM B-2-B)
 Nomor Referensi: COO-KADIN-00129
 
 Dengan ini kami menyatakan bahwa barang yang dijelaskan di bawah ini adalah asli berasal dari Indonesia:
-Eksportir: PT Nusantara Global Coffee, Jakarta, Indonesia
+Eksportir: ${companyName}, ${isRattan ? "Semarang" : "Jakarta"}, Indonesia
 Penerima: GlobalTech Imports GmbH, Frankfurt, Jerman
 
-Barang: 300 Karung Biji Kopi Robusta Premium Grade 1
-Asal Dataran Tinggi: Perkebunan Banyumas & Lampung, Indonesia
-Stempel Otoritas: Kamar Dagang dan Industri Divisi Jakarta Barat
+Barang: ${isRattan ? "150 Pcs Kursi Rotan Handcrafted Jepara" : "300 Karung Biji Kopi Robusta Premium Grade 1"}
+Asal Dataran Tinggi: ${isRattan ? "Sentra Industri Rotan Trangsan & Jepara, Jawa Tengah, Indonesia" : "Perkebunan Banyumas & Lampung, Indonesia"}
+Stempel Otoritas: Kamar Dagang dan Industri Divisi ${isRattan ? "Semarang" : "Jakarta Barat"}
 Status Verifikasi: Aktif & Terverifikasi Asli`
     }
   ];
@@ -348,7 +366,7 @@ Status Verifikasi: Aktif & Terverifikasi Asli`
             <h2 className="text-2xl font-black text-[#070235] mb-2 tracking-tight">PO Terkirim & Menunggu Tanda Tangan</h2>
             <p className="text-xs text-on-surface-variant font-bold uppercase tracking-widest mb-4">Fase 7 — Menunggu Persetujuan Pembeli</p>
             <p className="text-sm text-on-surface-variant leading-relaxed max-w-sm mx-auto">
-              Purchase Order **PO-GLB-2605-001** telah berhasil dibuat secara resmi dan dikirimkan secara aman ke email Klaus Weber di **GlobalTech Imports GmbH**.
+              Purchase Order **{poNumber}** telah berhasil dibuat secara resmi dan dikirimkan secara aman ke email Klaus Weber di **GlobalTech Imports GmbH**.
             </p>
           </div>
 
@@ -406,7 +424,7 @@ Status Verifikasi: Aktif & Terverifikasi Asli`
             <div className="flex justify-between items-start">
               <div>
                 <h1 className="text-3xl font-black text-primary mb-2 tracking-tight">PURCHASE ORDER</h1>
-                <p className="text-sm text-on-surface-variant font-medium">Nomor PO: <span className="text-on-surface font-bold">PO-GLB-2605-001</span></p>
+                <p className="text-sm text-on-surface-variant font-medium">Nomor PO: <span className="text-on-surface font-bold">{poNumber}</span></p>
                 <p className="text-sm text-on-surface-variant font-medium">Tanggal: <span className="text-on-surface font-bold">23 Mei 2026</span></p>
               </div>
               <div className="text-right">
@@ -425,9 +443,9 @@ Status Verifikasi: Aktif & Terverifikasi Asli`
             <div className="grid grid-cols-2 gap-8">
               <div>
                 <h4 className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider mb-2">Penjual (Eksportir UMKM)</h4>
-                <h3 className="text-sm font-bold text-on-surface">PT Nusantara Global Coffee</h3>
-                <p className="text-xs text-on-surface-variant">Jakarta, Indonesia</p>
-                <p className="text-xs text-on-surface-variant font-mono">NIB: 1234567890123</p>
+                <h3 className="text-sm font-bold text-on-surface">{companyName}</h3>
+                <p className="text-xs text-on-surface-variant">{isRattan ? "Semarang, Jawa Tengah, Indonesia" : "Jakarta, Indonesia"}</p>
+                <p className="text-xs text-on-surface-variant font-mono">NIB: {nib}</p>
               </div>
               <div>
                 <h4 className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider mb-2">Rincian Pengapalan & Logistik</h4>
@@ -444,7 +462,7 @@ Status Verifikasi: Aktif & Terverifikasi Asli`
                   <tr className="border-b-2 border-outline-variant text-xs text-on-surface-variant font-bold uppercase tracking-wider">
                     <th className="pb-3">Deskripsi Produk</th>
                     <th className="pb-3 text-center">Kode HS</th>
-                    <th className="pb-3 text-center">Volume (MT)</th>
+                    <th className="pb-3 text-center">{isRattan ? "Volume (Pcs)" : "Volume (MT)"}</th>
                     <th className="pb-3 text-right">Harga Satuan</th>
                     <th className="pb-3 text-right">Total Nilai</th>
                   </tr>
@@ -452,11 +470,11 @@ Status Verifikasi: Aktif & Terverifikasi Asli`
                 <tbody className="text-sm">
                   <tr className="border-b border-outline-variant/50">
                     <td className="py-4">
-                      <div className="font-bold text-on-surface">Biji Kopi Robusta Premium (Grade 1)</div>
+                      <div className="font-bold text-on-surface">{isRattan ? productName : "Biji Kopi Robusta Premium (Grade 1)"}</div>
                     </td>
-                    <td className="py-4 text-center text-on-surface-variant font-mono">0901.11</td>
-                    <td className="py-4 text-center text-on-surface font-semibold">18,00</td>
-                    <td className="py-4 text-right text-on-surface font-mono">{formatCurrency(agreedPrice * 1000)}</td>
+                    <td className="py-4 text-center text-on-surface-variant font-mono">{isRattan ? "9401.52" : "0901.11"}</td>
+                    <td className="py-4 text-center text-on-surface font-semibold">{isRattan ? "150,00" : "18,00"}</td>
+                    <td className="py-4 text-right text-on-surface font-mono">{isRattan ? formatCurrency(agreedPrice) : formatCurrency(agreedPrice * 1000)}</td>
                     <td className="py-4 text-right font-black text-on-surface font-mono">{formatCurrency(itemTotal)}</td>
                   </tr>
                   <tr className="border-b border-outline-variant/50">
@@ -495,7 +513,7 @@ Status Verifikasi: Aktif & Terverifikasi Asli`
                     <span className="material-symbols-outlined text-[14px]">draw</span> Tanda Tangani Persetujuan
                   </span>
                 </div>
-                <span className="text-xs font-semibold text-on-surface mt-2">Anda (PT Nusantara Coffee)</span>
+                <span className="text-xs font-semibold text-on-surface mt-2">Anda ({isRattan ? companyName : "PT Nusantara Coffee"})</span>
               </div>
             </div>
 

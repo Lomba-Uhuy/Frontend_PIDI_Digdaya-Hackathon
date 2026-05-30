@@ -9,9 +9,78 @@ export default function OnboardingWizard() {
   const [productPhotos, setProductPhotos] = useState<File[]>([]);
   const [certFiles, setCertFiles] = useState<File[]>([]);
 
+  // Controlled States for Form Inputs
+  const [productName, setProductName] = useState("");
+  const [productDesc, setProductDesc] = useState("");
+  const [floorPrice, setFloorPrice] = useState("");
+  const [askingPrice, setAskingPrice] = useState("");
+  const [nib, setNib] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [moq, setMoq] = useState("");
+  const [capacity, setCapacity] = useState("");
+  const [logistics, setLogistics] = useState("fob");
+
   useEffect(() => {
     resetState();
+    // Clear custom localStorage items on onboarding
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("tradeconnect_product_name");
+      localStorage.removeItem("tradeconnect_product_desc");
+      localStorage.removeItem("tradeconnect_floor_price");
+      localStorage.removeItem("tradeconnect_asking_price");
+      localStorage.removeItem("tradeconnect_nib");
+      localStorage.removeItem("tradeconnect_company_name");
+      localStorage.removeItem("tradeconnect_moq");
+      localStorage.removeItem("tradeconnect_capacity");
+      localStorage.removeItem("tradeconnect_logistics");
+      localStorage.removeItem("tradeconnect_product_type");
+    }
   }, []);
+
+  const handlePrefillDemoMode = () => {
+    setProductName("Kursi Rotan Handcrafted Jepara");
+    setProductDesc("Kursi anyaman rotan premium buatan pengrajin lokal Jepara, menggunakan material rotan alami Grade A (100% Certified Sustainable Rattan) dengan finishing ramah lingkungan standar ekspor Uni Eropa.");
+    setFloorPrice("45.00");
+    setAskingPrice("55.00");
+    setNib("1234567890123");
+    setCompanyName("CV Jepara Rattan Mandiri");
+    setMoq("150 Pcs (1 x 20ft Container)");
+    setCapacity("1,500 Pcs / Bulan");
+    setLogistics("fob");
+    
+    // Add fake file mock objects for productPhotos and certFiles to simulate filled files
+    const fakePhoto = new File([""], "rotan-chair-jepara.jpg", { type: "image/jpeg" });
+    const fakeCert = new File([""], "sertifikat-svlk-2026.pdf", { type: "application/pdf" });
+    setProductPhotos([fakePhoto]);
+    setCertFiles([fakeCert]);
+
+    setStep(1);
+    
+    alert("⚡ [TradeConnect Demo Mode] Data UMKM Rotan Jepara berhasil diisi di semua form!");
+  };
+
+  const handleCompleteSetup = () => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("tradeconnect_product_name", productName || "Biji Kopi Robusta Premium");
+      localStorage.setItem("tradeconnect_product_desc", productDesc || "Biji kopi robusta Grade 1 premium buatan petani lokal Indonesia dengan keasaman seimbang.");
+      localStorage.setItem("tradeconnect_floor_price", floorPrice || "2.68");
+      localStorage.setItem("tradeconnect_asking_price", askingPrice || "2.85");
+      localStorage.setItem("tradeconnect_nib", nib || "1234567890123");
+      localStorage.setItem("tradeconnect_company_name", companyName || "PT Nusantara Global Coffee");
+      localStorage.setItem("tradeconnect_moq", moq || "1000 Pcs");
+      localStorage.setItem("tradeconnect_capacity", capacity || "50,000 Units");
+      localStorage.setItem("tradeconnect_logistics", logistics || "fob");
+      
+      const isRattan = (productName || "").toLowerCase().includes("rotan") || (productName || "").toLowerCase().includes("rattan") || (productName || "").toLowerCase().includes("kursi");
+      localStorage.setItem("tradeconnect_product_type", isRattan ? "rattan" : "coffee");
+      
+      // Save final price
+      const price = parseFloat(askingPrice || "2.85");
+      localStorage.setItem("tradeconnect_final_price", price.toString());
+    }
+    setJourneyStep("verified");
+    router.push('/verification');
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, setter: React.Dispatch<React.SetStateAction<File[]>>) => {
     if (e.target.files) {
@@ -41,6 +110,25 @@ export default function OnboardingWizard() {
         </h1>
         <p className="text-base text-on-surface-variant">Institutional Export Terminal Initialization</p>
       </header>
+
+      {/* Demo Mode Trigger Banner */}
+      <div className="w-full max-w-3xl mb-6 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/30 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-center gap-4 shadow-md">
+        <div className="flex items-center gap-3 text-emerald-800">
+          <span className="material-symbols-outlined text-[28px] animate-pulse" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
+          <div>
+            <h4 className="text-sm font-bold">⚡ Presentasi &amp; Mode Demo Cepat</h4>
+            <p className="text-xs text-emerald-700/80 font-medium font-sans">Klik tombol untuk mengisi otomatis profil UMKM Rotan Jepara untuk presentasi instan.</p>
+          </div>
+        </div>
+        <button 
+          type="button"
+          onClick={handlePrefillDemoMode}
+          className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-md transition-all active:translate-y-0.5 whitespace-nowrap shrink-0 flex items-center gap-1.5"
+        >
+          <span className="material-symbols-outlined text-[16px]">bolt</span>
+          Aktifkan Demo Mode (Rotan Jepara)
+        </button>
+      </div>
 
       {/* Onboarding Wizard Card */}
       <div className="w-full max-w-3xl bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden flex flex-col shadow-sm">
@@ -108,7 +196,7 @@ export default function OnboardingWizard() {
                 </div>
               </div>
 
-              <form className="grid grid-cols-1 gap-6">
+              <form className="grid grid-cols-1 gap-6" onSubmit={(e) => e.preventDefault()}>
                 <div className="flex flex-col gap-2">
                   <label className="flex flex-col" htmlFor="product_name">
                     <span className="text-sm font-medium text-on-surface">Product Name *</span>
@@ -116,7 +204,15 @@ export default function OnboardingWizard() {
                   </label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline">inventory_2</span>
-                    <input className="w-full pl-10 pr-4 py-3 bg-surface border border-outline-variant rounded-md text-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors" id="product_name" placeholder="e.g., Premium Robusta Coffee Beans" required type="text"/>
+                    <input 
+                      className="w-full pl-10 pr-4 py-3 bg-surface border border-outline-variant rounded-md text-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors" 
+                      id="product_name" 
+                      placeholder="e.g., Premium Robusta Coffee Beans" 
+                      required 
+                      type="text"
+                      value={productName}
+                      onChange={(e) => setProductName(e.target.value)}
+                    />
                   </div>
                 </div>
 
@@ -125,7 +221,14 @@ export default function OnboardingWizard() {
                     <span className="text-sm font-medium text-on-surface">Product Description *</span>
                     <span className="text-[10px] sm:text-xs font-bold text-on-surface-variant uppercase mt-1 tracking-widest">Deskripsi Produk</span>
                   </label>
-                  <textarea className="w-full p-4 bg-surface border border-outline-variant rounded-md text-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors min-h-[120px]" id="product_desc" placeholder="Describe the materials, origin, quality, and unique selling points..." required></textarea>
+                  <textarea 
+                    className="w-full p-4 bg-surface border border-outline-variant rounded-md text-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors min-h-[120px]" 
+                    id="product_desc" 
+                    placeholder="Describe the materials, origin, quality, and unique selling points..." 
+                    required
+                    value={productDesc}
+                    onChange={(e) => setProductDesc(e.target.value)}
+                  ></textarea>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -136,7 +239,17 @@ export default function OnboardingWizard() {
                     </label>
                     <div className="relative">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline">price_check</span>
-                      <input className="w-full pl-10 pr-4 py-3 bg-surface border border-outline-variant rounded-md text-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors" id="floor_price" placeholder="e.g., 2.68" required type="number" min="0" step="0.01"/>
+                      <input 
+                        className="w-full pl-10 pr-4 py-3 bg-surface border border-outline-variant rounded-md text-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors" 
+                        id="floor_price" 
+                        placeholder="e.g., 2.68" 
+                        required 
+                        type="number" 
+                        min="0" 
+                        step="0.01"
+                        value={floorPrice}
+                        onChange={(e) => setFloorPrice(e.target.value)}
+                      />
                     </div>
                     <p className="text-[11px] text-on-surface-variant flex items-start gap-1.5">
                       <span className="material-symbols-outlined text-[14px] text-primary mt-0.5">lock</span>
@@ -150,7 +263,17 @@ export default function OnboardingWizard() {
                     </label>
                     <div className="relative">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline">sell</span>
-                      <input className="w-full pl-10 pr-4 py-3 bg-surface border border-outline-variant rounded-md text-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors" id="asking_price" placeholder="e.g., 2.85" required type="number" min="0" step="0.01"/>
+                      <input 
+                        className="w-full pl-10 pr-4 py-3 bg-surface border border-outline-variant rounded-md text-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors" 
+                        id="asking_price" 
+                        placeholder="e.g., 2.85" 
+                        required 
+                        type="number" 
+                        min="0" 
+                        step="0.01"
+                        value={askingPrice}
+                        onChange={(e) => setAskingPrice(e.target.value)}
+                      />
                     </div>
                     <p className="text-[11px] text-on-surface-variant flex items-start gap-1.5">
                       <span className="material-symbols-outlined text-[14px] text-secondary mt-0.5">info</span>
@@ -192,7 +315,7 @@ export default function OnboardingWizard() {
           {step === 2 && (
             <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-right-4 duration-500">
               <div>
-                <h2 className="text-2xl font-semibold text-primary">Legal & Compliance Data</h2>
+                <h2 className="text-2xl font-semibold text-primary">Legal &amp; Compliance Data</h2>
                 <h3 className="text-xl font-semibold text-on-surface-variant mt-1">Data Legalitas</h3>
                 <p className="text-sm text-on-surface-variant mt-4 max-w-2xl">
                   Please provide your official business registration details to establish your institutional profile. <br/>
@@ -210,7 +333,7 @@ export default function OnboardingWizard() {
                 </div>
               </div>
 
-              <form className="grid grid-cols-1 gap-6">
+              <form className="grid grid-cols-1 gap-6" onSubmit={(e) => e.preventDefault()}>
                 <div className="flex flex-col gap-2">
                   <label className="flex flex-col" htmlFor="nib">
                     <span className="text-sm font-medium text-on-surface">NIB (Nomor Induk Berusaha) *</span>
@@ -218,7 +341,15 @@ export default function OnboardingWizard() {
                   </label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline">badge</span>
-                    <input className="w-full pl-10 pr-4 py-3 bg-surface border border-outline-variant rounded-md text-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors" id="nib" placeholder="13-digit official identifier" required type="text"/>
+                    <input 
+                      className="w-full pl-10 pr-4 py-3 bg-surface border border-outline-variant rounded-md text-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors" 
+                      id="nib" 
+                      placeholder="13-digit official identifier" 
+                      required 
+                      type="text"
+                      value={nib}
+                      onChange={(e) => setNib(e.target.value)}
+                    />
                   </div>
                 </div>
 
@@ -229,7 +360,15 @@ export default function OnboardingWizard() {
                   </label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline">domain</span>
-                    <input className="w-full pl-10 pr-4 py-3 bg-surface border border-outline-variant rounded-md text-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors" id="company_name" placeholder="e.g., PT. Nusantara Global" required type="text"/>
+                    <input 
+                      className="w-full pl-10 pr-4 py-3 bg-surface border border-outline-variant rounded-md text-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors" 
+                      id="company_name" 
+                      placeholder="e.g., PT. Nusantara Global" 
+                      required 
+                      type="text"
+                      value={companyName}
+                      onChange={(e) => setCompanyName(e.target.value)}
+                    />
                   </div>
                 </div>
 
@@ -269,7 +408,7 @@ export default function OnboardingWizard() {
           {step === 3 && (
             <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-right-4 duration-500">
               <div>
-                <h2 className="text-2xl font-semibold text-primary">Production Capability & Logistics</h2>
+                <h2 className="text-2xl font-semibold text-primary">Production Capability &amp; Logistics</h2>
                 <h3 className="text-xl font-semibold text-on-surface-variant mt-1">Data Kapabilitas</h3>
                 <p className="text-sm text-on-surface-variant mt-4 max-w-2xl">
                   Let global buyers know your capacity to deliver. <br/>
@@ -277,7 +416,7 @@ export default function OnboardingWizard() {
                 </p>
               </div>
 
-              <form className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <form className="grid grid-cols-1 md:grid-cols-2 gap-6" onSubmit={(e) => e.preventDefault()}>
                 <div className="flex flex-col gap-2">
                   <label className="flex flex-col" htmlFor="moq">
                     <span className="text-sm font-medium text-on-surface">Minimum Order Quantity (MOQ) *</span>
@@ -285,7 +424,15 @@ export default function OnboardingWizard() {
                   </label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline">shopping_basket</span>
-                    <input className="w-full pl-10 pr-4 py-3 bg-surface border border-outline-variant rounded-md text-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors" id="moq" placeholder="e.g., 1000 Pcs or 1 20ft Container" required type="text"/>
+                    <input 
+                      className="w-full pl-10 pr-4 py-3 bg-surface border border-outline-variant rounded-md text-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors" 
+                      id="moq" 
+                      placeholder="e.g., 1000 Pcs or 1 20ft Container" 
+                      required 
+                      type="text"
+                      value={moq}
+                      onChange={(e) => setMoq(e.target.value)}
+                    />
                   </div>
                 </div>
 
@@ -296,7 +443,15 @@ export default function OnboardingWizard() {
                   </label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline">factory</span>
-                    <input className="w-full pl-10 pr-4 py-3 bg-surface border border-outline-variant rounded-md text-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors" id="capacity" placeholder="e.g., 50,000 Units" required type="text"/>
+                    <input 
+                      className="w-full pl-10 pr-4 py-3 bg-surface border border-outline-variant rounded-md text-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors" 
+                      id="capacity" 
+                      placeholder="e.g., 50,000 Units" 
+                      required 
+                      type="text"
+                      value={capacity}
+                      onChange={(e) => setCapacity(e.target.value)}
+                    />
                   </div>
                 </div>
 
@@ -307,7 +462,12 @@ export default function OnboardingWizard() {
                   </label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline">local_shipping</span>
-                    <select className="w-full pl-10 pr-10 py-3 bg-surface border border-outline-variant rounded-md text-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none appearance-none transition-colors cursor-pointer" id="logistics">
+                    <select 
+                      className="w-full pl-10 pr-10 py-3 bg-surface border border-outline-variant rounded-md text-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none appearance-none transition-colors cursor-pointer" 
+                      id="logistics"
+                      value={logistics}
+                      onChange={(e) => setLogistics(e.target.value)}
+                    >
                       <option value="fob">FOB (Free on Board) - Recommended</option>
                       <option value="exw">EXW (Ex Works)</option>
                       <option value="cif">CIF (Cost, Insurance, and Freight)</option>
@@ -334,10 +494,7 @@ export default function OnboardingWizard() {
             ) : <div></div>}
             
             <button 
-              onClick={step < 3 ? nextStep : () => {
-                setJourneyStep("verified");
-                router.push('/verification');
-              }}
+              onClick={step < 3 ? nextStep : handleCompleteSetup}
               className="bg-primary hover:bg-surface-tint text-on-primary font-medium text-sm px-8 py-3 rounded-md transition-colors flex items-center gap-2 ml-auto" 
               type="button"
             >

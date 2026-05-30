@@ -13,6 +13,9 @@ export default function DashboardLayout({
   const [currentStep, setCurrentStep] = useState<TradeConnectStep>("onboarding");
   const [showNotifications, setShowNotifications] = useState(false);
   const [hasNewNotifications, setHasNewNotifications] = useState(true);
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+  const [companyName, setCompanyName] = useState("CV Kopi Mandiri");
+  const [productName, setProductName] = useState("Kopi Arabika");
 
   const navItems = [
     { name: "Dashboard", path: "/dashboard", icon: "dashboard" },
@@ -26,9 +29,18 @@ export default function DashboardLayout({
 
   useEffect(() => {
     setCurrentStep(getStep());
+    const savedCompany = localStorage.getItem("tradeconnect_company_name");
+    if (savedCompany) setCompanyName(savedCompany);
+    const savedProduct = localStorage.getItem("tradeconnect_product_name");
+    if (savedProduct) setProductName(savedProduct);
+
     const handleStateChange = () => {
       setCurrentStep(getStep());
       setHasNewNotifications(true);
+      const updatedCompany = localStorage.getItem("tradeconnect_company_name");
+      if (updatedCompany) setCompanyName(updatedCompany);
+      const updatedProduct = localStorage.getItem("tradeconnect_product_name");
+      if (updatedProduct) setProductName(updatedProduct);
     };
     window.addEventListener("tradeconnect_state_change", handleStateChange);
     return () => {
@@ -59,7 +71,7 @@ export default function DashboardLayout({
       list.unshift({
         id: "match-found",
         title: "Rekomendasi Pembeli Baru",
-        description: "Klaus Weber (Hamburg, Jerman) sangat cocok dengan profil Kopi Arabika Anda.",
+        description: `Klaus Weber (Hamburg, Jerman) sangat cocok dengan profil ${productName} Anda.`,
         type: "match",
         time: "2 menit yang lalu",
       });
@@ -203,7 +215,14 @@ export default function DashboardLayout({
         {/* TopAppBar */}
         <header className="bg-surface border-b border-outline-variant flex justify-between items-center w-full px-4 md:px-8 h-16 sticky top-0 z-40 flex-shrink-0">
           <div className="flex items-center gap-4">
-            {/* Left side is left clean and elegant */}
+            {/* MOBILE HAMBURGER BUTTON */}
+            <button 
+              onClick={() => setIsMobileNavOpen(true)}
+              className="flex md:hidden text-on-surface-variant hover:text-primary p-1.5 rounded-lg hover:bg-surface-container-low transition-colors shrink-0"
+              title="Buka Menu Navigasi"
+            >
+              <span className="material-symbols-outlined text-[24px]">menu</span>
+            </button>
             <span className="text-sm font-semibold text-on-surface-variant hidden md:inline-block">
               Selamat Datang Kembali, UMKM Ekspor Indonesia
             </span>
@@ -278,7 +297,7 @@ export default function DashboardLayout({
             {/* Profile Avatar & Indonesian Company Label */}
             <div className="flex items-center gap-3 border-l border-outline-variant pl-4 md:pl-6">
               <div className="text-right hidden md:block">
-                <div className="text-xs font-black text-on-surface">CV Kopi Mandiri</div>
+                <div className="text-xs font-black text-on-surface">{companyName}</div>
                 <div className="text-[9px] font-bold text-secondary uppercase tracking-wider">Eksportir Pemula</div>
               </div>
               <div className="w-8 h-8 rounded-full bg-surface-container-highest border border-outline-variant overflow-hidden flex-shrink-0">
@@ -297,6 +316,76 @@ export default function DashboardLayout({
           {children}
         </div>
       </div>
+
+      {/* MOBILE NAVIGATION SIDEBAR OVERLAY */}
+      {isMobileNavOpen && (
+        <div className="flex md:hidden fixed inset-0 z-50 animate-in fade-in duration-200">
+          {/* Backdrop */}
+          <div 
+            onClick={() => setIsMobileNavOpen(false)}
+            className="absolute inset-0 bg-[#070235]/40 backdrop-blur-[2px]"
+          />
+          {/* Drawer Content */}
+          <nav className="absolute left-0 top-0 bottom-0 w-64 bg-surface-container-low border-r border-outline-variant flex flex-col py-6 overflow-y-auto animate-in slide-in-from-left duration-300">
+            <div className="px-4 mb-8 flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded bg-primary flex items-center justify-center text-on-primary">
+                  <span className="material-symbols-outlined font-bold text-2xl">anchor</span>
+                </div>
+                <div>
+                  <h1 className="text-lg font-black text-primary">TradeConnect</h1>
+                  <p className="text-[9px] text-on-surface-variant uppercase tracking-wider font-bold">Siap Ekspor</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setIsMobileNavOpen(false)}
+                className="text-on-surface-variant hover:text-error p-1.5 rounded-full hover:bg-surface-container-high transition-colors"
+              >
+                <span className="material-symbols-outlined text-[20px]">close</span>
+              </button>
+            </div>
+
+            <div className="px-4 mb-6">
+              <button className="w-full bg-primary text-on-primary font-semibold text-xs py-2 px-4 rounded-md flex items-center justify-center gap-2">
+                <span className="material-symbols-outlined text-[16px]">smart_toy</span>
+                Konsultasi AI
+              </button>
+            </div>
+
+            <div className="flex-1 px-2 flex flex-col gap-0.5">
+              {navItems.map((item) => {
+                const isActive = pathname === item.path;
+                const showDivider = item.path === "/purchase-order";
+                return (
+                  <React.Fragment key={item.path}>
+                    {showDivider && (
+                      <div className="my-2 px-3 flex items-center gap-2">
+                        <div className="flex-1 h-px bg-outline-variant"></div>
+                        <span className="text-[9px] font-bold text-on-surface-variant uppercase tracking-widest">Transaksi Selesai</span>
+                        <div className="flex-1 h-px bg-outline-variant"></div>
+                      </div>
+                    )}
+                    <Link
+                      href={item.path}
+                      onClick={() => setIsMobileNavOpen(false)}
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
+                        isActive
+                          ? "bg-secondary-container text-on-secondary-container font-semibold"
+                          : "text-on-surface-variant hover:bg-surface-container-high"
+                      }`}
+                    >
+                      <span className="material-symbols-outlined">
+                        {item.icon}
+                      </span>
+                      <span className="text-sm">{item.name}</span>
+                    </Link>
+                  </React.Fragment>
+                );
+              })}
+            </div>
+          </nav>
+        </div>
+      )}
     </div>
   );
 }

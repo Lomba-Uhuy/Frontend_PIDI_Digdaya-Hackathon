@@ -16,13 +16,40 @@ export default function ExportCalculatorPage() {
   const [insurance, setInsurance] = useState(0.10);
   const [exportDuty, setExportDuty] = useState(5); // in %
 
+  // Dynamic state
+  const [productName, setProductName] = useState("Premium Robusta Coffee Beans");
+  const [productType, setProductType] = useState("coffee");
+
   // Calculation output state
   const [isCalculated, setIsCalculated] = useState(true);
   const [savedPrice, setSavedPrice] = useState<number | null>(null);
 
   useEffect(() => {
     setCurrentStep(getStep());
+    if (typeof window !== "undefined") {
+      const savedProduct = localStorage.getItem("tradeconnect_product_name") || "Premium Robusta Coffee Beans";
+      setProductName(savedProduct);
+      const savedType = localStorage.getItem("tradeconnect_product_type") || "coffee";
+      setProductType(savedType);
+
+      const savedFloor = localStorage.getItem("tradeconnect_floor_price");
+      const isRattan = savedProduct.toLowerCase().includes("rotan") || savedProduct.toLowerCase().includes("rattan") || savedProduct.toLowerCase().includes("kursi");
+      
+      if (isRattan) {
+        setHpp(savedFloor ? parseFloat(savedFloor) : 40.00);
+        setLocalHandling(3.00);
+        setFreight(10.00);
+        setInsurance(2.00);
+      } else {
+        setHpp(savedFloor ? parseFloat(savedFloor) : 2.00);
+        setLocalHandling(0.15);
+        setFreight(0.20);
+        setInsurance(0.10);
+      }
+    }
   }, []);
+
+  const unitLabel = productType === "rattan" ? "pcs" : "kg";
 
   // Compute values
   // Formula formal: 
@@ -41,7 +68,7 @@ export default function ExportCalculatorPage() {
   const finalCif = finalCfr + insurance;
   
   // Benchmark
-  const marketAvg = 2.80; // BPS Robusta unit value in USD/kg
+  const marketAvg = productType === "rattan" ? 55.00 : 2.80; // BPS Robusta unit value in USD/kg or Furnitures
   let status: "competitive" | "high" | "low" = "competitive";
   if (finalCif > marketAvg * 1.05) {
     status = "high";
@@ -95,21 +122,21 @@ export default function ExportCalculatorPage() {
                   Harga Pokok Produksi (HPP/EXW)
                   <span className="material-symbols-outlined text-[14px] text-on-surface-variant" title="Harga produk dasar di pintu gudang Anda (Ex-Works) sebelum logistik.">info</span>
                 </span>
-                <span className="font-mono text-primary font-bold">${hpp.toFixed(2)}/kg</span>
+                <span className="font-mono text-primary font-bold">${hpp.toFixed(2)}/{unitLabel}</span>
               </div>
               <input 
                 type="range" 
-                min="0.50" 
-                max="4.00" 
-                step="0.05"
+                min={productType === "rattan" ? "20.00" : "0.50"} 
+                max={productType === "rattan" ? "80.00" : "4.00"} 
+                step={productType === "rattan" ? "1.00" : "0.05"}
                 value={hpp}
                 onChange={(e) => setHpp(parseFloat(e.target.value))}
                 className="w-full h-1.5 bg-surface-container-high rounded-lg appearance-none cursor-pointer accent-primary"
               />
               <div className="flex justify-between text-[9px] text-on-surface-variant font-mono">
-                <span>$0.50</span>
-                <span>$2.00</span>
-                <span>$4.00</span>
+                <span>{productType === "rattan" ? "$20.00" : "$0.50"}</span>
+                <span>{productType === "rattan" ? "$50.00" : "$2.00"}</span>
+                <span>{productType === "rattan" ? "$80.00" : "$4.00"}</span>
               </div>
             </div>
 
@@ -139,21 +166,21 @@ export default function ExportCalculatorPage() {
             <div className="flex flex-col gap-1.5">
               <div className="flex justify-between text-xs font-semibold">
                 <span className="text-on-surface-variant">Ongkir Domestik & Handling Port</span>
-                <span className="font-mono text-primary font-bold">${localHandling.toFixed(2)}/kg</span>
+                <span className="font-mono text-primary font-bold">${localHandling.toFixed(2)}/{unitLabel}</span>
               </div>
               <input 
                 type="range" 
-                min="0.05" 
-                max="0.50" 
-                step="0.01"
+                min={productType === "rattan" ? "1.00" : "0.05"} 
+                max={productType === "rattan" ? "10.00" : "0.50"} 
+                step={productType === "rattan" ? "0.50" : "0.01"}
                 value={localHandling}
                 onChange={(e) => setLocalHandling(parseFloat(e.target.value))}
                 className="w-full h-1.5 bg-surface-container-high rounded-lg appearance-none cursor-pointer accent-primary"
               />
               <div className="flex justify-between text-[9px] text-on-surface-variant font-mono">
-                <span>$0.05</span>
-                <span>$0.25</span>
-                <span>$0.50</span>
+                <span>{productType === "rattan" ? "$1.00" : "$0.05"}</span>
+                <span>{productType === "rattan" ? "$5.00" : "$0.25"}</span>
+                <span>{productType === "rattan" ? "$10.00" : "$0.50"}</span>
               </div>
             </div>
 
@@ -183,21 +210,21 @@ export default function ExportCalculatorPage() {
             <div className="flex flex-col gap-1.5">
               <div className="flex justify-between text-xs font-semibold">
                 <span className="text-on-surface-variant">Ocean Freight Internasional (Hamburg)</span>
-                <span className="font-mono text-primary font-bold">${freight.toFixed(2)}/kg</span>
+                <span className="font-mono text-primary font-bold">${freight.toFixed(2)}/{unitLabel}</span>
               </div>
               <input 
                 type="range" 
-                min="0.05" 
-                max="0.80" 
-                step="0.01"
+                min={productType === "rattan" ? "2.00" : "0.05"} 
+                max={productType === "rattan" ? "30.00" : "0.80"} 
+                step={productType === "rattan" ? "0.50" : "0.01"}
                 value={freight}
                 onChange={(e) => setFreight(parseFloat(e.target.value))}
                 className="w-full h-1.5 bg-surface-container-high rounded-lg appearance-none cursor-pointer accent-primary"
               />
               <div className="flex justify-between text-[9px] text-on-surface-variant font-mono">
-                <span>$0.05</span>
-                <span>$0.40</span>
-                <span>$0.80</span>
+                <span>{productType === "rattan" ? "$2.00" : "$0.05"}</span>
+                <span>{productType === "rattan" ? "$16.00" : "$0.40"}</span>
+                <span>{productType === "rattan" ? "$30.00" : "$0.80"}</span>
               </div>
             </div>
 
@@ -205,21 +232,21 @@ export default function ExportCalculatorPage() {
             <div className="flex flex-col gap-1.5">
               <div className="flex justify-between text-xs font-semibold">
                 <span className="text-on-surface-variant">Asuransi Maritim Internasional</span>
-                <span className="font-mono text-primary font-bold">${insurance.toFixed(2)}/kg</span>
+                <span className="font-mono text-primary font-bold">${insurance.toFixed(2)}/{unitLabel}</span>
               </div>
               <input 
                 type="range" 
-                min="0.02" 
-                max="0.30" 
-                step="0.01"
+                min={productType === "rattan" ? "0.50" : "0.02"} 
+                max={productType === "rattan" ? "5.00" : "0.30"} 
+                step={productType === "rattan" ? "0.10" : "0.01"}
                 value={insurance}
                 onChange={(e) => setInsurance(parseFloat(e.target.value))}
                 className="w-full h-1.5 bg-surface-container-high rounded-lg appearance-none cursor-pointer accent-primary"
               />
               <div className="flex justify-between text-[9px] text-on-surface-variant font-mono">
-                <span>$0.02</span>
-                <span>$0.15</span>
-                <span>$0.30</span>
+                <span>{productType === "rattan" ? "$0.50" : "$0.02"}</span>
+                <span>{productType === "rattan" ? "$2.75" : "$0.15"}</span>
+                <span>{productType === "rattan" ? "$5.00" : "$0.30"}</span>
               </div>
             </div>
           </div>
@@ -367,20 +394,18 @@ export default function ExportCalculatorPage() {
                 <div className="w-[25%] h-full bg-rose-400/40" title="Mahal"></div>
 
                 {/* Marker pointer of calculated CIF value relative to benchmark */}
-                {/* Benchmark is 2.80. Let's map 2.80 to 60%. */}
-                {/* finalCif relative positioning */}
                 <div 
                   className="absolute top-0 bottom-0 w-1 bg-[#070235] transition-all duration-500 shadow-lg"
-                  style={{ left: `${Math.min(Math.max((finalCif / 4.0) * 100, 5), 95)}%` }}
+                  style={{ left: `${Math.min(Math.max((finalCif / (productType === "rattan" ? 100.0 : 4.0)) * 100, 5), 95)}%` }}
                 >
                   <div className="absolute -top-1.5 -left-1 w-3 h-3 bg-[#070235] rounded-full border border-white"></div>
                 </div>
               </div>
 
               <div className="flex justify-between text-[10px] text-on-surface-variant font-mono">
-                <span>Rendah (&lt; $2.55)</span>
-                <span className="font-bold text-emerald-800">Ideal ($2.55 - $2.95)</span>
-                <span>Tinggi (&gt; $2.95)</span>
+                <span>Rendah ({productType === "rattan" ? "< $48.00" : "< $2.55"})</span>
+                <span className="font-bold text-emerald-800">Ideal ({productType === "rattan" ? "$48.00 - $58.00" : "$2.55 - $2.95"})</span>
+                <span>Tinggi ({productType === "rattan" ? "> $58.00" : "> $2.95"})</span>
               </div>
             </div>
 
@@ -388,13 +413,13 @@ export default function ExportCalculatorPage() {
             <div className="bg-primary/5 p-4 rounded-xl flex items-start gap-3 border border-primary/10">
               <span className="material-symbols-outlined text-primary text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>lightbulb</span>
               <div className="text-xs leading-relaxed text-on-surface">
-                <strong>Analisis Kelayakan Ekspor:</strong> Biji kopi robusta dengan HS Code 0901.11 di Jerman mencatat rata-rata harga pasar impor BPS sebesar <strong>${marketAvg.toFixed(2)}/kg</strong>. 
+                <strong>Analisis Kelayakan Ekspor:</strong> {productType === "rattan" ? "Furnitur Kursi Rotan dengan HS Code 9401.52" : "Biji kopi robusta dengan HS Code 0901.11"} di Jerman mencatat rata-rata harga pasar impor BPS sebesar <strong>${marketAvg.toFixed(2)}/{unitLabel}</strong>. 
                 {status === "competitive" ? (
-                  <span> Harga penawaran CIF Anda (<strong>${finalCif.toFixed(2)}/kg</strong>) sangat bersaing. Pembeli dari Eropa Barat cenderung menyetujui transaksi ini karena margin keuntungan mereka aman dan sesuai harga standar Uni Eropa.</span>
+                  <span> Harga penawaran CIF Anda (<strong>${finalCif.toFixed(2)}/{unitLabel}</strong>) sangat bersaing. Pembeli dari Eropa Barat cenderung menyetujui transaksi ini karena margin keuntungan mereka aman dan sesuai harga standar Uni Eropa.</span>
                 ) : status === "high" ? (
-                  <span> Harga penawaran CIF Anda (<strong>${finalCif.toFixed(2)}/kg</strong>) berada di atas harga pasar. Ini dapat memicu negosiasi panjang. Pertimbangkan menurunkan target profit margin atau memotong ongkos Handling lokal untuk meningkatkan tingkat keberhasilan deal.</span>
+                  <span> Harga penawaran CIF Anda (<strong>${finalCif.toFixed(2)}/{unitLabel}</strong>) berada di atas harga pasar. Ini dapat memicu negosiasi panjang. Pertimbangkan menurunkan target profit margin atau memotong ongkos Handling lokal untuk meningkatkan tingkat keberhasilan deal.</span>
                 ) : (
-                  <span> Harga penawaran CIF Anda (<strong>${finalCif.toFixed(2)}/kg</strong>) sangat murah. Pastikan kualitas robusta Grade 1 premium tetap terjaga dan berhati-hatilah terhadap kecurigaan produk di bawah standar (dumping) oleh otoritas bea cukai Hamburg.</span>
+                  <span> Harga penawaran CIF Anda (<strong>${finalCif.toFixed(2)}/{unitLabel}</strong>) sangat murah. Pastikan kualitas produk {productType === "rattan" ? "furnitur rotan Jepara" : "robusta Grade 1 premium"} tetap terjaga dan berhati-hatilah terhadap kecurigaan produk di bawah standar (dumping) oleh otoritas bea cukai Hamburg.</span>
                 )}
               </div>
             </div>

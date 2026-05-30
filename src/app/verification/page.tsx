@@ -9,6 +9,21 @@ export default function VerificationPage() {
   const [score, setScore] = useState(0);
   const [scoreOffset, setScoreOffset] = useState(352);
 
+  const [companyName, setCompanyName] = useState("PT Nusantara Global Coffee");
+  const [productName, setProductName] = useState("Premium Robusta Coffee Beans");
+  const [productType, setProductType] = useState("coffee");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedCompany = localStorage.getItem("tradeconnect_company_name");
+      if (savedCompany) setCompanyName(savedCompany);
+      const savedProduct = localStorage.getItem("tradeconnect_product_name");
+      if (savedProduct) setProductName(savedProduct);
+      const savedType = localStorage.getItem("tradeconnect_product_type");
+      if (savedType) setProductType(savedType);
+    }
+  }, []);
+
   useEffect(() => {
     // Simulate the verification pipeline
     const timer1 = setTimeout(() => setLoadingStep(1), 1500); // Verify NIB
@@ -125,13 +140,17 @@ export default function VerificationPage() {
                 </div>
                 
                 <div className="text-on-surface-variant">Entity Type</div>
-                <div className="font-medium text-on-surface">PT (Perseroan Terbatas)</div>
+                <div className="font-medium text-on-surface">
+                  {companyName.toUpperCase().includes("CV") ? "CV (Persekutuan Komanditer)" : "PT (Perseroan Terbatas)"}
+                </div>
                 
                 <div className="text-on-surface-variant">Risk Level</div>
                 <div className="font-medium text-on-surface">Low - Medium Risk</div>
                 
                 <div className="text-on-surface-variant">KBLI Match</div>
-                <div className="font-medium text-on-surface">46311 (Wholesale Coffee)</div>
+                <div className="font-medium text-on-surface">
+                  {productType === "rattan" ? "31001 (Wholesale Furniture & Rattan)" : "46311 (Wholesale Coffee)"}
+                </div>
               </div>
             </div>
 
@@ -140,11 +159,15 @@ export default function VerificationPage() {
                 <span className="material-symbols-outlined text-primary text-[20px]">category</span>
                 <h3 className="text-base font-semibold text-on-surface">AI HS Code Mapping</h3>
               </div>
-              <p className="text-xs text-on-surface-variant mb-3">NLP model mapped your description "Premium Robusta Coffee Beans" to:</p>
+              <p className="text-xs text-on-surface-variant mb-3">NLP model mapped your description "{productName}" to:</p>
               
               <div className="bg-surface-variant p-3 rounded-md border border-outline-variant">
-                <div className="text-xl font-mono-data font-bold text-primary tracking-widest mb-1">0901.11</div>
-                <div className="text-xs font-medium text-on-surface">Coffee, not roasted, not decaffeinated</div>
+                <div className="text-xl font-mono-data font-bold text-primary tracking-widest mb-1">
+                  {productType === "rattan" ? "9401.52" : "0901.11"}
+                </div>
+                <div className="text-xs font-medium text-on-surface">
+                  {productType === "rattan" ? "Seats of rattan (Kursi rotan anyaman)" : "Coffee, not roasted, not decaffeinated"}
+                </div>
                 <div className="mt-2 pt-2 border-t border-outline-variant flex items-center gap-1 text-[11px] text-secondary font-medium">
                   <span className="material-symbols-outlined text-[14px]">trending_up</span>
                   High global demand detected

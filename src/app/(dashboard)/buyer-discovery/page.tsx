@@ -42,6 +42,38 @@ export default function BuyerDiscoveryPage() {
   const [sortBy, setSortBy] = useState("Relevansi");
   const [filteredBuyers, setFilteredBuyers] = useState<Buyer[]>([]);
 
+  const [companyName, setCompanyName] = useState("PT Nusantara Global Coffee");
+  const [productName, setProductName] = useState("Biji Kopi Robusta Premium");
+  const [productType, setProductType] = useState("coffee");
+  const [nib, setNib] = useState("1234567890123");
+  const [capacity, setCapacity] = useState("50,000 Units");
+  const [moq, setMoq] = useState("1000 Pcs");
+
+  // Sync profile details on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedCompany = localStorage.getItem("tradeconnect_company_name") || "PT Nusantara Global Coffee";
+      const savedProduct = localStorage.getItem("tradeconnect_product_name") || "Biji Kopi Robusta Premium";
+      const savedType = localStorage.getItem("tradeconnect_product_type") || "coffee";
+      const savedNib = localStorage.getItem("tradeconnect_nib") || "1234567890123";
+      const savedCapacity = localStorage.getItem("tradeconnect_capacity") || "50,000 Units";
+      const savedMoq = localStorage.getItem("tradeconnect_moq") || "1000 Pcs";
+
+      setCompanyName(savedCompany);
+      setProductName(savedProduct);
+      setProductType(savedType);
+      setNib(savedNib);
+      setCapacity(savedCapacity);
+      setMoq(savedMoq);
+
+      if (savedType === "rattan") {
+        setTargetHsCode("9401.52 (Kursi Rotan)");
+      } else {
+        setTargetHsCode("0901.21 (Kopi Panggang)");
+      }
+    }
+  }, []);
+
   // Pitching process simulation effect
   useEffect(() => {
     if (!isPitching) return;
@@ -64,25 +96,29 @@ export default function BuyerDiscoveryPage() {
     }
   }, [isPitching, pitchStep]);
 
+  const isRattan = productType === "rattan";
+
   const buyers: Buyer[] = [
     {
       id: "globaltech",
       name: "GlobalTech Imports GmbH",
       logo: "G",
       location: "Frankfurt, Jerman",
-      category: "Komoditas Global & Bahan Pangan",
+      category: isRattan ? "Mebel & Kerajinan Tangan Premium" : "Komoditas Global & Bahan Pangan",
       score: 94,
       lastShipment: "4 Hari yang Lalu",
       origin: "Indonesia",
-      avgVolume: "18.0 TEU / bulan",
-      hsCodes: "0901.11, 0901.21",
+      avgVolume: isRattan ? "1.5 TEU / bulan" : "18.0 TEU / bulan",
+      hsCodes: isRattan ? "9401.52, 9403.83" : "0901.11, 0901.21",
       confidence: "Tingkat Keyakinan 98%",
-      rationale: "Importir B2B asal Jerman ini sedang aktif mencari pemasok biji kopi robusta untuk pengapalan Kuartal 3 (Q3) ke pelabuhan Hamburg. Mereka memiliki permintaan pengapalan kontainer yang sangat stabil (rata-rata 18 TEU per bulan) dan sangat cocok dengan kapasitas PT Nusantara.",
+      rationale: isRattan 
+        ? `Importir B2B asal Jerman ini sedang aktif mencari pemasok kursi/anyaman rotan untuk pengapalan Kuartal 3 (Q3) ke pelabuhan Hamburg. Mereka memiliki permintaan pengapalan kontainer furnitur anyaman yang sangat stabil dan sangat cocok dengan kapasitas ${companyName || "CV Jepara Rattan Mandiri"}.`
+        : `Importir B2B asal Jerman ini sedang aktif mencari pemasok biji kopi robusta untuk pengapalan Kuartal 3 (Q3) ke pelabuhan Hamburg. Mereka memiliki permintaan pengapalan kontainer yang sangat stabil (rata-rata 18 TEU per bulan) dan sangat cocok dengan kapasitas ${companyName || "PT Nusantara Global Coffee"}.`,
       details: {
         established: "2008",
         importRecords: "1.240 pengiriman sukses",
         preferredPorts: "Pelabuhan Hamburg (DEHAM), Pelabuhan Bremen (DEBRE)",
-        certifications: "ISO 9001, Fairtrade Imp., Rainforest Alliance",
+        certifications: isRattan ? "FSC Certification, SVLK Timber Legality" : "ISO 9001, Fairtrade Imp., Rainforest Alliance",
         complianceHistory: "100% Catatan Manifest Bersih (Bebas Hambatan Pabean)",
         contactPerson: "Klaus Weber (Direktur Pengadaan Global)",
         financialScore: "A+ (Peringkat Kredit Dun & Bradstreet)",
@@ -93,19 +129,21 @@ export default function BuyerDiscoveryPage() {
       name: "EuroCafé Logistics Group",
       logo: "E",
       location: "Hamburg, Jerman",
-      category: "Distribusi Grosir",
+      category: isRattan ? "Grosir Mebel & Dekorasi Rumah" : "Distribusi Grosir",
       score: 82,
       lastShipment: "45 Hari yang Lalu",
-      origin: "Brasil / Vietnam",
-      avgVolume: "12 TEU / bulan",
-      hsCodes: "0901.21, 1801.00",
+      origin: isRattan ? "Indonesia / Vietnam" : "Brasil / Vietnam",
+      avgVolume: isRattan ? "2 TEU / bulan" : "12 TEU / bulan",
+      hsCodes: isRattan ? "9401.52, 9401.53" : "0901.21, 1801.00",
       confidence: "Tingkat Keyakinan 85%",
-      rationale: "Kecocokan volume pengiriman yang kuat dengan kapasitas Anda. Namun, riwayat data bill of lading menunjukkan mereka utamanya mengimpor biji kopi mentah curah (HS 0901.11) dibandingkan spesifikasi kopi panggang Anda. Silakan lanjutkan dengan draf penawaran khusus yang menonjolkan kualitas penyangraian Anda.",
+      rationale: isRattan
+        ? `Kecocokan volume pengiriman yang cukup dengan kapasitas Anda. Namun, riwayat data bill of lading menunjukkan mereka utamanya mengimpor furnitur kayu berat dibandingkan spesifikasi anyaman rotan ringan Anda. Silakan lanjutkan dengan draf penawaran khusus yang menonjolkan keunikan anyaman tangan Jepara Anda.`
+        : "Kecocokan volume pengiriman yang kuat dengan kapasitas Anda. Namun, riwayat data bill of lading menunjukkan mereka utamanya mengimpor biji kopi mentah curah (HS 0901.11) dibandingkan spesifikasi kopi panggang Anda. Silakan lanjutkan dengan draf penawaran khusus yang menonjolkan kualitas penyangraian Anda.",
       details: {
         established: "2012",
         importRecords: "850 pengiriman sukses",
         preferredPorts: "Pelabuhan Hamburg (DEHAM), Pelabuhan Rotterdam (NLROT)",
-        certifications: "IFS Broker Certificate, Importir Organik Resmi Uni Eropa",
+        certifications: isRattan ? "FSC Certificate, V-Legal Timber" : "IFS Broker Certificate, Importir Organik Resmi Uni Eropa",
         complianceHistory: "Sangat Baik (Keterlambatan kecil diselesaikan di 2024)",
         contactPerson: "Dr. Elena Brandt (Kepala Rantai Pasok)",
         financialScore: "Peringkat A- Rated",
@@ -113,18 +151,22 @@ export default function BuyerDiscoveryPage() {
     }
   ];
 
+  // Update filtered buyers when productType or companyName changes
   useEffect(() => {
     setFilteredBuyers(buyers);
-  }, []);
+  }, [productType, companyName]);
 
   const handleApplyFilter = () => {
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
-      const hasCoffeeKeyword = targetHsCode.toLowerCase().includes("kopi") || targetHsCode.toLowerCase().includes("0901");
+      const isRattanMode = productType === "rattan";
+      const keyword = isRattanMode ? "rotan" : "kopi";
+      const code = isRattanMode ? "9401" : "0901";
+      const hasMatch = targetHsCode.toLowerCase().includes(keyword) || targetHsCode.toLowerCase().includes(code);
       const isTargetRegionMatch = selectedRegion === "Uni Eropa (EU27)";
       
-      if (!isTargetRegionMatch || !hasCoffeeKeyword) {
+      if (!isTargetRegionMatch || !hasMatch) {
         setFilteredBuyers([]);
       } else {
         setFilteredBuyers(buyers);
@@ -136,7 +178,8 @@ export default function BuyerDiscoveryPage() {
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
-      setTargetHsCode("0901.21 (Kopi Panggang)");
+      const isRattanMode = productType === "rattan";
+      setTargetHsCode(isRattanMode ? "9401.52 (Kursi Rotan)" : "0901.21 (Kopi Panggang)");
       setSelectedRegion("Uni Eropa (EU27)");
       setMinVolume("1 TEU / Bulan");
       setSortBy("Relevansi");
@@ -651,11 +694,11 @@ export default function BuyerDiscoveryPage() {
                 {/* Step 3.5: Preview of the drafted email */}
                 {pitchStep === 3 && (
                   <div className="bg-surface border border-outline-variant p-3.5 rounded-lg text-[10px] font-mono text-on-surface-variant shadow-inner max-h-24 overflow-y-auto animate-in slide-in-from-top-2 duration-300 w-full text-left">
-                    <span className="text-primary font-bold">Subjek:</span> Perkenalan B2B: Biji Kopi Robusta Premium Grade 1<br/>
+                    <span className="text-primary font-bold">Subjek:</span> Perkenalan B2B: {productName}<br/>
                     <span className="text-primary font-bold">Kpd:</span> klaus.weber@globaltech.de<br/>
                     <span className="text-slate-400">---</span><br/>
                     Dear Mr. Weber,<br/>
-                    PT Nusantara Coffee offers Premium Grade 1 Robusta Coffee Beans (HS 0901.11) with moisture content below 12.5%. Our monthly production capacity is 50,000 Units and NIB is fully verified...
+                    {companyName} offers premium {productName} (HS {isRattan ? "9401.52" : "0901.11"}) crafted under highest standards. Our monthly production capacity is {capacity} and MOQ is {moq}. Our NIB ({nib}) is fully verified...
                   </div>
                 )}
 

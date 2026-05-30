@@ -109,8 +109,53 @@ export async function generateReply(
 
   // Dynamic high-fidelity mock replies based on input text & keyword rules
   const lowerText = emailContent.toLowerCase();
+  const isRattan = productContext.toLowerCase().includes("rotan") || productContext.toLowerCase().includes("rattan") || productContext.toLowerCase().includes("kursi");
   
-  // Custom generated drafts based on buyer's counter-offer or generic replies
+  if (isRattan) {
+    if (lowerText.includes("45,00") || lowerText.includes("45.00") || lowerText.includes("45")) {
+      return {
+        drafts: [
+          {
+            id: "draft-1-comp-rattan",
+            title: "Tolak Halus (Kompromi $50.00)",
+            strategy: "Tawarkan harga jalan tengah di atas floor price ($45.00/pcs) dengan termin pembayaran aman (30% DP, 70% LC) untuk menjaga kualitas rotan kelas A alami asal Jepara.",
+            text: "Terima kasih atas ketertarikan Anda yang luar biasa pada kursi rotan kami. Sayangnya, karena kontrol kualitas yang ketat serta tingkat kerumitan anyaman tangan pengrajin Jepara kami, harga penawaran $45,00/unit berada di bawah batas margin keberlanjutan kami. Sebagai jalan tengah, kami bersedia menawarkan harga khusus $50,00/unit CIF Pelabuhan Hamburg dengan syarat pembayaran 30% Down Payment (DP) dan sisa 70% melalui Letter of Credit (L/C) at sight. Mohon saran jika Anda menyetujui usulan kompromi ini."
+          },
+          {
+            id: "draft-2-vol-rattan",
+            title: "Diskon Volume (Nego $48.00)",
+            strategy: "Berikan diskon ekstra mendekati floor price ($48.00/pcs) dengan syarat pembeli meningkatkan volume pembelian uji coba menjadi 2 kontainer penuh (300 pcs kursi).",
+            text: "Terima kasih atas tanggapan berharga Anda. Kami memahami dinamika pasar furnitur di Jerman saat ini. Kami bersedia menyesuaikan penawaran kami mendekati target Anda, yaitu sebesar $48,00/unit CIF Hamburg, dengan syarat volume pemesanan uji coba ditingkatkan menjadi minimum 2 kontainer penuh (sekitar 300 unit kursi). Hal ini sangat membantu kami mengoptimalkan pengapalan domestik dan pengemasan logistik. Silakan beri tahu kami jika opsi ini dapat disetujui."
+          },
+          {
+            id: "draft-3-fob-rattan",
+            title: "Opsi FOB Pelabuhan Semarang ($47.00)",
+            strategy: "Kurangi harga secara signifikan dengan mengubah klausul Incoterms dari CIF Hamburg menjadi FOB Tanjung Emas Semarang, memindahkan biaya pengapalan internasional ke pembeli.",
+            text: "Salam hangat dari Indonesia. Menanggapi proposal Anda, kami tidak dapat memenuhi CIF Hamburg di harga $45,00/unit. Namun, kami dapat menawarkan opsi alternatif yang sangat hemat: harga $47,00/unit FOB Pelabuhan Tanjung Emas (Semarang). Hal ini memungkinkan tim logistik Anda untuk mengelola pengapalan laut dan asuransi internasional secara mandiri dengan tarif korporat Anda sendiri. Mohon saran jika opsi ini lebih menguntungkan bagi Anda."
+          }
+        ]
+      };
+    }
+
+    return {
+      drafts: [
+        {
+          id: "draft-gen-1-rattan",
+          title: "Konfirmasi Persetujuan Kontrak",
+          strategy: "Kirim pesan terima kasih profesional atas kesepakatan harga dan instruksikan penyusunan kontrak pembelian.",
+          text: "Terima kasih atas konfirmasi dan kerjasamanya yang luar biasa. Kami sangat senang kita dapat mencapai kesepakatan bersama yang adil untuk kursi rotan Jepara ini. Kami akan segera menyusun dokumen Proforma Invoice dan Purchase Order resmi di platform TradeConnect agar kita dapat melangkah ke tahap pemeriksaan kepatuhan hukum ekspor serta penandatanganan kontrak."
+        },
+        {
+          id: "draft-gen-2-rattan",
+          title: "Tanya Jadwal Pengapalan",
+          strategy: "Tanyakan estimasi tanggal kesiapan kapal dan berkoordinasi mengenai detail agen logistik pembeli.",
+          text: "Kami menyambut baik kesepakatan ini. Untuk mempersiapkan logistik pergudangan kami di Jepara, Jawa Tengah, mohon informasikan jadwal kedatangan kapal (shipping window) yang Anda targetkan untuk Kuartal 3 ini. Kami juga siap berkoordinasi langsung dengan freight forwarder rujukan Anda."
+        }
+      ]
+    };
+  }
+
+  // Custom generated drafts based on buyer's counter-offer or generic replies (Coffee Default)
   if (lowerText.includes("2,50") || lowerText.includes("2.50")) {
     return {
       drafts: [
@@ -215,12 +260,19 @@ export async function checkRedFlag(buyerId: string): Promise<RedFlagReport> {
 
   // High-Fidelity Mock Risk Intelligence
   if (buyerId === "klaus") {
+    let isRattan = false;
+    if (typeof window !== "undefined") {
+      const productName = localStorage.getItem("tradeconnect_product_name") || "";
+      isRattan = productName.toLowerCase().includes("rotan") || productName.toLowerCase().includes("rattan") || productName.toLowerCase().includes("kursi");
+    }
     return {
       riskLevel: "LOW",
       flags: [
         { icon: "verified_user", title: "Profil Bisnis Terverifikasi", description: "GlobalTech Imports GmbH terdaftar secara resmi di Frankfurt, Jerman (UID: DE123456789) tanpa riwayat sengketa dagang." },
         { icon: "payments", title: "Rekam Jejak Pembayaran Bersih", description: "Tidak ada keluhan gagal bayar atau keterlambatan Letter of Credit (L/C) dalam 24 bulan terakhir." },
-        { icon: "eco", title: "Kepatuhan EUDR Sesuai Regulasi", description: "Buyer secara aktif mendukung pelacakan koordinat geo-lokasi kebun kopi sesuai aturan deforestasi Uni Eropa." }
+        isRattan 
+        ? { icon: "eco", title: "Sertifikasi SVLK & FSC Valid", description: "Dokumen Sistem Verifikasi Legalitas Kayu (SVLK) dan sertifikasi FSC produk rotan Anda cocok 100% dengan persyaratan bea cukai Uni Eropa." }
+        : { icon: "eco", title: "Kepatuhan EUDR Sesuai Regulasi", description: "Buyer secara aktif mendukung pelacakan koordinat geo-lokasi kebun kopi sesuai aturan deforestasi Uni Eropa." }
       ]
     };
   } else if (buyerId === "nippon") {

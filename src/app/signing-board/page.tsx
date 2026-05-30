@@ -14,9 +14,20 @@ export default function SigningBoardPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
 
-  // Load final price on mount
+  const [companyName, setCompanyName] = useState("PT Nusantara Global Coffee");
+  const [productName, setProductName] = useState("Biji Kopi Robusta Premium");
+  const [productType, setProductType] = useState("coffee");
+  const [nib, setNib] = useState("1234567890123");
+
+  // Load final price and profile on mount
   useEffect(() => {
     setAgreedPrice(getFinalPrice());
+    if (typeof window !== "undefined") {
+      setCompanyName(localStorage.getItem("tradeconnect_company_name") || "PT Nusantara Global Coffee");
+      setProductName(localStorage.getItem("tradeconnect_product_name") || "Biji Kopi Robusta Premium");
+      setProductType(localStorage.getItem("tradeconnect_product_type") || "coffee");
+      setNib(localStorage.getItem("tradeconnect_nib") || "1234567890123");
+    }
   }, []);
 
   // HTML5 Canvas Drawing Logic
@@ -111,9 +122,11 @@ export default function SigningBoardPage() {
   };
 
   // Calculations
-  const itemTotal = agreedPrice * 18 * 1000; // 18 Metric Tons
+  const isRattan = productType === "rattan";
+  const itemTotal = isRattan ? (agreedPrice * 150) : (agreedPrice * 18 * 1000); // 150 Pcs or 18 Metric Tons
   const shippingTotal = 2100;
   const grandTotal = itemTotal + shippingTotal;
+  const poNumber = isRattan ? "PO-JPR-2605-001" : "PO-GLB-2605-001";
 
   // Format currency
   const formatCurrency = (val: number) => {
@@ -136,8 +149,8 @@ export default function SigningBoardPage() {
           
           <h1 className="text-3xl md:text-4xl font-extrabold text-white mb-4 tracking-tight">Purchase Order Signed Successfully</h1>
           <p className="text-slate-400 text-base max-w-md mx-auto mb-8 leading-relaxed">
-            Thank you! GlobalTech Imports GmbH has verified and digitally signed <strong className="text-emerald-400">PO-GLB-2605-001</strong>. 
-            The supplier, PT Nusantara Global Coffee, has been notified to initiate the production process.
+            Thank you! GlobalTech Imports GmbH has verified and digitally signed <strong className="text-emerald-400">{poNumber}</strong>. 
+            The supplier, {companyName}, has been notified to initiate the production process.
           </p>
 
           <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 mb-8 max-w-md mx-auto text-left space-y-2">
@@ -172,7 +185,7 @@ export default function SigningBoardPage() {
             Request Revisions
           </h2>
           <p className="text-slate-400 text-sm mb-6">
-            Specify the changes required for <span className="text-slate-200 font-semibold">PO-GLB-2605-001</span>. PT Nusantara Global Coffee will receive this feedback in their Negotiation Hub immediately.
+            Specify the changes required for <span className="text-slate-200 font-semibold">{poNumber}</span>. {companyName} will receive this feedback in their Negotiation Hub immediately.
           </p>
 
           {revisionSent ? (
@@ -261,7 +274,7 @@ export default function SigningBoardPage() {
                 Awaiting Digital Signature
               </span>
               <h2 className="text-3xl font-black text-[#070235] mt-3 tracking-tight">PURCHASE ORDER</h2>
-              <p className="text-xs text-on-surface-variant mt-1.5 font-medium">PO Number: <span className="text-on-surface font-bold">PO-GLB-2605-001</span></p>
+              <p className="text-xs text-on-surface-variant mt-1.5 font-medium">PO Number: <span className="text-on-surface font-bold">{poNumber}</span></p>
               <p className="text-xs text-on-surface-variant font-medium">Date Issued: <span className="text-on-surface font-bold">23 May 2026</span></p>
             </div>
             
@@ -279,9 +292,9 @@ export default function SigningBoardPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-surface p-5 rounded-xl border border-outline-variant shadow-inner">
             <div>
               <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">Vendor (Exporter)</span>
-              <h4 className="text-sm font-bold text-[#070235]">PT Nusantara Global Coffee</h4>
-              <p className="text-xs text-on-surface-variant">Jakarta, Indonesia</p>
-              <p className="text-xs text-on-surface-variant font-mono">NIB: 1234567890123</p>
+              <h4 className="text-sm font-bold text-[#070235]">{companyName}</h4>
+              <p className="text-xs text-on-surface-variant">{isRattan ? "Semarang, Jawa Tengah, Indonesia" : "Jakarta, Indonesia"}</p>
+              <p className="text-xs text-on-surface-variant font-mono">NIB: {nib}</p>
               <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 mt-2 inline-flex items-center gap-0.5">
                 <span className="material-symbols-outlined text-[12px]">verified</span> Verified OSS Profile
               </span>
@@ -301,7 +314,7 @@ export default function SigningBoardPage() {
                 <tr className="border-b-2 border-outline-variant text-[10px] text-slate-500 font-bold uppercase tracking-wider">
                   <th className="pb-3">Description</th>
                   <th className="pb-3 text-center">HS Code</th>
-                  <th className="pb-3 text-center">Qty (MT)</th>
+                  <th className="pb-3 text-center">{isRattan ? "Qty (Pcs)" : "Qty (MT)"}</th>
                   <th className="pb-3 text-right">Unit Price</th>
                   <th className="pb-3 text-right">Total</th>
                 </tr>
@@ -309,17 +322,17 @@ export default function SigningBoardPage() {
               <tbody className="text-xs md:text-sm">
                 <tr className="border-b border-outline-variant/40">
                   <td className="py-4">
-                    <div className="font-bold text-[#070235]">Premium Robusta Coffee Beans (Grade 1)</div>
-                    <div className="text-[11px] text-slate-500 mt-0.5">Moisture &lt;12.5%, Defects &lt;11%, Screen Size 16</div>
+                    <div className="font-bold text-[#070235]">{isRattan ? productName : "Premium Robusta Coffee Beans (Grade 1)"}</div>
+                    <div className="text-[11px] text-slate-500 mt-0.5">{isRattan ? "100% Certified Sustainable Rattan, Grade A Anyaman" : "Moisture <12.5%, Defects <11%, Screen Size 16"}</div>
                   </td>
-                  <td className="py-4 text-center font-mono text-xs text-on-surface-variant">0901.11</td>
-                  <td className="py-4 text-center font-bold text-on-surface">18.00</td>
-                  <td className="py-4 text-right font-mono text-on-surface">{formatCurrency(agreedPrice * 1000)}</td>
+                  <td className="py-4 text-center font-mono text-xs text-on-surface-variant">{isRattan ? "9401.52" : "0901.11"}</td>
+                  <td className="py-4 text-center font-bold text-on-surface">{isRattan ? "150.00" : "18.00"}</td>
+                  <td className="py-4 text-right font-mono text-on-surface">{isRattan ? formatCurrency(agreedPrice) : formatCurrency(agreedPrice * 1000)}</td>
                   <td className="py-4 text-right font-black font-mono text-[#070235]">{formatCurrency(itemTotal)}</td>
                 </tr>
                 <tr className="border-b border-outline-variant/40">
                   <td className="py-4">
-                    <div className="font-bold text-[#070235]">CIF Logistics & Handling (Jakarta to Hamburg)</div>
+                    <div className="font-bold text-[#070235]">CIF Logistics & Handling ({isRattan ? "Semarang" : "Jakarta"} to Hamburg)</div>
                     <div className="text-[11px] text-slate-500 mt-0.5">Includes local charges, ocean freight, cargo insurance</div>
                   </td>
                   <td className="py-4 text-center font-mono text-xs text-slate-400">-</td>
@@ -437,7 +450,7 @@ export default function SigningBoardPage() {
 
       <footer className="text-center text-xs text-slate-400 space-y-1">
         <p>Protected by TradeConnect 256-bit SSL B2B Institutional Escrow Pipeline.</p>
-        <p>© 2026 TradeConnect. All Rights Reserved. Frankfurt - Jakarta corridor.</p>
+        <p>© 2026 TradeConnect. All Rights Reserved. Frankfurt - {isRattan ? "Semarang" : "Jakarta"} corridor.</p>
       </footer>
     </div>
   );
