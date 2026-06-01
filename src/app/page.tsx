@@ -210,9 +210,9 @@ export default function OnboardingWizard() {
                       <span className="text-sm font-medium text-on-surface">Harga Dasar Minimum (Rp/unit) *</span>
                     </label>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline">price_check</span>
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-on-surface-variant select-none">Rp</span>
                       <input 
-                        className="w-full pl-10 pr-4 py-3 bg-surface border border-outline-variant rounded-md text-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors" 
+                        className="w-full pl-12 pr-4 py-3 bg-surface border border-outline-variant rounded-md text-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors" 
                         id="floor_price" 
                         placeholder="misal: 42880" 
                         required 
@@ -232,9 +232,9 @@ export default function OnboardingWizard() {
                       <span className="text-sm font-medium text-on-surface">Harga Penawaran Awal (Rp/unit) *</span>
                     </label>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline">sell</span>
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-on-surface-variant select-none">Rp</span>
                       <input 
-                        className="w-full pl-10 pr-4 py-3 bg-surface border border-outline-variant rounded-md text-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors" 
+                        className="w-full pl-12 pr-4 py-3 bg-surface border border-outline-variant rounded-md text-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors" 
                         id="asking_price" 
                         placeholder="misal: 45600" 
                         required 

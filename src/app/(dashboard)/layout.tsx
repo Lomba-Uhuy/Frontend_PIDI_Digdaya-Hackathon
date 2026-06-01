@@ -10,13 +10,6 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const [currentStep, setCurrentStep] = useState<TradeConnectStep>("onboarding");
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [hasNewNotifications, setHasNewNotifications] = useState(true);
-  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
-  const [companyName, setCompanyName] = useState("CV Kopi Mandiri");
-  const [productName, setProductName] = useState("Kopi Arabika");
-
   const navItems = [
     { name: "Dashboard", path: "/dashboard", icon: "dashboard" },
     { name: "Intelijen Pasar", path: "/market-intelligence", icon: "bar_chart" },
@@ -26,6 +19,67 @@ export default function DashboardLayout({
     { name: "Kepatuhan Hukum", path: "/compliance", icon: "fact_check" },
     { name: "Purchase Order (PO)", path: "/purchase-order", icon: "request_quote" },
   ];
+  const [currentStep, setCurrentStep] = useState<TradeConnectStep>("onboarding");
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [hasNewNotifications, setHasNewNotifications] = useState(true);
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+  const [companyName, setCompanyName] = useState("CV Kopi Mandiri");
+  const [productName, setProductName] = useState("Kopi Arabika");
+
+  // Tour States
+  const [tourStep, setTourStep] = useState(0);
+  const [coords, setCoords] = useState<{ top: number; left: number } | null>(null);
+
+  const handleStartTour = () => {
+    setTourStep(1);
+  };
+
+  const handleNextTourStep = () => {
+    if (tourStep < 4) {
+      setTourStep(tourStep + 1);
+    } else {
+      setTourStep(0);
+    }
+  };
+
+  const handleSkipTour = () => {
+    setTourStep(0);
+  };
+
+  const getTourHighlightClass = (path: string) => {
+    if (tourStep === 2 && path === "/buyer-discovery") return "tour-highlight animate-pulse";
+    if (tourStep === 3 && path === "/negotiation") return "tour-highlight animate-pulse";
+    if (tourStep === 4 && path === "/purchase-order") return "tour-highlight animate-pulse";
+    return "";
+  };
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const tourShown = localStorage.getItem("tradeconnect_tour_shown");
+      if (!tourShown) {
+        setTourStep(1);
+        localStorage.setItem("tradeconnect_tour_shown", "true");
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (tourStep === 1) {
+      setCoords(null);
+    } else {
+      const targetId = `tour-step-${tourStep}`;
+      const element = document.getElementById(targetId);
+      if (element && typeof window !== "undefined" && window.innerWidth >= 768) {
+        const rect = element.getBoundingClientRect();
+        setCoords({
+          top: rect.top + window.scrollY,
+          left: rect.right + 16,
+        });
+      } else {
+        setCoords(null);
+      }
+    }
+  }, [tourStep]);
 
   useEffect(() => {
     setCurrentStep(getStep());
@@ -169,6 +223,8 @@ export default function DashboardLayout({
         <div className="flex-1 px-2 flex flex-col gap-0.5">
           {navItems.map((item, idx) => {
             const isActive = pathname === item.path;
+            const tourClass = getTourHighlightClass(item.path);
+            const isTourHighlighted = tourClass !== "";
             // Insert a visual separator before Purchase Order
             const showDivider = item.path === "/purchase-order";
             return (
@@ -182,8 +238,11 @@ export default function DashboardLayout({
                 )}
                 <Link
                   href={item.path}
+                  id={item.path === "/buyer-discovery" ? "tour-step-2" : item.path === "/negotiation" ? "tour-step-3" : item.path === "/purchase-order" ? "tour-step-4" : undefined}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
-                    isActive
+                    isTourHighlighted
+                      ? tourClass
+                      : isActive
                       ? "bg-secondary-container text-on-secondary-container font-semibold translate-x-1 duration-200"
                       : "text-on-surface-variant hover:bg-surface-container-high"
                   }`}
@@ -207,6 +266,14 @@ export default function DashboardLayout({
             <span className="material-symbols-outlined">help</span>
             <span className="text-sm">Bantuan</span>
           </Link>
+          <button 
+            type="button"
+            onClick={handleStartTour}
+            className="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all w-full text-left cursor-pointer"
+          >
+            <span className="material-symbols-outlined">auto_awesome</span>
+            <span className="text-sm font-medium">Lihat Tutorial</span>
+          </button>
         </div>
       </nav>
 
@@ -384,6 +451,129 @@ export default function DashboardLayout({
               })}
             </div>
           </nav>
+        </div>
+      )}
+      {/* GUIDED ONBOARDING TOUR */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        .tour-highlight {
+          position: relative !important;
+          z-index: 9999 !important;
+          background-color: var(--md-sys-color-secondary-container, #e8def8) !important;
+          color: var(--md-sys-color-on-secondary-container, #1c0024) !important;
+          box-shadow: 0 0 0 9999px rgba(7, 2, 53, 0.65), 0 0 20px rgba(109, 40, 217, 0.8) !important;
+          pointer-events: none !important;
+          border-radius: 8px !important;
+        }
+        .tour-card-glow {
+          box-shadow: 0 10px 25px -5px rgba(7, 2, 53, 0.3), 0 8px 10px -6px rgba(7, 2, 53, 0.3), 0 0 0 1px rgba(7, 2, 53, 0.05), 0 0 20px rgba(99, 102, 241, 0.15);
+        }
+      `}} />
+
+      {tourStep > 0 && (
+        <div className="fixed inset-0 z-[10000] overflow-hidden select-none pointer-events-auto">
+          {/* Semi-transparent Backdrop for Step 1 or mobile */}
+          {(tourStep === 1 || !coords) && (
+            <div 
+              onClick={handleSkipTour}
+              className="absolute inset-0 bg-[#070235]/65 backdrop-blur-[2px] transition-all duration-300"
+            />
+          )}
+
+          {/* Tour Card */}
+          <div 
+            className="bg-surface-container-lowest text-on-surface border border-outline-variant rounded-2xl w-full max-w-sm p-6 flex flex-col gap-4 tour-card-glow animate-in fade-in zoom-in-95 duration-300 pointer-events-auto"
+            style={
+              coords 
+                ? {
+                    position: "absolute",
+                    top: `${coords.top}px`,
+                    left: `${coords.left}px`,
+                    transform: "translateY(-50%)",
+                  }
+                : {
+                    position: "fixed",
+                    top: "50%",
+                    left: "50%",
+                    transform: "translate(-50%, -50%)",
+                  }
+            }
+          >
+            {/* Step Indicator & Header */}
+            <div className="flex justify-between items-center">
+              <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                Langkah {tourStep} dari 4
+              </span>
+              <button 
+                onClick={handleSkipTour}
+                className="text-on-surface-variant hover:text-error p-1 rounded-full hover:bg-surface-container-high transition-colors"
+                title="Lewati Tutorial"
+              >
+                <span className="material-symbols-outlined text-[18px]">close</span>
+              </button>
+            </div>
+
+            {/* Tour Content */}
+            <div className="space-y-2 select-text">
+              {tourStep === 1 && (
+                <>
+                  <h3 className="text-lg font-black text-[#070235] flex items-center gap-2">
+                    <span>👋</span> Selamat datang di TradeConnect!
+                  </h3>
+                  <p className="text-xs text-on-surface-variant leading-relaxed">
+                    Platform ekspor UMKM terintegrasi AI. Kami akan memandu Anda memahami fitur utama dalam 4 langkah mudah untuk memulai ekspor perdana Anda.
+                  </p>
+                </>
+              )}
+              {tourStep === 2 && (
+                <>
+                  <h3 className="text-lg font-black text-[#070235] flex items-center gap-2">
+                    <span>🔍</span> Cari Pembeli Global
+                  </h3>
+                  <p className="text-xs text-on-surface-variant leading-relaxed">
+                    Temukan pembeli global secara instan di sini. AI kami secara cerdas memetakan deskripsi produk Anda untuk mencocokkan profil importir berpotensi tinggi dari sistem bea cukai global.
+                  </p>
+                </>
+              )}
+              {tourStep === 3 && (
+                <>
+                  <h3 className="text-lg font-black text-[#070235] flex items-center gap-2">
+                    <span>💬</span> Negosiasi &amp; Risiko
+                  </h3>
+                  <p className="text-xs text-on-surface-variant leading-relaxed">
+                    Masuk ke Pusat Negosiasi untuk berkomunikasi langsung via email terintegrasi. AI kami menyusun draf balasan pintar (RAG) untuk penyesuaian harga dan mendeteksi tanda bahaya kredibilitas pembeli secara otomatis.
+                  </p>
+                </>
+              )}
+              {tourStep === 4 && (
+                <>
+                  <h3 className="text-lg font-black text-[#070235] flex items-center gap-2">
+                    <span>📄</span> Purchase Order &amp; Ekspor!
+                  </h3>
+                  <p className="text-xs text-on-surface-variant leading-relaxed">
+                    Di menu ini, buat Purchase Order (PO) resmi secara instan. Kirim ke email pembeli dan pantau tanda tangannya secara real-time. Transaksi selesai tanpa perlu me-refresh halaman!
+                  </p>
+                </>
+              )}
+            </div>
+
+            {/* Footer Actions */}
+            <div className="flex flex-col gap-2 mt-2">
+              <button 
+                onClick={handleNextTourStep}
+                className="w-full bg-[#070235] text-white hover:bg-[#070235]/90 font-bold text-xs py-2.5 rounded-lg flex items-center justify-center gap-1 transition-all active:translate-y-0.5 cursor-pointer"
+              >
+                {tourStep === 4 ? "Mulai Jelajahi! 🚀" : "Selanjutnya →"}
+              </button>
+              {tourStep < 4 && (
+                <button 
+                  onClick={handleSkipTour}
+                  className="w-full text-on-surface-variant hover:text-primary text-xs font-bold py-1.5 transition-colors uppercase tracking-wider cursor-pointer"
+                >
+                  Lewati Tour
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>
