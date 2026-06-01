@@ -113,7 +113,7 @@ export default function OnboardingWizard() {
               <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-medium transition-colors ${step >= 1 ? 'bg-primary text-on-primary border-primary' : 'bg-surface-container-lowest text-on-surface-variant border-surface-variant'}`}>
                 1
               </div>
-              <span className={`text-[10px] sm:text-xs font-bold uppercase tracking-widest ${step >= 1 ? 'text-primary' : 'text-on-surface-variant'}`}>Product</span>
+              <span className={`text-[10px] sm:text-xs font-bold uppercase tracking-widest ${step >= 1 ? 'text-primary' : 'text-on-surface-variant'}`}>Produk</span>
             </div>
 
             {/* Step 2 */}
@@ -121,7 +121,7 @@ export default function OnboardingWizard() {
               <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-medium transition-colors ${step >= 2 ? 'bg-primary text-on-primary border-primary' : 'bg-surface-container-lowest text-on-surface-variant border-surface-variant'}`}>
                 2
               </div>
-              <span className={`text-[10px] sm:text-xs font-bold uppercase tracking-widest ${step >= 2 ? 'text-primary' : 'text-on-surface-variant'}`}>Legal</span>
+              <span className={`text-[10px] sm:text-xs font-bold uppercase tracking-widest ${step >= 2 ? 'text-primary' : 'text-on-surface-variant'}`}>Legalitas</span>
             </div>
 
             {/* Step 3 */}
@@ -129,7 +129,7 @@ export default function OnboardingWizard() {
               <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-medium transition-colors ${step >= 3 ? 'bg-primary text-on-primary border-primary' : 'bg-surface-container-lowest text-on-surface-variant border-surface-variant'}`}>
                 3
               </div>
-              <span className={`text-[10px] sm:text-xs font-bold uppercase tracking-widest ${step >= 3 ? 'text-primary' : 'text-on-surface-variant'}`}>Capability</span>
+              <span className={`text-[10px] sm:text-xs font-bold uppercase tracking-widest ${step >= 3 ? 'text-primary' : 'text-on-surface-variant'}`}>Kapabilitas</span>
             </div>
           </div>
         </div>
@@ -141,20 +141,18 @@ export default function OnboardingWizard() {
           {step === 1 && (
             <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-right-4 duration-500">
               <div>
-                <h2 className="text-2xl font-semibold text-primary">Product Data</h2>
-                <h3 className="text-xl font-semibold text-on-surface-variant mt-1">Data Produk</h3>
+                <h2 className="text-2xl font-semibold text-primary">Data Produk</h2>
                 <p className="text-sm text-on-surface-variant mt-4 max-w-2xl">
-                  Please provide details about the primary product you intend to export. <br/>
-                  <span className="text-on-tertiary-container">Harap berikan detail tentang produk utama yang ingin Anda ekspor.</span>
+                  Harap berikan detail tentang produk utama yang ingin Anda ekspor.
                 </p>
               </div>
 
               <div className="bg-surface border-l-4 border-primary p-4 rounded-r-md flex items-start gap-4">
                 <span className="material-symbols-outlined text-primary mt-1" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
                 <div>
-                  <p className="text-sm text-on-surface font-semibold mb-1">TradeConnect AI HS Code Mapping</p>
+                  <p className="text-sm text-on-surface font-semibold mb-1">Pemetaan HS Code AI TradeConnect</p>
                   <p className="text-sm text-on-surface-variant">
-                    Our NLP model will automatically map your product description to the most relevant 6-digit HS Code for global markets.
+                    Model NLP kami akan memetakan deskripsi produk Anda secara otomatis ke HS Code 6 digit yang paling relevan untuk pasar global.
                   </p>
                 </div>
               </div>
@@ -162,15 +160,14 @@ export default function OnboardingWizard() {
               <form className="grid grid-cols-1 gap-6" onSubmit={(e) => e.preventDefault()}>
                 <div className="flex flex-col gap-2">
                   <label className="flex flex-col" htmlFor="product_name">
-                    <span className="text-sm font-medium text-on-surface">Product Name *</span>
-                    <span className="text-[10px] sm:text-xs font-bold text-on-surface-variant uppercase mt-1 tracking-widest">Nama Produk</span>
+                    <span className="text-sm font-medium text-on-surface">Nama Produk *</span>
                   </label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline">inventory_2</span>
                     <input 
                       className="w-full pl-10 pr-4 py-3 bg-surface border border-outline-variant rounded-md text-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors" 
                       id="product_name" 
-                      placeholder="e.g., Premium Robusta Coffee Beans" 
+                      placeholder="misal: Biji Kopi Robusta Premium" 
                       required 
                       type="text"
                       value={productName}
@@ -181,13 +178,12 @@ export default function OnboardingWizard() {
 
                 <div className="flex flex-col gap-2">
                   <label className="flex flex-col" htmlFor="product_desc">
-                    <span className="text-sm font-medium text-on-surface">Product Description *</span>
-                    <span className="text-[10px] sm:text-xs font-bold text-on-surface-variant uppercase mt-1 tracking-widest">Deskripsi Produk</span>
+                    <span className="text-sm font-medium text-on-surface">Deskripsi Produk *</span>
                   </label>
                   <textarea 
                     className="w-full p-4 bg-surface border border-outline-variant rounded-md text-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors min-h-[120px]" 
                     id="product_desc" 
-                    placeholder="Describe the materials, origin, quality, and unique selling points..." 
+                    placeholder="Gambarkan bahan, asal, kualitas, dan keunggulan produk..." 
                     required
                     value={productDesc}
                     onChange={(e) => setProductDesc(e.target.value)}
@@ -197,15 +193,14 @@ export default function OnboardingWizard() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="flex flex-col gap-2">
                     <label className="flex flex-col" htmlFor="floor_price">
-                      <span className="text-sm font-medium text-on-surface">Floor Price (USD/unit) *</span>
-                      <span className="text-[10px] sm:text-xs font-bold text-on-surface-variant uppercase mt-1 tracking-widest">Harga Dasar Minimum</span>
+                      <span className="text-sm font-medium text-on-surface">Harga Dasar Minimum (USD/unit) *</span>
                     </label>
                     <div className="relative">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline">price_check</span>
                       <input 
                         className="w-full pl-10 pr-4 py-3 bg-surface border border-outline-variant rounded-md text-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors" 
                         id="floor_price" 
-                        placeholder="e.g., 2.68" 
+                        placeholder="misal: 2.68" 
                         required 
                         type="number" 
                         min="0" 
@@ -221,15 +216,14 @@ export default function OnboardingWizard() {
                   </div>
                   <div className="flex flex-col gap-2">
                     <label className="flex flex-col" htmlFor="asking_price">
-                      <span className="text-sm font-medium text-on-surface">Asking Price (USD/unit) *</span>
-                      <span className="text-[10px] sm:text-xs font-bold text-on-surface-variant uppercase mt-1 tracking-widest">Harga Penawaran Awal</span>
+                      <span className="text-sm font-medium text-on-surface">Harga Penawaran Awal (USD/unit) *</span>
                     </label>
                     <div className="relative">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline">sell</span>
                       <input 
                         className="w-full pl-10 pr-4 py-3 bg-surface border border-outline-variant rounded-md text-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors" 
                         id="asking_price" 
-                        placeholder="e.g., 2.85" 
+                        placeholder="misal: 2.85" 
                         required 
                         type="number" 
                         min="0" 
@@ -247,14 +241,13 @@ export default function OnboardingWizard() {
 
                 <div className="flex flex-col gap-2">
                   <label className="flex flex-col">
-                    <span className="text-sm font-medium text-on-surface">Product Photos *</span>
-                    <span className="text-[10px] sm:text-xs font-bold text-on-surface-variant uppercase mt-1 tracking-widest">Foto Produk</span>
+                    <span className="text-sm font-medium text-on-surface">Foto Produk *</span>
                   </label>
                   <label className="border-2 border-dashed border-outline-variant rounded-md p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-surface-variant/50 transition-colors">
                     <input type="file" multiple accept="image/png, image/jpeg" className="hidden" onChange={(e) => handleFileChange(e, setProductPhotos)} />
                     <span className="material-symbols-outlined text-outline text-4xl mb-2">add_photo_alternate</span>
-                    <p className="text-sm text-on-surface font-medium">Click to upload or drag and drop</p>
-                    <p className="text-xs text-on-surface-variant mt-1">PNG, JPG up to 5MB</p>
+                    <p className="text-sm text-on-surface font-medium">Klik untuk mengunggah atau seret dan lepas file di sini</p>
+                    <p className="text-xs text-on-surface-variant mt-1">PNG, JPG hingga 5MB</p>
                   </label>
                   {productPhotos.length > 0 && (
                     <div className="flex flex-wrap gap-2 mt-2">
@@ -278,20 +271,18 @@ export default function OnboardingWizard() {
           {step === 2 && (
             <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-right-4 duration-500">
               <div>
-                <h2 className="text-2xl font-semibold text-primary">Legal &amp; Compliance Data</h2>
-                <h3 className="text-xl font-semibold text-on-surface-variant mt-1">Data Legalitas</h3>
+                <h2 className="text-2xl font-semibold text-primary">Data Legalitas &amp; Kepatuhan</h2>
                 <p className="text-sm text-on-surface-variant mt-4 max-w-2xl">
-                  Please provide your official business registration details to establish your institutional profile. <br/>
-                  <span className="text-on-tertiary-container">Harap berikan detail pendaftaran bisnis resmi Anda untuk membuat profil institusional Anda.</span>
+                  Harap berikan detail pendaftaran bisnis resmi Anda untuk membuat profil institusional Anda.
                 </p>
               </div>
 
               <div className="bg-surface border-l-4 border-primary p-4 rounded-r-md flex items-start gap-4">
                 <span className="material-symbols-outlined text-primary mt-1" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
                 <div>
-                  <p className="text-sm text-on-surface font-semibold mb-1">TradeConnect AI Verification</p>
+                  <p className="text-sm text-on-surface font-semibold mb-1">Verifikasi AI TradeConnect</p>
                   <p className="text-sm text-on-surface-variant">
-                    Your NIB acts as the central key. We securely cross-reference this with the OSS system to instantly map your compliance tier and unlock targeted export markets.
+                    NIB Anda bertindak sebagai kunci utama. Kami menyinkronkannya dengan aman dengan sistem OSS untuk memetakan tingkat kepatuhan Anda secara instan dan membuka pasar ekspor tujuan.
                   </p>
                 </div>
               </div>
@@ -300,14 +291,13 @@ export default function OnboardingWizard() {
                 <div className="flex flex-col gap-2">
                   <label className="flex flex-col" htmlFor="nib">
                     <span className="text-sm font-medium text-on-surface">NIB (Nomor Induk Berusaha) *</span>
-                    <span className="text-[10px] sm:text-xs font-bold text-on-surface-variant uppercase mt-1 tracking-widest">Business Registration Number</span>
                   </label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline">badge</span>
                     <input 
                       className="w-full pl-10 pr-4 py-3 bg-surface border border-outline-variant rounded-md text-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors" 
                       id="nib" 
-                      placeholder="13-digit official identifier" 
+                      placeholder="13 digit nomor identifikasi resmi" 
                       required 
                       type="text"
                       value={nib}
@@ -318,15 +308,14 @@ export default function OnboardingWizard() {
 
                 <div className="flex flex-col gap-2">
                   <label className="flex flex-col" htmlFor="company_name">
-                    <span className="text-sm font-medium text-on-surface">Registered Company Name *</span>
-                    <span className="text-[10px] sm:text-xs font-bold text-on-surface-variant uppercase mt-1 tracking-widest">Nama Perusahaan Terdaftar</span>
+                    <span className="text-sm font-medium text-on-surface">Nama Perusahaan Terdaftar *</span>
                   </label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline">domain</span>
                     <input 
                       className="w-full pl-10 pr-4 py-3 bg-surface border border-outline-variant rounded-md text-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors" 
                       id="company_name" 
-                      placeholder="e.g., PT. Nusantara Global" 
+                      placeholder="misal: PT. Nusantara Global" 
                       required 
                       type="text"
                       value={companyName}
@@ -337,14 +326,13 @@ export default function OnboardingWizard() {
 
                 <div className="flex flex-col gap-2">
                   <label className="flex flex-col">
-                    <span className="text-sm font-medium text-on-surface">Upload Certifications (Optional)</span>
-                    <span className="text-[10px] sm:text-xs font-bold text-on-surface-variant uppercase mt-1 tracking-widest">Unggah Sertifikasi Pendukung</span>
+                    <span className="text-sm font-medium text-on-surface">Unggah Sertifikasi Pendukung (Opsional)</span>
                   </label>
                   <label className="border-2 border-dashed border-outline-variant rounded-md p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-surface-variant/50 transition-colors">
                     <input type="file" multiple accept=".pdf, image/png, image/jpeg" className="hidden" onChange={(e) => handleFileChange(e, setCertFiles)} />
                     <span className="material-symbols-outlined text-outline text-4xl mb-2">upload_file</span>
-                    <p className="text-sm text-on-surface font-medium">Click to upload certificates (Halal, BPOM, SNI, etc.)</p>
-                    <p className="text-xs text-on-surface-variant mt-1">PDF, PNG, JPG up to 5MB</p>
+                    <p className="text-sm text-on-surface font-medium">Klik untuk mengunggah sertifikat (Halal, BPOM, SNI, dll.)</p>
+                    <p className="text-xs text-on-surface-variant mt-1">PDF, PNG, JPG hingga 5MB</p>
                   </label>
                   {certFiles.length > 0 && (
                     <div className="flex flex-col gap-2 mt-2">
@@ -371,26 +359,23 @@ export default function OnboardingWizard() {
           {step === 3 && (
             <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-right-4 duration-500">
               <div>
-                <h2 className="text-2xl font-semibold text-primary">Production Capability &amp; Logistics</h2>
-                <h3 className="text-xl font-semibold text-on-surface-variant mt-1">Data Kapabilitas</h3>
+                <h2 className="text-2xl font-semibold text-primary">Kapasitas Produksi &amp; Logistik</h2>
                 <p className="text-sm text-on-surface-variant mt-4 max-w-2xl">
-                  Let global buyers know your capacity to deliver. <br/>
-                  <span className="text-on-tertiary-container">Beri tahu pembeli global kapasitas produksi dan pengiriman Anda.</span>
+                  Beri tahu pembeli global kapasitas produksi dan pengiriman Anda.
                 </p>
               </div>
 
               <form className="grid grid-cols-1 md:grid-cols-2 gap-6" onSubmit={(e) => e.preventDefault()}>
                 <div className="flex flex-col gap-2">
                   <label className="flex flex-col" htmlFor="moq">
-                    <span className="text-sm font-medium text-on-surface">Minimum Order Quantity (MOQ) *</span>
-                    <span className="text-[10px] sm:text-xs font-bold text-on-surface-variant uppercase mt-1 tracking-widest">Batas Pesanan Minimum</span>
+                    <span className="text-sm font-medium text-on-surface">Batas Pesanan Minimum (MOQ) *</span>
                   </label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline">shopping_basket</span>
                     <input 
                       className="w-full pl-10 pr-4 py-3 bg-surface border border-outline-variant rounded-md text-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors" 
                       id="moq" 
-                      placeholder="e.g., 1000 Pcs or 1 20ft Container" 
+                      placeholder="misal: 1000 Pcs atau 1 Kontainer 20ft" 
                       required 
                       type="text"
                       value={moq}
@@ -401,15 +386,14 @@ export default function OnboardingWizard() {
 
                 <div className="flex flex-col gap-2">
                   <label className="flex flex-col" htmlFor="capacity">
-                    <span className="text-sm font-medium text-on-surface">Monthly Production Capacity *</span>
-                    <span className="text-[10px] sm:text-xs font-bold text-on-surface-variant uppercase mt-1 tracking-widest">Kapasitas Produksi Bulanan</span>
+                    <span className="text-sm font-medium text-on-surface">Kapasitas Produksi Bulanan *</span>
                   </label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline">factory</span>
                     <input 
                       className="w-full pl-10 pr-4 py-3 bg-surface border border-outline-variant rounded-md text-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors" 
                       id="capacity" 
-                      placeholder="e.g., 50,000 Units" 
+                      placeholder="misal: 50.000 Unit" 
                       required 
                       type="text"
                       value={capacity}
@@ -420,8 +404,7 @@ export default function OnboardingWizard() {
 
                 <div className="flex flex-col gap-2 md:col-span-2">
                   <label className="flex flex-col" htmlFor="logistics">
-                    <span className="text-sm font-medium text-on-surface">Preferred Logistics Term (Incoterms)</span>
-                    <span className="text-[10px] sm:text-xs font-bold text-on-surface-variant uppercase mt-1 tracking-widest">Preferensi Logistik</span>
+                    <span className="text-sm font-medium text-on-surface">Preferensi Syarat Logistik (Incoterms)</span>
                   </label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline">local_shipping</span>
@@ -431,10 +414,10 @@ export default function OnboardingWizard() {
                       value={logistics}
                       onChange={(e) => setLogistics(e.target.value)}
                     >
-                      <option value="fob">FOB (Free on Board) - Recommended</option>
+                      <option value="fob">FOB (Free on Board) - Direkomendasikan</option>
                       <option value="exw">EXW (Ex Works)</option>
                       <option value="cif">CIF (Cost, Insurance, and Freight)</option>
-                      <option value="negotiable">Open to Negotiation</option>
+                      <option value="negotiable">Terbuka untuk Negosiasi</option>
                     </select>
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline pointer-events-none">expand_more</span>
                   </div>
@@ -452,7 +435,7 @@ export default function OnboardingWizard() {
                 type="button"
               >
                 <span className="material-symbols-outlined text-[18px]">arrow_back</span>
-                Back
+                Kembali
               </button>
             ) : <div></div>}
             
@@ -461,7 +444,7 @@ export default function OnboardingWizard() {
               className="bg-primary hover:bg-surface-tint text-on-primary font-medium text-sm px-8 py-3 rounded-md transition-colors flex items-center gap-2 ml-auto" 
               type="button"
             >
-              {step < 3 ? 'Next Step' : 'Complete Setup'}
+              {step < 3 ? 'Langkah Selanjutnya' : 'Selesaikan Konfigurasi'}
               {step < 3 && <span className="material-symbols-outlined text-[18px]">arrow_forward</span>}
               {step === 3 && <span className="material-symbols-outlined text-[18px]">check_circle</span>}
             </button>

@@ -75,31 +75,31 @@ export default function VerificationPage() {
             </span>
           </div>
           
-          <h2 className="text-xl font-bold text-primary mb-2">Analyzing Institutional Profile</h2>
-          <p className="text-sm text-on-surface-variant mb-8">Please wait while TradeConnect AI verifies your data...</p>
-
-          <div className="w-full flex flex-col gap-4 text-left">
-            <div className={`flex items-center gap-4 transition-opacity duration-500 ${loadingStep >= 0 ? 'opacity-100' : 'opacity-30'}`}>
-              <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${loadingStep >= 1 ? 'bg-secondary text-on-secondary' : 'bg-surface-variant animate-pulse'}`}>
-                {loadingStep >= 1 ? <span className="material-symbols-outlined text-[14px]">check</span> : <span className="w-2 h-2 bg-on-surface-variant rounded-full"></span>}
-              </div>
-              <span className="text-sm font-medium text-on-surface">Connecting to OSS RBA (Kementerian Investasi)</span>
-            </div>
-
-            <div className={`flex items-center gap-4 transition-opacity duration-500 ${loadingStep >= 1 ? 'opacity-100' : 'opacity-30'}`}>
-              <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${loadingStep >= 2 ? 'bg-secondary text-on-secondary' : 'bg-surface-variant animate-pulse'}`}>
-                {loadingStep >= 2 ? <span className="material-symbols-outlined text-[14px]">check</span> : <span className="w-2 h-2 bg-on-surface-variant rounded-full"></span>}
-              </div>
-              <span className="text-sm font-medium text-on-surface">NLP Classification for HS Code Mapping</span>
-            </div>
-
-            <div className={`flex items-center gap-4 transition-opacity duration-500 ${loadingStep >= 2 ? 'opacity-100' : 'opacity-30'}`}>
-              <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${loadingStep >= 3 ? 'bg-secondary text-on-secondary' : 'bg-surface-variant animate-pulse'}`}>
-                {loadingStep >= 3 ? <span className="material-symbols-outlined text-[14px]">check</span> : <span className="w-2 h-2 bg-on-surface-variant rounded-full"></span>}
-              </div>
-              <span className="text-sm font-medium text-on-surface">Calculating Verified Profile Score</span>
-            </div>
-          </div>
+          <h2 className="text-xl font-bold text-primary mb-2">Menganalisis Profil Institusi</h2>
+          <p className="text-sm text-on-surface-variant mb-8">Mohon tunggu sementara TradeConnect AI memverifikasi data Anda...</p>
+ 
+           <div className="w-full flex flex-col gap-4 text-left">
+             <div className={`flex items-center gap-4 transition-opacity duration-500 ${loadingStep >= 0 ? 'opacity-100' : 'opacity-30'}`}>
+               <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${loadingStep >= 1 ? 'bg-secondary text-on-secondary' : 'bg-surface-variant animate-pulse'}`}>
+                 {loadingStep >= 1 ? <span className="material-symbols-outlined text-[14px]">check</span> : <span className="w-2 h-2 bg-on-surface-variant rounded-full"></span>}
+               </div>
+               <span className="text-sm font-medium text-on-surface">Menghubungkan ke OSS RBA (Kementerian Investasi)</span>
+             </div>
+ 
+             <div className={`flex items-center gap-4 transition-opacity duration-500 ${loadingStep >= 1 ? 'opacity-100' : 'opacity-30'}`}>
+               <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${loadingStep >= 2 ? 'bg-secondary text-on-secondary' : 'bg-surface-variant animate-pulse'}`}>
+                 {loadingStep >= 2 ? <span className="material-symbols-outlined text-[14px]">check</span> : <span className="w-2 h-2 bg-on-surface-variant rounded-full"></span>}
+               </div>
+               <span className="text-sm font-medium text-on-surface">Klasifikasi NLP untuk Pemetaan HS Code</span>
+             </div>
+ 
+             <div className={`flex items-center gap-4 transition-opacity duration-500 ${loadingStep >= 2 ? 'opacity-100' : 'opacity-30'}`}>
+               <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${loadingStep >= 3 ? 'bg-secondary text-on-secondary' : 'bg-surface-variant animate-pulse'}`}>
+                 {loadingStep >= 3 ? <span className="material-symbols-outlined text-[14px]">check</span> : <span className="w-2 h-2 bg-on-surface-variant rounded-full"></span>}
+               </div>
+               <span className="text-sm font-medium text-on-surface">Menghitung Skor Profil Terverifikasi</span>
+             </div>
+           </div>
         </div>
       </main>
     );
@@ -119,8 +119,8 @@ export default function VerificationPage() {
           <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mb-4 shadow-lg z-10 border-4 border-on-primary/20">
             <span className="material-symbols-outlined text-[32px] text-on-secondary">verified</span>
           </div>
-          <h1 className="text-2xl md:text-3xl font-bold mb-2 z-10">Verification Successful</h1>
-          <p className="text-primary-fixed-dim text-sm z-10">Your institutional profile is now active and verified.</p>
+          <h1 className="text-2xl md:text-3xl font-bold mb-2 z-10">Verifikasi Berhasil</h1>
+          <p className="text-primary-fixed-dim text-sm z-10">Profil institusi Anda sekarang telah aktif dan terverifikasi.</p>
         </div>
 
         {/* Verification Results */}
@@ -131,23 +131,23 @@ export default function VerificationPage() {
             <div className="bg-surface p-4 rounded-lg border border-outline-variant">
               <div className="flex items-center gap-2 mb-3">
                 <span className="material-symbols-outlined text-secondary text-[20px]">gavel</span>
-                <h3 className="text-base font-semibold text-on-surface">OSS RBA Validation</h3>
+                <h3 className="text-base font-semibold text-on-surface">Validasi OSS RBA</h3>
               </div>
               <div className="grid grid-cols-2 gap-y-3 text-xs md:text-sm">
                 <div className="text-on-surface-variant">Status</div>
                 <div className="font-medium text-secondary flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[14px]">check_circle</span> Active & Valid
+                  <span className="material-symbols-outlined text-[14px]">check_circle</span> Aktif &amp; Valid
                 </div>
                 
-                <div className="text-on-surface-variant">Entity Type</div>
+                <div className="text-on-surface-variant">Jenis Entitas</div>
                 <div className="font-medium text-on-surface">
                   {companyName.toUpperCase().includes("CV") ? "CV (Persekutuan Komanditer)" : "PT (Perseroan Terbatas)"}
                 </div>
                 
-                <div className="text-on-surface-variant">Risk Level</div>
-                <div className="font-medium text-on-surface">Low - Medium Risk</div>
+                <div className="text-on-surface-variant">Tingkat Risiko</div>
+                <div className="font-medium text-on-surface">Risiko Rendah - Sedang</div>
                 
-                <div className="text-on-surface-variant">KBLI Match</div>
+                <div className="text-on-surface-variant">Kesesuaian KBLI</div>
                 <div className="font-medium text-on-surface">
                   {productType === "rattan" ? "31001 (Wholesale Furniture & Rattan)" : "46311 (Wholesale Coffee)"}
                 </div>
@@ -157,20 +157,20 @@ export default function VerificationPage() {
             <div className="bg-surface p-4 rounded-lg border border-outline-variant">
               <div className="flex items-center gap-2 mb-3">
                 <span className="material-symbols-outlined text-primary text-[20px]">category</span>
-                <h3 className="text-base font-semibold text-on-surface">AI HS Code Mapping</h3>
+                <h3 className="text-base font-semibold text-on-surface">Pemetaan HS Code AI</h3>
               </div>
-              <p className="text-xs text-on-surface-variant mb-3">NLP model mapped your description "{productName}" to:</p>
+              <p className="text-xs text-on-surface-variant mb-3">Model NLP memetakan deskripsi "{productName}" Anda ke:</p>
               
               <div className="bg-surface-variant p-3 rounded-md border border-outline-variant">
                 <div className="text-xl font-mono-data font-bold text-primary tracking-widest mb-1">
                   {productType === "rattan" ? "9401.52" : "0901.11"}
                 </div>
                 <div className="text-xs font-medium text-on-surface">
-                  {productType === "rattan" ? "Seats of rattan (Kursi rotan anyaman)" : "Coffee, not roasted, not decaffeinated"}
+                  {productType === "rattan" ? "Seats of rattan (Kursi rotan anyaman)" : "Kopi, tidak disangrai, tidak didekafeinasi"}
                 </div>
                 <div className="mt-2 pt-2 border-t border-outline-variant flex items-center gap-1 text-[11px] text-secondary font-medium">
                   <span className="material-symbols-outlined text-[14px]">trending_up</span>
-                  High global demand detected
+                  Permintaan global tinggi terdeteksi
                 </div>
               </div>
             </div>
@@ -181,7 +181,7 @@ export default function VerificationPage() {
             <div className="bg-surface p-4 rounded-lg border border-outline-variant h-full flex flex-col">
               <div className="flex items-center gap-2 mb-4">
                 <span className="material-symbols-outlined text-primary text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>military_tech</span>
-                <h3 className="text-base font-semibold text-on-surface">Verified Profile Score</h3>
+                <h3 className="text-base font-semibold text-on-surface">Skor Profil Terverifikasi</h3>
               </div>
               
               <div className="flex-1 flex flex-col items-center justify-center">
@@ -194,17 +194,17 @@ export default function VerificationPage() {
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
                     <span className="text-4xl font-bold text-on-surface">{score}</span>
-                    <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mt-1">out of 100</span>
+                    <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mt-1">dari 100</span>
                   </div>
                 </div>
 
                 <p className="text-center text-xs text-on-surface-variant px-2">
-                  Excellent! Your score unlocks access to premium global buyers and prioritized AI matchmaking.
+                  Sangat Baik! Skor Anda membuka akses ke pembeli global premium dan prioritas pencocokan AI.
                 </p>
                 
                 <div className="w-full mt-4 space-y-2">
                   <div className="flex justify-between text-[11px] text-on-surface-variant">
-                    <span>Identity completeness</span>
+                    <span>Kelengkapan Identitas</span>
                     <span className="font-medium text-secondary">100%</span>
                   </div>
                   <div className="w-full h-1 bg-surface-variant rounded-full overflow-hidden">
@@ -212,7 +212,7 @@ export default function VerificationPage() {
                   </div>
                   
                   <div className="flex justify-between text-[11px] text-on-surface-variant mt-2">
-                    <span>Capacity readiness</span>
+                    <span>Kesiapan Kapasitas</span>
                     <span className="font-medium text-secondary">80%</span>
                   </div>
                   <div className="w-full h-1 bg-surface-variant rounded-full overflow-hidden">
@@ -231,13 +231,13 @@ export default function VerificationPage() {
             onClick={() => router.push('/')}
             className="px-4 py-2.5 text-xs font-medium text-primary hover:bg-surface rounded-md transition-colors"
           >
-            Review Data
+            Tinjau Data
           </button>
           <button 
             onClick={() => router.push('/dashboard')}
             className="px-6 py-2.5 text-xs font-medium bg-primary text-on-primary hover:bg-surface-tint rounded-md transition-colors flex items-center gap-2 shadow-sm"
           >
-            Enter Founder Dashboard
+            Masuk ke Dasbor Eksportir
             <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
           </button>
         </div>
