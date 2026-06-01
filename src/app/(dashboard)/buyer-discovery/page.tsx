@@ -683,7 +683,7 @@ export default function BuyerDiscoveryPage() {
               </div>
 
               <h3 className="text-xl font-bold text-primary mb-1">TradeConnect AI Outbound Pipeline</h3>
-              <p className="text-xs text-on-surface-variant mb-6 uppercase tracking-wider font-bold">Fase 2: Pengiriman Email Penawaran Resmi</p>
+              <p className="text-xs text-on-surface-variant mb-6 uppercase tracking-wider font-bold">Pengiriman Email Penawaran Resmi</p>
 
               {/* Progress Steps */}
               <div className="w-full space-y-4 mb-6">

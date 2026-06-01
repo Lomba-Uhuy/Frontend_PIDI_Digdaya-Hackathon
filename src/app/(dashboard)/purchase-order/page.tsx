@@ -264,7 +264,7 @@ Status Verifikasi: Aktif & Terverifikasi Asli`
             <div className="md:col-span-7 space-y-4">
               <h3 className="text-sm font-bold text-on-surface-variant uppercase tracking-wider flex items-center gap-1.5">
                 <span className="material-symbols-outlined text-[18px] text-primary">folder_zip</span>
-                Paket Dokumen Resmi Ekspor (Fase 8)
+                Paket Dokumen Resmi Ekspor
               </h3>
               
               <div className="grid grid-cols-1 gap-3">
@@ -387,7 +387,7 @@ Status Verifikasi: Aktif & Terverifikasi Asli`
 
           <div>
             <h2 className="text-2xl font-black text-[#070235] mb-2 tracking-tight">PO Terkirim & Menunggu Tanda Tangan</h2>
-            <p className="text-xs text-on-surface-variant font-bold uppercase tracking-widest mb-4">Fase 7 — Menunggu Persetujuan Pembeli</p>
+            <p className="text-xs text-on-surface-variant font-bold uppercase tracking-widest mb-4">Menunggu Persetujuan Pembeli</p>
             <p className="text-sm text-on-surface-variant leading-relaxed max-w-sm mx-auto">
               Purchase Order <strong className="font-bold text-on-surface">{poNumber}</strong> telah berhasil dibuat secara resmi dan dikirimkan secara aman ke email Klaus Weber di <strong className="font-bold text-on-surface">GlobalTech Imports GmbH</strong>.
             </p>

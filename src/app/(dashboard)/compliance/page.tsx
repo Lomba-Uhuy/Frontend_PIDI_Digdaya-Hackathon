@@ -262,7 +262,7 @@ export default function CompliancePage() {
             </div>
 
             <h3 className="text-xl font-bold text-[#070235] mb-1">Pemindai Kepatuhan Transaksi AI</h3>
-            <p className="text-xs text-on-surface-variant mb-6 uppercase tracking-wider font-bold">Fase 6: Kesiapan Transaksi & Pemeriksa Bendera Merah</p>
+            <p className="text-xs text-on-surface-variant mb-6 uppercase tracking-wider font-bold">Kesiapan Transaksi & Pemeriksa Bendera Merah</p>
 
             {/* Scanning Checks */}
             <div className="w-full space-y-4 mb-6">
