@@ -193,12 +193,7 @@ export default function BuyerDiscoveryPage() {
         {/* Header & Context */}
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-4 mb-6">
           <div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="material-symbols-outlined text-[20px] text-surface-tint">auto_awesome</span>
-              <span className="text-xs font-bold text-surface-tint tracking-widest uppercase">Mesin Pencocokan Semantik AI</span>
-            </div>
-            <h2 className="text-3xl font-bold text-primary mb-2">Pencarian Pembeli Global</h2>
-            <p className="text-base text-on-surface-variant max-w-2xl">Menganalisis miliaran data Bill of Lading global dan manifest pabean publik untuk menemukan importir potensial yang paling cocok untuk katalog produk UMKM Anda.</p>
+            <h2 className="text-3xl font-bold text-primary">Pencarian Pembeli Global</h2>
           </div>
           <div className="flex gap-3">
             <button className="px-4 py-2 border border-outline-variant rounded-md bg-surface-container-lowest text-on-surface text-sm font-semibold hover:bg-surface-container-low transition-colors flex items-center gap-2 shadow-sm">
@@ -443,30 +438,7 @@ export default function BuyerDiscoveryPage() {
 
           {/* Contextual Sidebar (Right) */}
           <div className="xl:col-span-4 space-y-6">
-            {/* Context Widget 1: Map/Heatmap */}
-            <div className="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
-              <div className="p-4 border-b border-outline-variant bg-surface-container-lowest flex items-center gap-2">
-                <span className="material-symbols-outlined text-on-surface-variant text-[20px]">travel_explore</span>
-                <h3 className="text-base font-bold text-on-surface">Peta Panas Permintaan</h3>
-              </div>
-              <div className="h-48 relative group flex items-center justify-center bg-[#dff3f0]">
-                 <div className="absolute inset-0 opacity-80" style={{
-                    backgroundImage: 'radial-gradient(circle at center, #68dba9 0%, transparent 70%)',
-                    backgroundSize: '100% 100%'
-                  }}></div>
-                  <div className="absolute top-1/4 left-1/4 w-3 h-3 bg-primary rounded-full shadow-[0_0_0_4px_rgba(7,2,53,0.2)] animate-pulse"></div>
-              </div>
-              <div className="p-4 bg-surface-container-lowest">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm text-on-surface-variant font-medium">Wilayah Teratas (HS 0901.21)</span>
-                  <span className="text-sm text-primary font-bold">Uni Eropa</span>
-                </div>
-                <div className="w-full bg-surface-variant rounded-full h-1.5 mb-3">
-                  <div className="bg-primary h-1.5 rounded-full" style={{ width: "65%" }}></div>
-                </div>
-                <p className="text-xs text-on-surface-variant">Volume impor Uni Eropa naik 4,2% YoY berdasarkan data pabean manifest Q3.</p>
-              </div>
-            </div>
+
 
             {/* Context Widget 2: Terminal Stats */}
             <div className="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">

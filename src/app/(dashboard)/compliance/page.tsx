@@ -57,17 +57,6 @@ export default function CompliancePage() {
 
   return (
     <div className="h-full w-full overflow-y-auto p-4 md:p-8 bg-surface-bright pb-16 relative">
-      {/* Self-contained CSS for Laser Scan Sweep */}
-      <style dangerouslySetInnerHTML={{__html: `
-        @keyframes laser-sweep {
-          0% { top: 0%; opacity: 0.8; }
-          50% { top: 100%; opacity: 0.8; }
-          100% { top: 0%; opacity: 0.8; }
-        }
-        .laser-line {
-          animation: laser-sweep 2s infinite linear;
-        }
-      `}} />
 
       <div className="max-w-6xl mx-auto space-y-6">
         
@@ -262,8 +251,6 @@ export default function CompliancePage() {
       {isScanning && (
         <div className="fixed inset-0 bg-[#070235]/70 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
           
-          {/* Laser Scanning Line Bar */}
-          <div className="laser-line absolute left-0 w-full h-[6px] bg-emerald-400 shadow-[0_0_15px_#10b981,0_0_30px_#10b981] z-20 pointer-events-none"></div>
 
           <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl w-full max-w-lg shadow-2xl p-6 md:p-8 flex flex-col items-center relative overflow-hidden z-10 animate-in zoom-in-95 duration-300">
             

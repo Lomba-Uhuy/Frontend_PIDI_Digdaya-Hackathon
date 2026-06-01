@@ -235,7 +235,7 @@ Status Verifikasi: Aktif & Terverifikasi Asli`
                 </div>
               </div>
               <p className="text-xs text-on-surface-variant leading-relaxed mt-2">
-                Selamat! Transaksi ekspor perdana Anda yang sukses telah menaikkan kredibilitas profil ekspor Anda. Akses pencocokan dengan **Buyer Premium (Tier 1)** kini terbuka secara eksklusif!
+                Selamat! Transaksi ekspor perdana Anda yang sukses telah menaikkan kredibilitas profil ekspor Anda. Akses pencocokan dengan <strong className="font-bold text-on-surface">Buyer Premium (Tier 1)</strong> kini terbuka secara eksklusif!
               </p>
             </div>
 
@@ -366,7 +366,7 @@ Status Verifikasi: Aktif & Terverifikasi Asli`
             <h2 className="text-2xl font-black text-[#070235] mb-2 tracking-tight">PO Terkirim & Menunggu Tanda Tangan</h2>
             <p className="text-xs text-on-surface-variant font-bold uppercase tracking-widest mb-4">Fase 7 — Menunggu Persetujuan Pembeli</p>
             <p className="text-sm text-on-surface-variant leading-relaxed max-w-sm mx-auto">
-              Purchase Order **{poNumber}** telah berhasil dibuat secara resmi dan dikirimkan secara aman ke email Klaus Weber di **GlobalTech Imports GmbH**.
+              Purchase Order <strong className="font-bold text-on-surface">{poNumber}</strong> telah berhasil dibuat secara resmi dan dikirimkan secara aman ke email Klaus Weber di <strong className="font-bold text-on-surface">GlobalTech Imports GmbH</strong>.
             </p>
           </div>
 
@@ -388,7 +388,7 @@ Status Verifikasi: Aktif & Terverifikasi Asli`
           </div>
 
           <p className="text-[11px] text-on-surface-variant max-w-xs leading-normal">
-            Dasbor eksportir Anda akan **terbuka otomatis secara instan** tepat saat pembeli membubuhkan tanda tangan digital pada tab di atas!
+            Dasbor eksportir Anda akan <strong className="font-bold text-on-surface">terbuka otomatis secara instan</strong> tepat saat pembeli membubuhkan tanda tangan digital pada tab di atas!
           </p>
         </div>
       </div>

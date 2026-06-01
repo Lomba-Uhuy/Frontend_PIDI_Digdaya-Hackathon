@@ -37,27 +37,7 @@ export default function OnboardingWizard() {
     }
   }, []);
 
-  const handlePrefillDemoMode = () => {
-    setProductName("Kursi Rotan Handcrafted Jepara");
-    setProductDesc("Kursi anyaman rotan premium buatan pengrajin lokal Jepara, menggunakan material rotan alami Grade A (100% Certified Sustainable Rattan) dengan finishing ramah lingkungan standar ekspor Uni Eropa.");
-    setFloorPrice("45.00");
-    setAskingPrice("55.00");
-    setNib("1234567890123");
-    setCompanyName("CV Jepara Rattan Mandiri");
-    setMoq("150 Pcs (1 x 20ft Container)");
-    setCapacity("1,500 Pcs / Bulan");
-    setLogistics("fob");
-    
-    // Add fake file mock objects for productPhotos and certFiles to simulate filled files
-    const fakePhoto = new File([""], "rotan-chair-jepara.jpg", { type: "image/jpeg" });
-    const fakeCert = new File([""], "sertifikat-svlk-2026.pdf", { type: "application/pdf" });
-    setProductPhotos([fakePhoto]);
-    setCertFiles([fakeCert]);
 
-    setStep(1);
-    
-    alert("⚡ [TradeConnect Demo Mode] Data UMKM Rotan Jepara berhasil diisi di semua form!");
-  };
 
   const handleCompleteSetup = () => {
     if (typeof window !== "undefined") {
@@ -111,24 +91,7 @@ export default function OnboardingWizard() {
         <p className="text-base text-on-surface-variant">Institutional Export Terminal Initialization</p>
       </header>
 
-      {/* Demo Mode Trigger Banner */}
-      <div className="w-full max-w-3xl mb-6 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/30 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-center gap-4 shadow-md">
-        <div className="flex items-center gap-3 text-emerald-800">
-          <span className="material-symbols-outlined text-[28px] animate-pulse" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
-          <div>
-            <h4 className="text-sm font-bold">⚡ Presentasi &amp; Mode Demo Cepat</h4>
-            <p className="text-xs text-emerald-700/80 font-medium font-sans">Klik tombol untuk mengisi otomatis profil UMKM Rotan Jepara untuk presentasi instan.</p>
-          </div>
-        </div>
-        <button 
-          type="button"
-          onClick={handlePrefillDemoMode}
-          className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-md transition-all active:translate-y-0.5 whitespace-nowrap shrink-0 flex items-center gap-1.5"
-        >
-          <span className="material-symbols-outlined text-[16px]">bolt</span>
-          Aktifkan Demo Mode (Rotan Jepara)
-        </button>
-      </div>
+
 
       {/* Onboarding Wizard Card */}
       <div className="w-full max-w-3xl bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden flex flex-col shadow-sm">
