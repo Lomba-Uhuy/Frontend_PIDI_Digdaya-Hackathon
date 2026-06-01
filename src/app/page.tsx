@@ -43,8 +43,6 @@ export default function OnboardingWizard() {
     if (typeof window !== "undefined") {
       localStorage.setItem("tradeconnect_product_name", productName || "Biji Kopi Robusta Premium");
       localStorage.setItem("tradeconnect_product_desc", productDesc || "Biji kopi robusta Grade 1 premium buatan petani lokal Indonesia dengan keasaman seimbang.");
-      localStorage.setItem("tradeconnect_floor_price", floorPrice || "2.68");
-      localStorage.setItem("tradeconnect_asking_price", askingPrice || "2.85");
       localStorage.setItem("tradeconnect_nib", nib || "1234567890123");
       localStorage.setItem("tradeconnect_company_name", companyName || "PT Nusantara Global Coffee");
       localStorage.setItem("tradeconnect_moq", moq || "1000 Pcs");
@@ -53,10 +51,26 @@ export default function OnboardingWizard() {
       
       const isRattan = (productName || "").toLowerCase().includes("rotan") || (productName || "").toLowerCase().includes("rattan") || (productName || "").toLowerCase().includes("kursi");
       localStorage.setItem("tradeconnect_product_type", isRattan ? "rattan" : "coffee");
+
+      const convertToUsd = (rpOrUsdStr: string, defaultValueUsd: number): number => {
+        const val = parseFloat(rpOrUsdStr);
+        if (isNaN(val)) return defaultValueUsd;
+        // Jika nilainya besar (> 1000), asumsikan dalam Rupiah dan konversi ke USD (kurs 16.000)
+        if (val > 1000) {
+          return val / 16000;
+        }
+        return val;
+      };
+
+      const defaultFloor = isRattan ? 45.00 : 2.68;
+      const defaultAsking = isRattan ? 55.00 : 2.85;
+
+      const finalFloorPriceUsd = convertToUsd(floorPrice, defaultFloor);
+      const finalAskingPriceUsd = convertToUsd(askingPrice, defaultAsking);
       
-      // Save final price
-      const price = parseFloat(askingPrice || "2.85");
-      localStorage.setItem("tradeconnect_final_price", price.toString());
+      localStorage.setItem("tradeconnect_floor_price", finalFloorPriceUsd.toFixed(2));
+      localStorage.setItem("tradeconnect_asking_price", finalAskingPriceUsd.toFixed(2));
+      localStorage.setItem("tradeconnect_final_price", finalAskingPriceUsd.toFixed(2));
     }
     setJourneyStep("verified");
     router.push('/verification');
@@ -193,18 +207,17 @@ export default function OnboardingWizard() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="flex flex-col gap-2">
                     <label className="flex flex-col" htmlFor="floor_price">
-                      <span className="text-sm font-medium text-on-surface">Harga Dasar Minimum (USD/unit) *</span>
+                      <span className="text-sm font-medium text-on-surface">Harga Dasar Minimum (Rp/unit) *</span>
                     </label>
                     <div className="relative">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline">price_check</span>
                       <input 
                         className="w-full pl-10 pr-4 py-3 bg-surface border border-outline-variant rounded-md text-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors" 
                         id="floor_price" 
-                        placeholder="misal: 2.68" 
+                        placeholder="misal: 42880" 
                         required 
                         type="number" 
                         min="0" 
-                        step="0.01"
                         value={floorPrice}
                         onChange={(e) => setFloorPrice(e.target.value)}
                       />
@@ -216,18 +229,17 @@ export default function OnboardingWizard() {
                   </div>
                   <div className="flex flex-col gap-2">
                     <label className="flex flex-col" htmlFor="asking_price">
-                      <span className="text-sm font-medium text-on-surface">Harga Penawaran Awal (USD/unit) *</span>
+                      <span className="text-sm font-medium text-on-surface">Harga Penawaran Awal (Rp/unit) *</span>
                     </label>
                     <div className="relative">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline">sell</span>
                       <input 
                         className="w-full pl-10 pr-4 py-3 bg-surface border border-outline-variant rounded-md text-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors" 
                         id="asking_price" 
-                        placeholder="misal: 2.85" 
+                        placeholder="misal: 45600" 
                         required 
                         type="number" 
                         min="0" 
-                        step="0.01"
                         value={askingPrice}
                         onChange={(e) => setAskingPrice(e.target.value)}
                       />

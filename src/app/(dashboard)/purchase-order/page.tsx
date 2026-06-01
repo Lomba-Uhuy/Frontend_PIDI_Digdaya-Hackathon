@@ -27,9 +27,30 @@ export default function PurchaseOrderPage() {
       setAgreedPrice(getFinalPrice());
     };
 
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "tradeconnect_step") {
+        setCurrentStep(e.newValue || "onboarding");
+      }
+      if (e.key === "tradeconnect_final_price") {
+        setAgreedPrice(getFinalPrice());
+      }
+    };
+
+    const handleVisibilityOrFocus = () => {
+      setCurrentStep(getStep());
+      setAgreedPrice(getFinalPrice());
+    };
+
     window.addEventListener("tradeconnect_state_change", handleStateChange);
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("focus", handleVisibilityOrFocus);
+    window.addEventListener("visibilitychange", handleVisibilityOrFocus);
+
     return () => {
       window.removeEventListener("tradeconnect_state_change", handleStateChange);
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("focus", handleVisibilityOrFocus);
+      window.removeEventListener("visibilitychange", handleVisibilityOrFocus);
     };
   }, []);
 
