@@ -35,7 +35,7 @@ export default function DashboardLayout({
   };
 
   const handleNextTourStep = () => {
-    if (tourStep < 4) {
+    if (tourStep < 5) {
       setTourStep(tourStep + 1);
     } else {
       setTourStep(0);
@@ -49,7 +49,8 @@ export default function DashboardLayout({
   const getTourHighlightClass = (path: string) => {
     if (tourStep === 2 && path === "/buyer-discovery") return "tour-highlight animate-pulse";
     if (tourStep === 3 && path === "/negotiation") return "tour-highlight animate-pulse";
-    if (tourStep === 4 && path === "/purchase-order") return "tour-highlight animate-pulse";
+    if (tourStep === 4 && path === "/compliance") return "tour-highlight animate-pulse";
+    if (tourStep === 5 && path === "/purchase-order") return "tour-highlight animate-pulse";
     return "";
   };
 
@@ -238,7 +239,17 @@ export default function DashboardLayout({
                 )}
                 <Link
                   href={item.path}
-                  id={item.path === "/buyer-discovery" ? "tour-step-2" : item.path === "/negotiation" ? "tour-step-3" : item.path === "/purchase-order" ? "tour-step-4" : undefined}
+                  id={
+                    item.path === "/buyer-discovery"
+                      ? "tour-step-2"
+                      : item.path === "/negotiation"
+                      ? "tour-step-3"
+                      : item.path === "/compliance"
+                      ? "tour-step-4"
+                      : item.path === "/purchase-order"
+                      ? "tour-step-5"
+                      : undefined
+                  }
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
                     isTourHighlighted
                       ? tourClass
@@ -501,7 +512,7 @@ export default function DashboardLayout({
             {/* Step Indicator & Header */}
             <div className="flex justify-between items-center">
               <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full uppercase tracking-wider">
-                Langkah {tourStep} dari 4
+                Langkah {tourStep} dari 5
               </span>
               <button 
                 onClick={handleSkipTour}
@@ -513,21 +524,21 @@ export default function DashboardLayout({
             </div>
 
             {/* Tour Content */}
-            <div className="space-y-2 select-text">
+            <div className="space-y-2 select-text font-sans">
               {tourStep === 1 && (
                 <>
-                  <h3 className="text-lg font-black text-[#070235] flex items-center gap-2">
-                    <span>👋</span> Selamat datang di TradeConnect!
+                  <h3 className="text-lg font-black text-[#070235]">
+                    Selamat datang di TradeConnect!
                   </h3>
                   <p className="text-xs text-on-surface-variant leading-relaxed">
-                    Platform ekspor UMKM terintegrasi AI. Kami akan memandu Anda memahami fitur utama dalam 4 langkah mudah untuk memulai ekspor perdana Anda.
+                    Platform ekspor UMKM terintegrasi AI. Kami akan memandu Anda memahami fitur utama dalam 5 langkah mudah untuk memulai ekspor perdana Anda.
                   </p>
                 </>
               )}
               {tourStep === 2 && (
                 <>
-                  <h3 className="text-lg font-black text-[#070235] flex items-center gap-2">
-                    <span>🔍</span> Cari Pembeli Global
+                  <h3 className="text-lg font-black text-[#070235]">
+                    Cari Pembeli Global
                   </h3>
                   <p className="text-xs text-on-surface-variant leading-relaxed">
                     Temukan pembeli global secara instan di sini. AI kami secara cerdas memetakan deskripsi produk Anda untuk mencocokkan profil importir berpotensi tinggi dari sistem bea cukai global.
@@ -536,8 +547,8 @@ export default function DashboardLayout({
               )}
               {tourStep === 3 && (
                 <>
-                  <h3 className="text-lg font-black text-[#070235] flex items-center gap-2">
-                    <span>💬</span> Negosiasi &amp; Risiko
+                  <h3 className="text-lg font-black text-[#070235]">
+                    Negosiasi dan Risiko
                   </h3>
                   <p className="text-xs text-on-surface-variant leading-relaxed">
                     Masuk ke Pusat Negosiasi untuk berkomunikasi langsung via email terintegrasi. AI kami menyusun draf balasan pintar (RAG) untuk penyesuaian harga dan mendeteksi tanda bahaya kredibilitas pembeli secara otomatis.
@@ -546,8 +557,18 @@ export default function DashboardLayout({
               )}
               {tourStep === 4 && (
                 <>
-                  <h3 className="text-lg font-black text-[#070235] flex items-center gap-2">
-                    <span>📄</span> Purchase Order &amp; Ekspor!
+                  <h3 className="text-lg font-black text-[#070235]">
+                    Kepatuhan Hukum
+                  </h3>
+                  <p className="text-xs text-on-surface-variant leading-relaxed">
+                    Analisis regulasi dan kepatuhan hukum untuk transaksi Anda. Gunakan pemindai risiko AI kami untuk memeriksa kesiapan ekspor dan memastikan dokumen transaksi Anda 100% aman dan sah.
+                  </p>
+                </>
+              )}
+              {tourStep === 5 && (
+                <>
+                  <h3 className="text-lg font-black text-[#070235]">
+                    Purchase Order dan Ekspor!
                   </h3>
                   <p className="text-xs text-on-surface-variant leading-relaxed">
                     Di menu ini, buat Purchase Order (PO) resmi secara instan. Kirim ke email pembeli dan pantau tanda tangannya secara real-time. Transaksi selesai tanpa perlu me-refresh halaman!
@@ -560,14 +581,14 @@ export default function DashboardLayout({
             <div className="flex flex-col gap-2 mt-2">
               <button 
                 onClick={handleNextTourStep}
-                className="w-full bg-[#070235] text-white hover:bg-[#070235]/90 font-bold text-xs py-2.5 rounded-lg flex items-center justify-center gap-1 transition-all active:translate-y-0.5 cursor-pointer"
+                className="w-full bg-[#070235] text-white hover:bg-[#070235]/90 font-bold text-xs py-2.5 rounded-lg flex items-center justify-center gap-1 transition-all active:translate-y-0.5 cursor-pointer font-sans"
               >
-                {tourStep === 4 ? "Mulai Jelajahi! 🚀" : "Selanjutnya →"}
+                {tourStep === 5 ? "Mulai Jelajahi" : "Selanjutnya"}
               </button>
-              {tourStep < 4 && (
+              {tourStep < 5 && (
                 <button 
                   onClick={handleSkipTour}
-                  className="w-full text-on-surface-variant hover:text-primary text-xs font-bold py-1.5 transition-colors uppercase tracking-wider cursor-pointer"
+                  className="w-full text-on-surface-variant hover:text-primary text-xs font-bold py-1.5 transition-colors uppercase tracking-wider cursor-pointer font-sans"
                 >
                   Lewati Tour
                 </button>

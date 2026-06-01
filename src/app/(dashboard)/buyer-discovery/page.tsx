@@ -49,6 +49,59 @@ export default function BuyerDiscoveryPage() {
   const [capacity, setCapacity] = useState("50,000 Units");
   const [moq, setMoq] = useState("1000 Pcs");
 
+  // Custom high-fidelity Interactive states
+  const [toast, setToast] = useState<{ message: string; type: "success" | "info" } | null>(null);
+  const [showReminderModal, setShowReminderModal] = useState(false);
+  const [reminderTitle, setReminderTitle] = useState("");
+  const [reminderDate, setReminderDate] = useState("");
+  const [reminderTime, setReminderTime] = useState("");
+  const [reminderType, setReminderType] = useState("Email Penawaran");
+
+  const showToast = (msg: string, type: "success" | "info" = "success") => {
+    setToast({ message: msg, type });
+    setTimeout(() => {
+      setToast(null);
+    }, 3500);
+  };
+
+  const handleExportCSV = () => {
+    const csvHeader = "Nama Pembeli,Lokasi,Kategori,Skor Kredibilitas,Rata-rata Volume Bulanan,Top HS Code,Kecocokan\n";
+    const csvRows = buyers.map(b => 
+      `"${b.name}","${b.location}","${b.category}",${b.score},"${b.avgVolume}","${b.hsCodes}","${b.confidence}"`
+    ).join("\n");
+    const csvContent = "data:text/csv;charset=utf-8," + csvHeader + csvRows;
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `pembeli_global_${productType || 'coffee'}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast("Data pembeli global berhasil diekspor ke CSV!");
+  };
+
+  const handleSaveReminder = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!reminderTitle || !reminderDate) {
+      showToast("Harap isi semua kolom wajib!", "info");
+      return;
+    }
+    const reminders = JSON.parse(localStorage.getItem("tradeconnect_reminders") || "[]");
+    reminders.push({
+      title: reminderTitle,
+      date: reminderDate,
+      time: reminderTime || "12:00",
+      type: reminderType,
+      id: Date.now()
+    });
+    localStorage.setItem("tradeconnect_reminders", JSON.stringify(reminders));
+    setShowReminderModal(false);
+    showToast(`Pengingat "${reminderTitle}" berhasil dijadwalkan!`);
+    setReminderTitle("");
+    setReminderDate("");
+    setReminderTime("");
+  };
+
   // Sync profile details on mount
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -196,11 +249,17 @@ export default function BuyerDiscoveryPage() {
             <h2 className="text-3xl font-bold text-primary">Pencarian Pembeli Global</h2>
           </div>
           <div className="flex gap-3">
-            <button className="px-4 py-2 border border-outline-variant rounded-md bg-surface-container-lowest text-on-surface text-sm font-semibold hover:bg-surface-container-low transition-colors flex items-center gap-2 shadow-sm">
+            <button 
+              onClick={handleExportCSV}
+              className="px-4 py-2 border border-outline-variant rounded-md bg-surface-container-lowest text-on-surface text-sm font-semibold hover:bg-surface-container-low transition-colors flex items-center gap-2 shadow-sm"
+            >
               <span className="material-symbols-outlined text-[18px]">download</span>
               Ekspor CSV
             </button>
-            <button className="px-4 py-2 bg-primary text-on-primary rounded-md text-sm font-semibold hover:bg-surface-tint transition-colors flex items-center gap-2 shadow-sm">
+            <button 
+              onClick={() => setShowReminderModal(true)}
+              className="px-4 py-2 bg-primary text-on-primary rounded-md text-sm font-semibold hover:bg-surface-tint transition-colors flex items-center gap-2 shadow-sm"
+            >
               <span className="material-symbols-outlined text-[18px]">add_alert</span>
               Buat Pengingat
             </button>
@@ -680,6 +739,107 @@ export default function BuyerDiscoveryPage() {
               </div>
 
             </div>
+          </div>
+        )}
+
+        {/* INTERACTIVE REMINDER SCHEDULER MODAL */}
+        {showReminderModal && (
+          <div className="fixed inset-0 bg-[#070235]/65 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
+            <form 
+              onSubmit={handleSaveReminder}
+              className="bg-surface-container-lowest border border-outline-variant rounded-2xl w-full max-w-md shadow-2xl p-6 md:p-8 flex flex-col gap-5 animate-in zoom-in-95 duration-300 pointer-events-auto text-sm text-on-surface font-sans"
+            >
+              <div className="flex justify-between items-center border-b border-outline-variant pb-3 shrink-0">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-primary text-[24px]">add_alert</span>
+                  <h3 className="text-base font-bold text-primary">Jadwalkan Pengingat Ekspor</h3>
+                </div>
+                <button 
+                  type="button"
+                  onClick={() => setShowReminderModal(false)}
+                  className="text-on-surface-variant hover:text-error p-1 rounded-full hover:bg-surface-container-high transition-colors"
+                >
+                  <span className="material-symbols-outlined text-[20px]">close</span>
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Judul Pengingat *</label>
+                  <input 
+                    type="text"
+                    required
+                    placeholder="misal: Kirim dokumen penawaran ke GlobalTech"
+                    value={reminderTitle}
+                    onChange={(e) => setReminderTitle(e.target.value)}
+                    className="w-full px-3 py-2 bg-surface border border-outline-variant rounded-md text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none text-on-surface font-medium"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Tanggal *</label>
+                    <input 
+                      type="date"
+                      required
+                      value={reminderDate}
+                      onChange={(e) => setReminderDate(e.target.value)}
+                      className="w-full px-3 py-2 bg-surface border border-outline-variant rounded-md text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none text-on-surface font-medium"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Waktu</label>
+                    <input 
+                      type="time"
+                      value={reminderTime}
+                      onChange={(e) => setReminderTime(e.target.value)}
+                      className="w-full px-3 py-2 bg-surface border border-outline-variant rounded-md text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none text-on-surface font-medium"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Tipe Pengingat</label>
+                  <div className="relative">
+                    <select 
+                      value={reminderType}
+                      onChange={(e) => setReminderType(e.target.value)}
+                      className="w-full px-3 pr-10 py-2 bg-surface border border-outline-variant rounded-md text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none appearance-none cursor-pointer text-on-surface font-medium"
+                    >
+                      <option value="Email Penawaran">Email Penawaran</option>
+                      <option value="Pemeriksaan Kepatuhan">Pemeriksaan Kepatuhan</option>
+                      <option value="Tanda Tangan PO">Tanda Tangan PO</option>
+                      <option value="Follow-up Logistik">Follow-up Logistik</option>
+                    </select>
+                    <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none text-[18px]">arrow_drop_down</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t border-outline-variant pt-3 flex justify-end gap-3 shrink-0">
+                <button 
+                  type="button"
+                  onClick={() => setShowReminderModal(false)}
+                  className="px-4 py-2 border border-outline-variant hover:bg-surface rounded-lg text-xs font-bold text-on-surface transition-colors"
+                >
+                  Batal
+                </button>
+                <button 
+                  type="submit"
+                  className="px-5 py-2 bg-primary text-on-primary hover:bg-surface-tint rounded-lg text-xs font-bold transition-colors shadow-md"
+                >
+                  Jadwalkan Pengingat
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* CUSTOM PREMIUM INTERACTIVE TOAST */}
+        {toast && (
+          <div className="fixed bottom-6 right-6 z-[10000] bg-[#070235] text-white border border-[#85f8c4]/40 px-5 py-3 rounded-xl shadow-2xl flex items-center gap-2.5 animate-in slide-in-from-bottom duration-300 font-sans">
+            <span className="material-symbols-outlined text-[#85f8c4]">check_circle</span>
+            <span className="text-xs font-bold">{toast.message}</span>
           </div>
         )}
 
