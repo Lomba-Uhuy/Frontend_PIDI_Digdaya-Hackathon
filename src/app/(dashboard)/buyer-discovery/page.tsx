@@ -410,18 +410,7 @@ export default function BuyerDiscoveryPage() {
                           </div>
                         </div>
                       </div>
-                      
-                      <div className="p-4 bg-surface-container-lowest">
-                        <div className="bg-surface-container-low border-l-4 border-surface-tint p-4 rounded-r-lg flex gap-3 shadow-inner">
-                          <span className="material-symbols-outlined text-surface-tint mt-0.5 text-[20px]">auto_awesome</span>
-                          <div>
-                            <h4 className="text-sm font-bold text-on-surface mb-1">Analisis Pencocokan AI: {buyer.confidence}</h4>
-                            <p className="text-xs text-on-surface-variant leading-relaxed">
-                              {buyer.rationale}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
+
                       
                       <div className="p-4 border-t border-outline-variant bg-surface-container-lowest flex justify-end gap-3">
                         <button 
