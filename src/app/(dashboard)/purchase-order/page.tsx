@@ -346,13 +346,15 @@ Status Verifikasi: Aktif & Terverifikasi Asli`
             <span className="material-symbols-outlined text-[22px] animate-pulse">auto_awesome</span>
             <span className="text-xs font-semibold"><strong>DEMO HELPER:</strong> Klaus Weber telah menerima tautan PO digital via email!</span>
           </div>
-          <button 
-            onClick={() => window.open('/signing-board?token=klaus-weber-9918', '_blank')}
-            className="px-4 py-2 bg-[#070235] hover:bg-surface-tint text-[#85f8c4] rounded-lg text-xs font-extrabold shadow-md transition-colors flex items-center gap-1.5 shrink-0"
+          <a 
+            href="/signing-board?token=klaus-weber-9918"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-4 py-2 bg-[#070235] hover:bg-surface-tint text-[#85f8c4] rounded-lg text-xs font-extrabold shadow-md transition-colors flex items-center gap-1.5 shrink-0 select-none no-underline hover:no-underline"
           >
             Buka Layar Buyer (Klaus)
             <span className="material-symbols-outlined text-[16px]">open_in_new</span>
-          </button>
+          </a>
         </div>
 
         <div className="w-full max-w-xl bg-surface-container-lowest border border-outline-variant rounded-2xl shadow-xl p-8 text-center flex flex-col items-center gap-6 mt-16 animate-in zoom-in-95 duration-500">
