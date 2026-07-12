@@ -2,6 +2,38 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { setStep as setJourneyStep } from "../../../lib/state";
+import {
+  AlertTriangle,
+  ArrowRight,
+  ArrowUpDown,
+  BadgeCheck,
+  BellPlus,
+  Calendar,
+  Check,
+  CheckCircle2,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  Gavel,
+  Globe,
+  History,
+  ListFilter,
+  MapPin,
+  Package,
+  RotateCcw,
+  SearchX,
+  Send,
+  SlidersHorizontal,
+  Sparkles,
+  Tag,
+  Trophy,
+  Truck,
+  Wrench,
+  X,
+} from "lucide-react";
+import { Avatar } from "../../../components/ui/avatar";
+import { Badge } from "../../../components/ui/badge";
 
 interface BuyerDetails {
   established: string;
@@ -246,21 +278,21 @@ export default function BuyerDiscoveryPage() {
         {/* Header & Context */}
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-4 mb-6">
           <div>
-            <h2 className="text-3xl font-bold text-primary">Pencarian Pembeli Global</h2>
+            <h2 className="text-3xl font-bold text-primary font-heading">Pencarian Pembeli Global</h2>
           </div>
           <div className="flex gap-3">
             <button 
               onClick={handleExportCSV}
               className="px-4 py-2 border border-outline-variant rounded-md bg-surface-container-lowest text-on-surface text-sm font-semibold hover:bg-surface-container-low transition-colors flex items-center gap-2 shadow-sm"
             >
-              <span className="material-symbols-outlined text-[18px]">download</span>
+              <Download className="size-[18px]" />
               Ekspor CSV
             </button>
             <button 
               onClick={() => setShowReminderModal(true)}
               className="px-4 py-2 bg-primary text-on-primary rounded-md text-sm font-semibold hover:bg-surface-tint transition-colors flex items-center gap-2 shadow-sm"
             >
-              <span className="material-symbols-outlined text-[18px]">add_alert</span>
+              <BellPlus className="size-[18px]" />
               Buat Pengingat
             </button>
           </div>
@@ -272,7 +304,7 @@ export default function BuyerDiscoveryPage() {
             <div className="flex flex-col gap-1.5">
               <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Target HS Code</label>
               <div className="relative">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">inventory_2</span>
+                <Package className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant size-[18px]" />
                 <input 
                   className="w-full pl-9 pr-3 py-2 bg-surface border border-outline-variant rounded-md text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none text-on-surface font-semibold" 
                   type="text" 
@@ -284,7 +316,7 @@ export default function BuyerDiscoveryPage() {
             <div className="flex flex-col gap-1.5">
               <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Negara Tujuan</label>
               <div className="relative">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">public</span>
+                <Globe className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant size-[18px]" />
                 <select 
                   className="w-full pl-9 pr-8 py-2 bg-surface border border-outline-variant rounded-md text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none appearance-none cursor-pointer text-on-surface font-semibold"
                   value={selectedRegion}
@@ -294,13 +326,13 @@ export default function BuyerDiscoveryPage() {
                   <option value="Amerika Utara">Amerika Utara</option>
                   <option value="Asia Timur">Asia Timur</option>
                 </select>
-                <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none text-[18px]">arrow_drop_down</span>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none size-[18px]" />
               </div>
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Volume Minimum Bulanan</label>
               <div className="relative">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">equalizer</span>
+                <SlidersHorizontal className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant size-[18px]" />
                 <select 
                   className="w-full pl-9 pr-8 py-2 bg-surface border border-outline-variant rounded-md text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none appearance-none cursor-pointer text-on-surface font-semibold"
                   value={minVolume}
@@ -310,14 +342,14 @@ export default function BuyerDiscoveryPage() {
                   <option value="5+ TEU / Bulan">5+ TEU / Bulan</option>
                   <option value="Hanya Kargo LCL">Hanya Kargo LCL</option>
                 </select>
-                <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none text-[18px]">arrow_drop_down</span>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none size-[18px]" />
               </div>
             </div>
             {/* Sort dropdown (relevance, score, terbaru) */}
             <div className="flex flex-col gap-1.5">
               <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Urutkan Berdasarkan</label>
               <div className="relative">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">sort</span>
+                <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant size-[18px]" />
                 <select 
                   className="w-full pl-9 pr-8 py-2 bg-surface border border-outline-variant rounded-md text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none appearance-none cursor-pointer text-on-surface font-semibold"
                   value={sortBy}
@@ -327,15 +359,15 @@ export default function BuyerDiscoveryPage() {
                   <option value="Skor Kecocokan">Skor Kecocokan</option>
                   <option value="Terbaru">Terbaru</option>
                 </select>
-                <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none text-[18px]">arrow_drop_down</span>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none size-[18px]" />
               </div>
             </div>
             <div className="flex items-end">
               <button 
                 onClick={handleApplyFilter}
-                className="w-full h-[38px] bg-primary text-[#ffffff] rounded-md border border-transparent hover:bg-surface-tint transition-colors text-sm font-bold flex items-center justify-center gap-2 shadow-sm"
+                className="w-full h-[38px] bg-primary text-white rounded-md border border-transparent hover:bg-surface-tint transition-colors text-sm font-bold flex items-center justify-center gap-2 shadow-sm"
               >
-                <span className="material-symbols-outlined text-[18px]">filter_list</span>
+                <ListFilter className="size-[18px]" />
                 Terapkan Filter
               </button>
             </div>
@@ -375,7 +407,7 @@ export default function BuyerDiscoveryPage() {
             ) : filteredBuyers.length === 0 ? (
               <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-8 md:p-12 text-center shadow-sm flex flex-col items-center justify-center animate-in fade-in duration-300">
                 <div className="w-16 h-16 rounded-full bg-primary-container/10 border border-primary/20 flex items-center justify-center text-primary mb-4 shadow-inner">
-                  <span className="material-symbols-outlined text-4xl">search_off</span>
+                  <SearchX className="size-9" />
                 </div>
                 <h3 className="text-xl font-bold text-on-surface mb-2">Tidak Ada Pembeli yang Cocok</h3>
                 <p className="text-xs text-on-surface-variant max-w-md leading-relaxed mb-6">
@@ -385,39 +417,29 @@ export default function BuyerDiscoveryPage() {
                   onClick={handleResetFilter}
                   className="px-6 py-2.5 bg-primary text-on-primary text-xs font-bold rounded-lg hover:bg-surface-tint transition-colors flex items-center gap-2 shadow-sm"
                 >
-                  <span className="material-symbols-outlined text-[18px]">restart_alt</span>
+                  <RotateCcw className="size-[18px]" />
                   Atur Ulang Filter
                 </button>
               </div>
             ) : (
               <div className="space-y-6">
                 {filteredBuyers.map((buyer) => {
-                  // Color-coded Credibility Score Badge
-                  let scoreColorClass = "bg-emerald-50 text-emerald-700 border border-emerald-200";
-                  if (buyer.score < 40) {
-                    scoreColorClass = "bg-red-50 text-red-700 border border-red-200";
-                  } else if (buyer.score < 70) {
-                    scoreColorClass = "bg-amber-50 text-amber-700 border border-amber-200";
-                  }
+                  const scoreVariant = buyer.score < 40 ? "danger" : buyer.score < 70 ? "warning" : "success";
 
                   return (
                     <div key={buyer.id} className="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 animate-in fade-in">
                       <div className="p-5 border-b border-outline-variant flex justify-between items-start bg-surface-container-lowest">
                         <div className="flex gap-4">
-                          <div className="w-12 h-12 rounded-lg border border-outline-variant bg-surface flex items-center justify-center flex-shrink-0 shadow-sm">
-                            <span className="text-2xl font-black text-primary">{buyer.logo}</span>
-                          </div>
+                          <Avatar name={buyer.name} initials={buyer.logo} size="lg" />
                           <div>
                             <div className="flex items-center gap-2 mb-1">
                               <h3 className="text-lg font-bold text-primary">{buyer.name}</h3>
                               {buyer.id === "globaltech" && (
-                                <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-[#85f8c4]/30 text-emerald-800 flex items-center gap-1 border border-[#85f8c4]">
-                                  <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span> Terverifikasi
-                                </span>
+                                <Badge variant="success" icon={BadgeCheck}>Terverifikasi</Badge>
                               )}
                             </div>
                             <p className="text-xs text-on-surface-variant flex items-center gap-1.5 font-medium">
-                              <span className="material-symbols-outlined text-[16px]">location_on</span> {buyer.location}
+                              <MapPin className="size-4" /> {buyer.location}
                               <span className="text-outline-variant">•</span>
                               {buyer.category}
                             </p>
@@ -425,21 +447,21 @@ export default function BuyerDiscoveryPage() {
                         </div>
                         <div className="text-right">
                           <div className="text-[10px] font-bold text-on-surface-variant uppercase mb-1 tracking-wider">Skor Kredibilitas</div>
-                          <div className={`px-2.5 py-1 rounded-full text-xs font-black flex items-center justify-center gap-0.5 leading-none tracking-tight ${scoreColorClass}`}>
+                          <Badge variant={scoreVariant} size="md" className="rounded-full tracking-tight normal-case">
                             {buyer.score}<span className="text-[10px] font-normal opacity-85">/100</span>
-                          </div>
+                          </Badge>
                         </div>
                       </div>
                       
                       <div className="grid grid-cols-3 divide-x divide-outline-variant border-b border-outline-variant bg-surface">
                         <div className="p-4">
                           <div className="text-[10px] font-bold text-on-surface-variant uppercase mb-2 flex items-center gap-1.5 tracking-wider">
-                            <span className="material-symbols-outlined text-[14px]">calendar_today</span> Pengiriman Terakhir
+                            <Calendar className="size-3.5" /> Pengiriman Terakhir
                           </div>
                           <div className="text-sm font-bold text-on-surface">{buyer.lastShipment}</div>
                           {buyer.id === "eurocafe" ? (
                             <div className="text-xs text-error flex items-center gap-1 mt-1 font-semibold">
-                              <span className="material-symbols-outlined text-[14px]">warning</span> Tidak Teratur
+                              <AlertTriangle className="size-3.5" /> Tidak Teratur
                             </div>
                           ) : (
                             <div className="text-xs text-on-surface-variant mt-1 font-semibold text-secondary">Asal: {buyer.origin}</div>
@@ -447,7 +469,7 @@ export default function BuyerDiscoveryPage() {
                         </div>
                         <div className="p-4">
                           <div className="text-[10px] font-bold text-on-surface-variant uppercase mb-2 flex items-center gap-1.5 tracking-wider">
-                            <span className="material-symbols-outlined text-[14px]">local_shipping</span> Rata-rata Volume
+                            <Truck className="size-3.5" /> Rata-rata Volume
                           </div>
                           <div className="text-sm font-bold text-on-surface">{buyer.avgVolume}</div>
                           <div className="text-xs text-on-surface-variant mt-1 font-medium">
@@ -456,7 +478,7 @@ export default function BuyerDiscoveryPage() {
                         </div>
                         <div className="p-4">
                           <div className="text-[10px] font-bold text-on-surface-variant uppercase mb-2 flex items-center gap-1.5 tracking-wider">
-                            <span className="material-symbols-outlined text-[14px]">category</span> Top HS Code
+                            <Tag className="size-3.5" /> Top HS Code
                           </div>
                           <div className="text-sm font-bold text-on-surface">{buyer.hsCodes}</div>
                           <div className="text-xs text-on-surface-variant mt-1 font-medium">
@@ -482,9 +504,9 @@ export default function BuyerDiscoveryPage() {
                               router.push(`/negotiation?buyer=${buyer.id}`);
                             }
                           }} 
-                          className="px-4 py-2 bg-primary text-[#ffffff] rounded-md text-sm font-bold hover:bg-surface-tint transition-colors flex items-center gap-2 shadow-sm"
+                          className="px-4 py-2 bg-primary text-white rounded-md text-sm font-bold hover:bg-surface-tint transition-colors flex items-center gap-2 shadow-sm"
                         >
-                          <span className="material-symbols-outlined text-[18px]">send</span>
+                          <Send className="size-[18px]" />
                           Buat Email Penawaran AI
                         </button>
                       </div>
@@ -502,7 +524,7 @@ export default function BuyerDiscoveryPage() {
             {/* Context Widget 2: Terminal Stats */}
             <div className="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
               <div className="p-4 border-b border-outline-variant bg-surface-container-lowest flex items-center gap-2">
-                <span className="material-symbols-outlined text-on-surface-variant text-[20px]">troubleshoot</span>
+                <Wrench className="text-on-surface-variant size-5" />
                 <h3 className="text-base font-bold text-on-surface">Diagnostik Pencarian</h3>
               </div>
               <div className="p-0 divide-y divide-outline-variant">
@@ -524,12 +546,12 @@ export default function BuyerDiscoveryPage() {
             {/* Context Widget 3: Compliance Alert */}
             <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 border-l-[4px] border-l-error shadow-sm">
               <div className="flex items-start gap-3">
-                <span className="material-symbols-outlined text-error text-[20px]">gavel</span>
+                <Gavel className="text-error size-5" />
                 <div>
                   <h4 className="text-sm font-bold text-on-surface mb-1">Regulasi Deforestasi UE (EUDR)</h4>
                   <p className="text-xs text-on-surface-variant mb-2 leading-relaxed">Pastikan koordinat geolokasi (GPS) untuk lahan kopi Anda telah diperbarui sebelum menawarkan produk ke pembeli Eropa. Kepatuhan hukum sangat ketat.</p>
                   <button className="text-[11px] font-bold text-primary hover:underline flex items-center gap-1 uppercase tracking-wider">
-                    Perbarui Koordinat <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+                    Perbarui Koordinat <ArrowRight className="size-3.5" />
                   </button>
                 </div>
               </div>
@@ -541,25 +563,23 @@ export default function BuyerDiscoveryPage() {
         <div className="mt-8 pt-4 border-t border-outline-variant flex justify-between items-center text-on-surface-variant">
           <span className="text-xs font-semibold tracking-wide">Menampilkan 1-2 dari 14 hasil cocok</span>
           <div className="flex gap-1.5">
-            <button className="w-8 h-8 flex items-center justify-center border border-outline-variant rounded hover:bg-surface-container-low transition-colors disabled:opacity-50 shadow-sm"><span className="material-symbols-outlined text-[18px]">chevron_left</span></button>
+            <button className="w-8 h-8 flex items-center justify-center border border-outline-variant rounded hover:bg-surface-container-low transition-colors disabled:opacity-50 shadow-sm"><ChevronLeft className="size-[18px]" /></button>
             <button className="w-8 h-8 flex items-center justify-center border border-primary bg-primary text-on-primary rounded text-xs font-bold shadow-sm">1</button>
             <button className="w-8 h-8 flex items-center justify-center border border-outline-variant rounded hover:bg-surface-container-low transition-colors text-xs font-bold shadow-sm">2</button>
             <button className="w-8 h-8 flex items-center justify-center border border-outline-variant rounded hover:bg-surface-container-low transition-colors text-xs font-bold shadow-sm">3</button>
             <span className="w-8 h-8 flex items-center justify-center text-xs font-bold">...</span>
-            <button className="w-8 h-8 flex items-center justify-center border border-outline-variant rounded hover:bg-surface-container-low transition-colors shadow-sm"><span className="material-symbols-outlined text-[18px]">chevron_right</span></button>
+            <button className="w-8 h-8 flex items-center justify-center border border-outline-variant rounded hover:bg-surface-container-low transition-colors shadow-sm"><ChevronRight className="size-[18px]" /></button>
           </div>
         </div>
 
         {/* INTERACTIVE BUYER PROFILE MODAL */}
         {selectedBuyer && (
-          <div className="fixed inset-0 bg-[#070235]/65 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="fixed inset-0 bg-primary/65 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
             <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl w-full max-w-2xl shadow-2xl p-6 md:p-8 flex flex-col max-h-[85vh] overflow-hidden animate-in zoom-in-95 duration-300">
               
               <div className="flex justify-between items-center border-b border-outline-variant pb-4 mb-6 shrink-0">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-indigo-50 border border-outline-variant text-[#070235] rounded-xl flex items-center justify-center font-black text-xl">
-                    {selectedBuyer.logo}
-                  </div>
+                  <Avatar name={selectedBuyer.name} initials={selectedBuyer.logo} size="lg" className="rounded-xl text-xl" />
                   <div>
                     <h3 className="text-xl font-black text-primary leading-tight">{selectedBuyer.name}</h3>
                     <p className="text-xs text-on-surface-variant font-medium">{selectedBuyer.location} • {selectedBuyer.category}</p>
@@ -569,7 +589,7 @@ export default function BuyerDiscoveryPage() {
                   onClick={() => setSelectedBuyer(null)}
                   className="text-on-surface-variant hover:text-error p-1.5 rounded-full hover:bg-surface-container-low transition-colors"
                 >
-                  <span className="material-symbols-outlined text-[22px]">close</span>
+                  <X className="size-[22px]" />
                 </button>
               </div>
 
@@ -589,7 +609,7 @@ export default function BuyerDiscoveryPage() {
                 {/* Import History */}
                 <div>
                   <h4 className="text-xs font-bold text-primary uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-[18px]">history</span> Riwayat Impor & Catatan Manifest
+                    <History className="size-[18px]" /> Riwayat Impor & Catatan Manifest
                   </h4>
                   <div className="bg-surface-container-low/50 border border-outline-variant rounded-lg p-4 space-y-2 text-xs font-medium">
                     <div className="flex justify-between border-b border-outline-variant/40 pb-2">
@@ -618,7 +638,7 @@ export default function BuyerDiscoveryPage() {
                 {/* Compliance & Standards */}
                 <div>
                   <h4 className="text-xs font-bold text-primary uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-[18px]">workspace_premium</span> Kepatuhan Global & Sertifikasi
+                    <Trophy className="size-[18px]" /> Kepatuhan Global & Sertifikasi
                   </h4>
                   <div className="bg-surface-container-low/50 border border-outline-variant rounded-lg p-4 space-y-2 text-xs font-medium">
                     <div className="flex justify-between border-b border-outline-variant/40 pb-2">
@@ -637,9 +657,9 @@ export default function BuyerDiscoveryPage() {
                 {/* AI Recommendation Context */}
                 <div>
                   <h4 className="text-xs font-bold text-primary uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-[18px]">auto_awesome</span> Analisis Kecocokan TradeConnect
+                    <Sparkles className="size-[18px]" /> Analisis Kecocokan TradeConnect
                   </h4>
-                  <div className="bg-[#85f8c4]/10 border-l-4 border-secondary p-4 rounded-r-xl">
+                  <div className="bg-secondary-fixed/10 border-l-4 border-secondary p-4 rounded-r-xl">
                     <p className="text-xs text-on-surface-variant font-medium leading-relaxed italic">
                       "{selectedBuyer.rationale}"
                     </p>
@@ -662,7 +682,7 @@ export default function BuyerDiscoveryPage() {
                   }}
                   className="px-6 py-2 bg-primary text-on-primary hover:bg-surface-tint rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 shadow-md"
                 >
-                  <span className="material-symbols-outlined text-[16px]">send</span>
+                  <Send className="size-4" />
                   Mulai Komunikasi (Outbound)
                 </button>
               </div>
@@ -672,14 +692,14 @@ export default function BuyerDiscoveryPage() {
 
         {/* Pitching Simulation Modal */}
         {isPitching && (
-          <div className="fixed inset-0 bg-[#070235]/65 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="fixed inset-0 bg-primary/65 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
             <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl w-full max-w-lg shadow-2xl p-6 md:p-8 flex flex-col items-center animate-in zoom-in-95 duration-300">
               
               {/* Spinner & AI Icon */}
               <div className="relative w-20 h-20 mb-6 flex items-center justify-center shrink-0">
                 <div className="absolute inset-0 border-4 border-outline-variant rounded-full"></div>
                 <div className="absolute inset-0 border-4 border-primary rounded-full border-t-transparent animate-spin"></div>
-                <span className="material-symbols-outlined text-primary text-3xl animate-pulse">auto_awesome</span>
+                <Sparkles className="text-primary animate-pulse size-8" />
               </div>
 
               <h3 className="text-xl font-bold text-primary mb-1">TradeConnect AI Outbound Pipeline</h3>
@@ -690,7 +710,7 @@ export default function BuyerDiscoveryPage() {
                 {/* Step 1 */}
                 <div className="flex items-center gap-3">
                   <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${pitchStep >= 2 ? 'bg-secondary text-on-secondary border-none' : 'bg-surface-variant animate-pulse text-on-surface-variant'}`}>
-                    {pitchStep >= 2 ? '✓' : '1'}
+                    {pitchStep >= 2 ? <Check className="size-3.5" /> : "1"}
                   </div>
                   <span className={`text-xs font-semibold ${pitchStep >= 1 ? 'text-on-surface' : 'text-on-surface-variant'}`}>Menganalisis kecocokan katalog dan kepatuhan hukum kebun</span>
                 </div>
@@ -698,7 +718,7 @@ export default function BuyerDiscoveryPage() {
                 {/* Step 2 */}
                 <div className={`flex items-center gap-3 transition-opacity duration-300 ${pitchStep >= 2 ? 'opacity-100' : 'opacity-30'}`}>
                   <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${pitchStep >= 3 ? 'bg-secondary text-on-secondary border-none' : 'bg-surface-variant animate-pulse text-on-surface-variant'}`}>
-                    {pitchStep >= 3 ? '✓' : '2'}
+                    {pitchStep >= 3 ? <Check className="size-3.5" /> : "2"}
                   </div>
                   <span className={`text-xs font-semibold ${pitchStep >= 2 ? 'text-on-surface' : 'text-on-surface-variant'}`}>Mencocokkan manifest impor pabean GlobalTech</span>
                 </div>
@@ -706,7 +726,7 @@ export default function BuyerDiscoveryPage() {
                 {/* Step 3 */}
                 <div className={`flex items-center gap-3 transition-opacity duration-300 ${pitchStep >= 3 ? 'opacity-100' : 'opacity-30'}`}>
                   <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${pitchStep >= 4 ? 'bg-secondary text-on-secondary border-none' : 'bg-surface-variant animate-pulse text-on-surface-variant'}`}>
-                    {pitchStep >= 4 ? '✓' : '3'}
+                    {pitchStep >= 4 ? <Check className="size-3.5" /> : "3"}
                   </div>
                   <span className={`text-xs font-semibold ${pitchStep >= 3 ? 'text-on-surface' : 'text-on-surface-variant'}`}>Menyusun surat penawaran B2B formal dalam Bahasa Inggris</span>
                 </div>
@@ -725,7 +745,7 @@ export default function BuyerDiscoveryPage() {
                 {/* Step 4 */}
                 <div className={`flex items-center gap-3 transition-opacity duration-300 ${pitchStep >= 4 ? 'opacity-100' : 'opacity-30'}`}>
                   <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${pitchStep >= 5 ? 'bg-secondary text-on-secondary border-none' : 'bg-surface-variant animate-pulse text-on-surface-variant'}`}>
-                    {pitchStep >= 5 ? '✓' : '4'}
+                    {pitchStep >= 5 ? <Check className="size-3.5" /> : "4"}
                   </div>
                   <span className={`text-xs font-semibold ${pitchStep >= 4 ? 'text-on-surface' : 'text-on-surface-variant'}`}>Mengirim email penawaran aman ke Klaus Weber</span>
                 </div>
@@ -744,14 +764,14 @@ export default function BuyerDiscoveryPage() {
 
         {/* INTERACTIVE REMINDER SCHEDULER MODAL */}
         {showReminderModal && (
-          <div className="fixed inset-0 bg-[#070235]/65 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="fixed inset-0 bg-primary/65 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
             <form 
               onSubmit={handleSaveReminder}
               className="bg-surface-container-lowest border border-outline-variant rounded-2xl w-full max-w-md shadow-2xl p-6 md:p-8 flex flex-col gap-5 animate-in zoom-in-95 duration-300 pointer-events-auto text-sm text-on-surface font-sans"
             >
               <div className="flex justify-between items-center border-b border-outline-variant pb-3 shrink-0">
                 <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary text-[24px]">add_alert</span>
+                  <BellPlus className="text-primary size-6" />
                   <h3 className="text-base font-bold text-primary">Jadwalkan Pengingat Ekspor</h3>
                 </div>
                 <button 
@@ -759,7 +779,7 @@ export default function BuyerDiscoveryPage() {
                   onClick={() => setShowReminderModal(false)}
                   className="text-on-surface-variant hover:text-error p-1 rounded-full hover:bg-surface-container-high transition-colors"
                 >
-                  <span className="material-symbols-outlined text-[20px]">close</span>
+                  <X className="size-5" />
                 </button>
               </div>
 
@@ -811,7 +831,7 @@ export default function BuyerDiscoveryPage() {
                       <option value="Tanda Tangan PO">Tanda Tangan PO</option>
                       <option value="Follow-up Logistik">Follow-up Logistik</option>
                     </select>
-                    <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none text-[18px]">arrow_drop_down</span>
+                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none size-[18px]" />
                   </div>
                 </div>
               </div>
@@ -837,8 +857,8 @@ export default function BuyerDiscoveryPage() {
 
         {/* CUSTOM PREMIUM INTERACTIVE TOAST */}
         {toast && (
-          <div className="fixed bottom-6 right-6 z-[10000] bg-[#070235] text-white border border-[#85f8c4]/40 px-5 py-3 rounded-xl shadow-2xl flex items-center gap-2.5 animate-in slide-in-from-bottom duration-300 font-sans">
-            <span className="material-symbols-outlined text-[#85f8c4]">check_circle</span>
+          <div className="fixed bottom-6 right-6 z-[10000] bg-primary text-white border border-secondary-fixed/40 px-5 py-3 rounded-xl shadow-2xl flex items-center gap-2.5 animate-in slide-in-from-bottom duration-300 font-sans">
+            <CheckCircle2 className="text-secondary-fixed size-6" />
             <span className="text-xs font-bold">{toast.message}</span>
           </div>
         )}

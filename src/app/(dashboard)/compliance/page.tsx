@@ -2,6 +2,19 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getFinalPrice, setStep as setJourneyStep } from "../../../lib/state";
+import {
+  BadgeCheck,
+  Bot,
+  Calculator,
+  Check,
+  FileSignature,
+  FolderCheck,
+  ScrollText,
+  Shield,
+  ShieldCheck,
+} from "lucide-react";
+import { Badge } from "../../../components/ui/badge";
+import { Stepper } from "../../../components/ui/stepper";
 
 export default function CompliancePage() {
   const router = useRouter();
@@ -63,38 +76,12 @@ export default function CompliancePage() {
         {/* Page Header & Stepper */}
         <div className="flex flex-col gap-4 border-b border-outline-variant pb-6">
           <div>
-            <h2 className="text-2xl font-bold text-on-surface">Pemeriksa Kesiapan Transaksi & Kepatuhan</h2>
+            <h2 className="text-2xl font-bold text-on-surface font-heading">Pemeriksa Kesiapan Transaksi & Kepatuhan</h2>
             <p className="text-sm text-on-surface-variant mt-1 font-medium">Meninjau Transaksi Ekspor: <span className="font-bold text-primary">#TRX-892-IDN</span></p>
           </div>
-          
-          {/* Wizard Progress Stepper */}
-          <div className="flex items-center justify-between w-full max-w-3xl mt-4 relative">
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-surface-container-high z-0"></div>
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1/2 h-1 bg-primary z-0"></div>
-            
-            {/* Step 1: Done */}
-            <div className="relative z-10 flex flex-col items-center gap-2 bg-surface-bright px-4">
-              <div className="w-8 h-8 rounded-full bg-secondary-container text-on-secondary-container border border-secondary flex items-center justify-center shadow-inner">
-                <span className="material-symbols-outlined text-[18px]">check</span>
-              </div>
-              <span className="text-[10px] font-bold uppercase text-on-surface tracking-wider">Dokumen Utama</span>
-            </div>
-            
-            {/* Step 2: Active */}
-            <div className="relative z-10 flex flex-col items-center gap-2 bg-surface-bright px-4">
-              <div className="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-md border-4 border-surface-bright">
-                <span className="text-sm font-bold">2</span>
-              </div>
-              <span className="text-[10px] font-bold uppercase text-primary tracking-wider">Penetapan Harga</span>
-            </div>
-            
-            {/* Step 3: Pending */}
-            <div className="relative z-10 flex flex-col items-center gap-2 bg-surface-bright px-4">
-              <div className="w-8 h-8 rounded-full bg-surface-container-high border border-outline-variant text-on-surface-variant flex items-center justify-center">
-                <span className="text-sm font-bold">3</span>
-              </div>
-              <span className="text-[10px] font-bold uppercase text-on-surface-variant tracking-wider">Indikator Risiko</span>
-            </div>
+
+          <div className="w-full max-w-3xl mt-4">
+            <Stepper steps={["Dokumen Utama", "Penetapan Harga", "Indikator Risiko"]} currentStep={2} />
           </div>
         </div>
 
@@ -108,28 +95,22 @@ export default function CompliancePage() {
             <section className="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 shadow-sm">
               <div className="flex justify-between items-center mb-4 border-b border-outline-variant/50 pb-3">
                 <h3 className="text-lg font-bold text-on-surface flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary text-[20px]">folder_managed</span>
+                  <FolderCheck className="text-primary size-5" />
                   Langkah 1: Dokumen Utama
                 </h3>
               </div>
               <div className="space-y-3">
                 <div className="flex items-center justify-between p-2.5 rounded-lg bg-surface border border-outline-variant shadow-sm">
                   <span className="text-sm font-semibold text-on-surface">NIB (Nomor Induk Berusaha)</span>
-                  <span className="bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded text-[10px] font-bold uppercase flex items-center gap-1 border border-secondary-fixed-dim">
-                    <span className="material-symbols-outlined text-[14px]">verified</span> Valid
-                  </span>
+                  <Badge variant="success" icon={BadgeCheck}>Valid</Badge>
                 </div>
                 <div className="flex items-center justify-between p-2.5 rounded-lg bg-surface border border-outline-variant shadow-sm">
                   <span className="text-sm font-semibold text-on-surface">Validasi Kode HS</span>
-                  <span className="bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded text-[10px] font-bold uppercase flex items-center gap-1 border border-secondary-fixed-dim">
-                    <span className="material-symbols-outlined text-[14px]">verified</span> 0901.11
-                  </span>
+                  <Badge variant="success" icon={BadgeCheck}>0901.11</Badge>
                 </div>
                 <div className="flex items-center justify-between p-2.5 rounded-lg bg-surface border border-outline-variant shadow-sm">
                   <span className="text-sm font-semibold text-on-surface">Sertifikasi BPOM / Halal</span>
-                  <span className="bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded text-[10px] font-bold uppercase flex items-center gap-1 border border-secondary-fixed-dim">
-                    <span className="material-symbols-outlined text-[14px]">verified</span> Disetujui
-                  </span>
+                  <Badge variant="success" icon={BadgeCheck}>Disetujui</Badge>
                 </div>
               </div>
             </section>
@@ -137,7 +118,7 @@ export default function CompliancePage() {
             {/* Preview of Step 3 */}
             <section className="bg-surface-container-low border border-outline-variant border-dashed rounded-xl p-5 opacity-80">
               <div className="flex items-center gap-2 text-on-surface-variant">
-                <span className="material-symbols-outlined text-[20px]">policy</span>
+                <ScrollText className="size-5" />
                 <span className="text-base font-bold">Berikutnya: Pemindai Risiko</span>
               </div>
               <p className="text-xs text-on-surface-variant mt-2 leading-relaxed font-medium">Menunggu finalisasi harga untuk menjalankan analisis risiko OFAC & Rute secara komprehensif.</p>
@@ -153,7 +134,7 @@ export default function CompliancePage() {
               <div className="bg-surface p-5 border-b border-outline-variant flex justify-between items-start">
                 <div>
                   <h3 className="text-xl font-bold text-on-surface flex items-center gap-2">
-                    <span className="material-symbols-outlined text-primary text-[24px]">calculate</span>
+                    <Calculator className="text-primary size-6" />
                     Kalkulator Harga Ekspor
                   </h3>
                   <p className="text-xs text-on-surface-variant mt-1 font-medium">Konversi biaya dasar Ex-Works ke incoterm internasional standar (FOB/CIF).</p>
@@ -223,7 +204,7 @@ export default function CompliancePage() {
                 {/* Mentor Callout Component */}
                 <div className="bg-primary-container/5 border-l-[4px] border-primary rounded-r-xl p-4 flex gap-3 mt-auto shadow-sm">
                   <div className="text-primary mt-0.5">
-                    <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>smart_toy</span>
+                    <Bot className="size-5" />
                   </div>
                   <div>
                     <h4 className="text-sm font-bold text-primary mb-1">Mentor AI: Kepatuhan Harga</h4>
@@ -239,7 +220,7 @@ export default function CompliancePage() {
                 <button className="px-5 py-2 rounded-md border border-outline-variant text-on-surface text-sm font-bold hover:bg-surface transition-colors shadow-sm bg-surface-container-lowest">Hitung Ulang</button>
                 <button onClick={handleStartScan} className="px-5 py-2 rounded-md bg-primary text-on-primary text-sm font-bold hover:bg-surface-tint transition-colors flex items-center gap-2 shadow-sm">
                   Jalankan Kepatuhan AI & Buat PO
-                  <span className="material-symbols-outlined text-[18px]">request_quote</span>
+                  <FileSignature className="size-[18px]" />
                 </button>
               </div>
             </section>
@@ -249,66 +230,66 @@ export default function CompliancePage() {
 
       {/* AI LASER SCANNING OVERLAY MODAL */}
       {isScanning && (
-        <div className="fixed inset-0 bg-[#070235]/70 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
+        <div className="fixed inset-0 bg-primary/70 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
           
 
           <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl w-full max-w-lg shadow-2xl p-6 md:p-8 flex flex-col items-center relative overflow-hidden z-10 animate-in zoom-in-95 duration-300">
             
             {/* Spinning Radar Icon */}
             <div className="relative w-20 h-20 mb-6 flex items-center justify-center shrink-0">
-              <div className="absolute inset-0 border-4 border-emerald-500/20 rounded-full"></div>
-              <div className="absolute inset-0 border-4 border-emerald-500 rounded-full border-t-transparent animate-spin"></div>
-              <span className="material-symbols-outlined text-emerald-500 text-4xl animate-pulse">security</span>
+              <div className="absolute inset-0 border-4 border-secondary/20 rounded-full"></div>
+              <div className="absolute inset-0 border-4 border-secondary rounded-full border-t-transparent animate-spin"></div>
+              <Shield className="text-secondary animate-pulse size-9" />
             </div>
 
-            <h3 className="text-xl font-bold text-[#070235] mb-1">Pemindai Kepatuhan Transaksi AI</h3>
+            <h3 className="text-xl font-bold text-primary mb-1 font-heading">Pemindai Kepatuhan Transaksi AI</h3>
             <p className="text-xs text-on-surface-variant mb-6 uppercase tracking-wider font-bold">Kesiapan Transaksi & Pemeriksa Bendera Merah</p>
 
             {/* Scanning Checks */}
             <div className="w-full space-y-4 mb-6">
               {/* Check 1 */}
               <div className="flex items-center gap-3">
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${scanStep >= 2 ? 'bg-emerald-500 text-slate-950 border-none' : 'bg-surface-variant animate-pulse text-on-surface-variant'}`}>
-                  {scanStep >= 2 ? '✓' : '1'}
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${scanStep >= 2 ? 'bg-secondary text-on-secondary border-none' : 'bg-surface-variant animate-pulse text-on-surface-variant'}`}>
+                  {scanStep >= 2 ? <Check className="size-3.5" /> : '1'}
                 </div>
-                <span className={`text-xs font-semibold ${scanStep >= 1 ? 'text-[#070235]' : 'text-on-surface-variant'}`}>Memindai kredensial hukum terhadap OSS & INATRADE</span>
+                <span className={`text-xs font-semibold ${scanStep >= 1 ? 'text-primary' : 'text-on-surface-variant'}`}>Memindai kredensial hukum terhadap OSS & INATRADE</span>
               </div>
 
               {/* Check 2 */}
               <div className={`flex items-center gap-3 transition-opacity duration-300 ${scanStep >= 2 ? 'opacity-100' : 'opacity-30'}`}>
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${scanStep >= 3 ? 'bg-emerald-500 text-slate-950 border-none' : 'bg-surface-variant animate-pulse text-on-surface-variant'}`}>
-                  {scanStep >= 3 ? '✓' : '2'}
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${scanStep >= 3 ? 'bg-secondary text-on-secondary border-none' : 'bg-surface-variant animate-pulse text-on-surface-variant'}`}>
+                  {scanStep >= 3 ? <Check className="size-3.5" /> : '2'}
                 </div>
-                <span className={`text-xs font-semibold ${scanStep >= 2 ? 'text-[#070235]' : 'text-on-surface-variant'}`}>Menganalisis pengiriman regional & riwayat wanprestasi GlobalTech</span>
+                <span className={`text-xs font-semibold ${scanStep >= 2 ? 'text-primary' : 'text-on-surface-variant'}`}>Menganalisis pengiriman regional & riwayat wanprestasi GlobalTech</span>
               </div>
 
               {/* Check 3 */}
               <div className={`flex items-center gap-3 transition-opacity duration-300 ${scanStep >= 3 ? 'opacity-100' : 'opacity-30'}`}>
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${scanStep >= 4 ? 'bg-emerald-500 text-slate-950 border-none' : 'bg-surface-variant animate-pulse text-on-surface-variant'}`}>
-                  {scanStep >= 4 ? '✓' : '3'}
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${scanStep >= 4 ? 'bg-secondary text-on-secondary border-none' : 'bg-surface-variant animate-pulse text-on-surface-variant'}`}>
+                  {scanStep >= 4 ? <Check className="size-3.5" /> : '3'}
                 </div>
-                <span className={`text-xs font-semibold ${scanStep >= 3 ? 'text-[#070235]' : 'text-on-surface-variant'}`}>Memeriksa Incoterms, konversi HPP & harga terlalu rendah (under-pricing)</span>
+                <span className={`text-xs font-semibold ${scanStep >= 3 ? 'text-primary' : 'text-on-surface-variant'}`}>Memeriksa Incoterms, konversi HPP & harga terlalu rendah (under-pricing)</span>
               </div>
 
               {/* Check 4 */}
               <div className={`flex items-center gap-3 transition-opacity duration-300 ${scanStep >= 4 ? 'opacity-100' : 'opacity-30'}`}>
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${scanStep >= 5 ? 'bg-emerald-500 text-slate-950 border-none' : 'bg-surface-variant animate-pulse text-on-surface-variant'}`}>
-                  {scanStep >= 5 ? '✓' : '4'}
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${scanStep >= 5 ? 'bg-secondary text-on-secondary border-none' : 'bg-surface-variant animate-pulse text-on-surface-variant'}`}>
+                  {scanStep >= 5 ? <Check className="size-3.5" /> : '4'}
                 </div>
-                <span className={`text-xs font-semibold ${scanStep >= 4 ? 'text-[#070235]' : 'text-on-surface-variant'}`}>Menjalankan pemindaian bendera merah NLP pada kontrak pembayaran</span>
+                <span className={`text-xs font-semibold ${scanStep >= 4 ? 'text-primary' : 'text-on-surface-variant'}`}>Menjalankan pemindaian bendera merah NLP pada kontrak pembayaran</span>
               </div>
             </div>
 
             <div className="w-full bg-surface-variant rounded-full h-1.5 overflow-hidden">
-              <div 
-                className="bg-emerald-500 h-1.5 rounded-full transition-all duration-500 ease-out animate-pulse" 
+              <div
+                className="bg-secondary h-1.5 rounded-full transition-all duration-500 ease-out animate-pulse"
                 style={{ width: `${(scanStep / 4) * 100}%` }}
               ></div>
             </div>
 
             {scanStep === 4 && (
-              <div className="mt-4 text-emerald-600 text-xs font-bold flex items-center gap-1 animate-bounce">
-                <span className="material-symbols-outlined text-[16px]">verified_user</span>
+              <div className="mt-4 text-secondary text-xs font-bold flex items-center gap-1 animate-bounce">
+                <ShieldCheck className="size-4" />
                 100% Bersih! Membuat Purchase Order Aman...
               </div>
             )}

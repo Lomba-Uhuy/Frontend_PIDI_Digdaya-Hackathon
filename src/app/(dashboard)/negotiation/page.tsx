@@ -4,6 +4,40 @@ import { useRouter } from "next/navigation";
 import { getStep, setStep as setJourneyStep, setFinalPrice } from "../../../lib/state";
 import { ChatMessage } from "../../../types";
 import { classifyIntent, generateReply, calculatePrice, DraftReply, checkRedFlag, getCredibilityDimensions, RedFlagReport } from "../../../lib/api";
+import { getIcon } from "../../../lib/icon-map";
+import { cn } from "../../../lib/utils";
+import {
+  AlertTriangle,
+  ArrowRight,
+  Award,
+  BarChart3,
+  Calculator,
+  CheckCircle2,
+  Edit3,
+  FileText,
+  HelpCircle,
+  Info,
+  Languages,
+  Lightbulb,
+  MailPlus,
+  MailWarning,
+  Menu,
+  Package,
+  PanelLeftClose,
+  PanelRightOpen,
+  Paperclip,
+  Pencil,
+  RefreshCw,
+  Search,
+  Send,
+  Shield,
+  ShieldCheck,
+  Sparkles,
+  Wallet,
+  X,
+} from "lucide-react";
+import { Avatar } from "../../../components/ui/avatar";
+import { Badge } from "../../../components/ui/badge";
 
 export default function NegotiationHubPage() {
   const router = useRouter();
@@ -52,7 +86,6 @@ export default function NegotiationHubPage() {
       name: "Klaus Weber",
       company: "GlobalTech Imports GmbH",
       country: "Jerman",
-      flag: "🇩🇪",
       product: productName,
       lastMessage: klausRepliedCount === 1 
         ? "Silakan buat Purchase Order resmi di sistem..." 
@@ -66,7 +99,6 @@ export default function NegotiationHubPage() {
       name: "Jan de Jong",
       company: "IndoEuro Trading Ltd",
       country: "Belanda",
-      flag: "🇳🇱",
       product: "Kerajinan Bambu Artistik",
       lastMessage: "Kontrak ditandatangani, terima kasih banyak!",
       time: "25 Mei",
@@ -78,7 +110,6 @@ export default function NegotiationHubPage() {
       name: "Lim Shen",
       company: "Asean Food Products",
       country: "Singapura",
-      flag: "🇸🇬",
       product: "Keripik Tempe Aneka Rasa",
       lastMessage: "Pembayaran tahap pertama berhasil diproses.",
       time: "24 Mei",
@@ -90,7 +121,6 @@ export default function NegotiationHubPage() {
       name: "Kenji Sato",
       company: "Nippon Organic Foods",
       country: "Jepang",
-      flag: "🇯🇵",
       product: "Teh Hijau Matcha Organik",
       lastMessage: "Mohon kirimkan sertifikasi bebas pestisida Anda.",
       time: "23 Mei",
@@ -371,10 +401,10 @@ export default function NegotiationHubPage() {
     return (
       <div className="h-full w-full flex flex-col items-center justify-center bg-surface-bright p-8">
         <div className="max-w-md text-center bg-surface-container-lowest p-8 border border-outline-variant rounded-2xl shadow-sm flex flex-col items-center">
-          <div className="w-16 h-16 bg-indigo-50 text-[#070235] border border-outline-variant rounded-full flex items-center justify-center mb-4">
-            <span className="material-symbols-outlined text-4xl">mail_lock</span>
+          <div className="w-16 h-16 bg-indigo-50 text-primary border border-outline-variant rounded-full flex items-center justify-center mb-4">
+            <MailWarning className="size-9" />
           </div>
-          <h2 className="text-xl font-bold text-[#070235] mb-2">Tidak Ada Negosiasi Aktif</h2>
+          <h2 className="text-xl font-bold text-primary mb-2 font-heading">Tidak Ada Negosiasi Aktif</h2>
           <p className="text-sm text-on-surface-variant mb-6">
             Anda belum memulai komunikasi dengan pembeli mana pun. Silakan buka menu <strong>Pencarian Pembeli</strong> untuk menemukan importir yang cocok dan kirimkan draf email perkenalan AI pertama Anda.
           </p>
@@ -383,7 +413,7 @@ export default function NegotiationHubPage() {
             className="bg-primary text-on-primary px-6 py-2.5 rounded-lg text-sm font-bold hover:bg-surface-tint transition-colors flex items-center gap-2 shadow-sm"
           >
             Buka Pencarian Pembeli
-            <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+            <ArrowRight className="size-4" />
           </button>
         </div>
       </div>
@@ -404,14 +434,14 @@ export default function NegotiationHubPage() {
         {/* Sidebar Header */}
         <div className="p-4 border-b border-outline-variant bg-surface-container-lowest flex flex-col gap-3 flex-shrink-0">
           <div className="flex justify-between items-center">
-            <h3 className="text-xs font-bold text-[#070235] uppercase tracking-wider">Hub Negosiasi</h3>
+            <h3 className="text-xs font-bold text-primary uppercase tracking-wider">Hub Negosiasi</h3>
             <span className="bg-primary/10 text-primary text-[10px] font-bold px-2 py-0.5 rounded-full">
               4 Pembeli
             </span>
           </div>
           {/* Search bar */}
           <div className="relative flex items-center">
-            <span className="material-symbols-outlined absolute left-2.5 text-on-surface-variant text-[16px]">search</span>
+            <Search className="absolute left-2.5 text-on-surface-variant size-4" />
             <input 
               type="text" 
               placeholder="Cari pembeli atau negara..." 
@@ -438,7 +468,7 @@ export default function NegotiationHubPage() {
             >
               <div className="flex justify-between items-start gap-1">
                 <span className="text-xs font-bold text-on-surface truncate flex items-center gap-1.5">
-                  <span>{buyer.flag}</span>
+                  <Avatar name={buyer.company} size="sm" className="text-[10px]" />
                   <span className="truncate">{buyer.company}</span>
                 </span>
                 <span className="text-[9px] text-on-surface-variant font-mono whitespace-nowrap">{buyer.time}</span>
@@ -450,15 +480,9 @@ export default function NegotiationHubPage() {
                 {buyer.lastMessage}
               </p>
               <div className="flex justify-between items-center mt-1.5">
-                <span className={`text-[9px] px-2 py-0.5 rounded font-extrabold uppercase border ${
-                  buyer.status === "Aktif" 
-                    ? "bg-primary-container text-on-primary-container border-primary/20"
-                    : buyer.status === "Selesai"
-                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                    : "bg-surface-container-high text-on-surface-variant border-outline-variant"
-                }`}>
+                <Badge variant={buyer.status === "Aktif" ? "info" : buyer.status === "Selesai" ? "success" : "neutral"}>
                   {buyer.status}
-                </span>
+                </Badge>
                 {buyer.unread && (
                   <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                 )}
@@ -479,44 +503,37 @@ export default function NegotiationHubPage() {
               setIsLeftPanelOpen(false);
               setMentorWidth(0);
             }}
-            className="block lg:hidden absolute inset-0 bg-[#070235]/35 backdrop-blur-[2px] z-10 animate-in fade-in duration-200 cursor-pointer"
+            className="block lg:hidden absolute inset-0 bg-primary/35 backdrop-blur-[2px] z-10 animate-in fade-in duration-200 cursor-pointer"
           />
         )}
         {/* Thread Header */}
         <div className="px-5 py-3 border-b border-outline-variant bg-surface-container-lowest flex justify-between items-center flex-shrink-0">
           <div className="flex items-center gap-2 min-w-0">
             {/* TOGGLE LEFT PANEL BUTTON */}
-            <button 
+            <button
               onClick={() => setIsLeftPanelOpen(!isLeftPanelOpen)}
-              className="text-on-surface-variant hover:text-primary p-1.5 rounded-lg hover:bg-surface-container-low transition-colors shrink-0 mr-1"
+              className="text-on-surface-variant hover:text-primary p-1.5 rounded-lg hover:bg-surface-container-low transition-colors shrink-0 mr-1 cursor-pointer"
               title={isLeftPanelOpen ? "Tutup Hub Negosiasi" : "Buka Hub Negosiasi"}
             >
-              <span className="material-symbols-outlined text-[20px]">
-                {isLeftPanelOpen ? "menu_open" : "menu"}
-              </span>
+              {isLeftPanelOpen ? <PanelLeftClose className="size-5" /> : <Menu className="size-5" />}
             </button>
 
             <div className="flex flex-col gap-0.5 min-w-0">
               <h2 className="text-sm md:text-base font-bold text-on-surface truncate">GlobalTech Imports GmbH</h2>
               <div className="flex items-center gap-2 flex-wrap text-[10px] text-on-surface-variant font-medium">
                 {/* Status Terhubung */}
-                <span className="flex items-center gap-1 bg-primary-container/10 px-2 py-0.5 rounded text-[9px] font-bold text-primary uppercase border border-primary/20 shrink-0">
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span> Terhubung via Email
-                </span>
+                <Badge variant="info" size="md">
+                  <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" /> Terhubung via Email
+                </Badge>
 
                 {/* INTENT BADGE (compact) */}
-                <span className={`flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-extrabold uppercase border shadow-sm shrink-0 ${
-                  activeIntent === "negotiation"
-                    ? "bg-amber-50 text-amber-700 border-amber-200"
-                    : activeIntent === "inquiry"
-                    ? "bg-blue-50 text-blue-700 border-blue-200"
-                    : "bg-rose-50 text-rose-700 border-rose-200"
-                }`}>
-                  <span className="material-symbols-outlined text-[10px]">
-                    {activeIntent === "negotiation" ? "payments" : activeIntent === "inquiry" ? "help" : "warning"}
-                  </span>
+                <Badge
+                  variant={activeIntent === "negotiation" ? "warning" : activeIntent === "inquiry" ? "info" : "danger"}
+                  size="md"
+                  icon={activeIntent === "negotiation" ? Wallet : activeIntent === "inquiry" ? HelpCircle : AlertTriangle}
+                >
                   Intent: {activeIntent === "negotiation" ? "Negosiasi" : activeIntent === "inquiry" ? "Pertanyaan" : "Keluhan"} ({Math.round(intentConfidence * 100)}%)
-                </span>
+                </Badge>
 
                 {/* Alamat Muted */}
                 <span className="hidden sm:inline-block text-on-surface-variant/80">•</span>
@@ -524,19 +541,19 @@ export default function NegotiationHubPage() {
               </div>
             </div>
           </div>
-          
+
           <div className="flex gap-2 items-center shrink-0">
             {mentorWidth === 0 && (
-              <button 
+              <button
                 onClick={() => setMentorWidth(380)}
-                className="bg-[#070235] text-[#85f8c4] border border-[#85f8c4]/30 px-3 py-1.5 rounded-lg text-[10px] font-extrabold uppercase flex items-center gap-1.5 hover:bg-[#070235]/80 transition-all shadow-md animate-in fade-in duration-300"
+                className="bg-primary text-secondary-fixed border border-secondary-fixed/30 px-3 py-1.5 rounded-lg text-[10px] font-extrabold uppercase flex items-center gap-1.5 hover:bg-primary-hover transition-all shadow-md animate-in fade-in duration-300 cursor-pointer"
               >
-                <span className="material-symbols-outlined text-[16px]">menu_open</span>
+                <PanelRightOpen className="size-4" />
                 Asisten AI
               </button>
             )}
             <div className="bg-surface-container-low text-on-surface-variant px-2.5 py-1 rounded-md flex items-center gap-1.5 border border-outline-variant text-[10px] font-bold uppercase shrink-0">
-              <span className="material-symbols-outlined text-[15px] text-primary">inventory_2</span>
+              <Package className="text-primary size-[15px]" />
               <span className="hidden sm:inline">RFQ: Pembelian Massal</span>
               <span className="sm:hidden">RFQ</span>
             </div>
@@ -552,9 +569,9 @@ export default function NegotiationHubPage() {
 
           {/* Outbound Pitch Alert */}
           <div className="bg-indigo-50/50 border border-primary/20 p-4 rounded-xl max-w-2xl text-left shadow-sm self-start flex gap-3 animate-in fade-in duration-500">
-            <span className="material-symbols-outlined text-primary text-[24px] shrink-0 mt-0.5">forward_to_inbox</span>
+            <MailPlus className="text-primary shrink-0 mt-0.5 size-6" />
             <div>
-              <div className="text-[10px] font-bold uppercase tracking-widest text-[#070235] mb-1">Email Penawaran AI Terkirim</div>
+              <div className="text-[10px] font-bold uppercase tracking-widest text-primary mb-1">Email Penawaran AI Terkirim</div>
               <p className="text-xs text-on-surface-variant font-medium leading-relaxed">
                 Email penawaran resmi untuk <strong className="text-primary">{productName} {productType === "rattan" ? "(HS 9401.52)" : "Grade 1 (HS 0901.11)"}</strong> telah dikirim secara otomatis ke alamat importir <strong className="text-primary">klaus.weber@globaltech.de</strong> pada pukul 09:42.
               </p>
@@ -572,7 +589,7 @@ export default function NegotiationHubPage() {
                 {msg.sender === 'buyer' && idx === 0 && (
                   <div className="mt-4 flex gap-2">
                     <div className="flex items-center gap-2 border border-outline-variant rounded-md px-3 py-2 bg-surface-container-low w-fit cursor-pointer hover:bg-surface-container-high transition-colors">
-                      <span className="material-symbols-outlined text-error text-[20px]">picture_as_pdf</span>
+                      <FileText className="text-error size-5" />
                       <span className="font-mono text-on-surface text-xs font-medium">Specs_Requirement_v2.pdf</span>
                     </div>
                   </div>
@@ -602,9 +619,9 @@ export default function NegotiationHubPage() {
             <div className="flex justify-center my-6 animate-in zoom-in-95 duration-500">
               <button 
                 onClick={() => router.push('/compliance')}
-                className="bg-[#070235] text-white hover:bg-surface-tint shadow-xl px-8 py-4 rounded-xl font-bold text-sm flex items-center gap-2 hover:-translate-y-1 transition-all active:translate-y-0 shadow-[0_0_20px_rgba(7,2,53,0.2)] animate-pulse"
+                className="bg-primary text-white hover:bg-surface-tint shadow-xl px-8 py-4 rounded-xl font-bold text-sm flex items-center gap-2 hover:-translate-y-1 transition-all active:translate-y-0 shadow-[0_0_20px_rgba(15,23,42,0.2)] animate-pulse"
               >
-                <span className="material-symbols-outlined">fact_check</span>
+                <ShieldCheck className="size-6" />
                 LANJUTKAN KE PEMERIKSAAN KEPATUHAN (DEAL READINESS)
               </button>
             </div>
@@ -625,24 +642,24 @@ export default function NegotiationHubPage() {
             <div className="px-3 py-2 border-t border-outline-variant flex justify-between items-center bg-surface-container-lowest">
               <div className="flex gap-2">
                 <button className="text-on-surface-variant hover:text-primary transition-colors p-1.5 rounded hover:bg-surface-container-low" disabled={currentStep === "compliance"}>
-                  <span className="material-symbols-outlined text-[20px]">attach_file</span>
+                  <Paperclip className="size-5" />
                 </button>
                 <button className="text-on-surface-variant hover:text-primary transition-colors p-1.5 rounded hover:bg-surface-container-low" disabled={currentStep === "compliance"}>
-                  <span className="material-symbols-outlined text-[20px]">description</span>
+                  <FileText className="size-5" />
                 </button>
               </div>
               <button 
                 onClick={handleSend}
                 disabled={!inputValue.trim() || currentStep === "compliance"}
-                className="bg-[#070235] text-white font-semibold text-sm py-1.5 px-6 rounded-md flex items-center gap-2 hover:bg-surface-tint transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                className="bg-primary text-white font-semibold text-sm py-1.5 px-6 rounded-md flex items-center gap-2 hover:bg-surface-tint transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
               >
-                Kirim <span className="material-symbols-outlined text-[16px]">send</span>
+                Kirim <Send className="size-4" />
               </button>
             </div>
           </div>
           <div className="mt-2 flex justify-between items-center px-1">
             <span className="text-[10px] font-bold uppercase text-on-surface-variant flex items-center gap-1">
-              <span className="material-symbols-outlined text-[14px]">translate</span> Diterjemahkan secara otomatis oleh TradeConnect AI
+              <Languages className="size-3.5" /> Diterjemahkan secara otomatis oleh TradeConnect AI
             </span>
             <span className="font-mono text-on-surface-variant text-[10px]">Koneksi Aman</span>
           </div>
@@ -663,20 +680,20 @@ export default function NegotiationHubPage() {
           onMouseDown={startResizing}
           className={`absolute left-0 top-0 bottom-0 w-3 -ml-1.5 cursor-col-resize z-30 transition-all flex items-center justify-center ${
             isResizing 
-              ? 'bg-[#85f8c4]/30 border-l-2 border-[#85f8c4]' 
+              ? 'bg-secondary-fixed/30 border-l-2 border-secondary-fixed' 
               : 'hover:bg-primary/10 hover:border-l-2 hover:border-primary'
           }`}
           title="Geser ke kanan untuk menutup"
         >
           <div className={`w-[2px] h-12 rounded-full transition-all ${
-            isResizing ? 'bg-[#85f8c4]' : 'bg-[#070235]/30'
+            isResizing ? 'bg-secondary-fixed' : 'bg-primary/30'
           }`} />
         </div>
 
         {/* Sidebar Header */}
         <div className="p-4 border-b border-outline-variant flex justify-between items-center bg-surface-container-lowest sticky top-0 z-10 pl-6 flex-shrink-0">
           <div className="flex items-center gap-3">
-            <span className="material-symbols-outlined text-primary text-[32px]" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
+            <Sparkles className="text-primary size-8" />
             <div>
               <h3 className="text-base font-bold text-primary">Asisten Mentor AI</h3>
               <p className="text-xs text-on-surface-variant">Analisis Negosiasi Real-time</p>
@@ -687,7 +704,7 @@ export default function NegotiationHubPage() {
             className="text-on-surface-variant hover:text-error p-1.5 rounded-full hover:bg-surface-container-low transition-colors"
             title="Tutup Asisten Mentor"
           >
-            <span className="material-symbols-outlined text-[20px]">close</span>
+            <X className="size-5" />
           </button>
         </div>
 
@@ -698,12 +715,12 @@ export default function NegotiationHubPage() {
           {/* ========================================================================= */}
           <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 shadow-sm flex flex-col gap-3 animate-in fade-in duration-300">
             <div className="flex justify-between items-center border-b border-outline-variant pb-2">
-              <h4 className="text-[11px] font-extrabold text-[#070235] uppercase tracking-wider flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[18px] text-primary">military_tech</span> Kredibilitas Pembeli
+              <h4 className="text-[11px] font-extrabold text-primary uppercase tracking-wider flex items-center gap-1.5">
+                <Award className="text-primary size-[18px]" /> Kredibilitas Pembeli
               </h4>
-              <span className="bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-bold px-2 py-0.5 rounded font-mono">
+              <Badge variant="success" className="normal-case font-mono">
                 Skor: {activeBuyerId === "klaus" ? "92/100" : activeBuyerId === "nippon" ? "71/100" : "80/100"}
-              </span>
+              </Badge>
             </div>
 
             <div className="flex flex-col gap-3 mt-1">
@@ -714,13 +731,13 @@ export default function NegotiationHubPage() {
                     <span className="font-mono text-primary">{dim.score}%</span>
                   </div>
                   <div className="w-full h-1.5 bg-surface-container-high rounded-full overflow-hidden mt-0.5">
-                    <div 
+                    <div
                       className={`h-full rounded-full transition-all duration-1000 ${
-                        dim.score >= 80 
-                          ? "bg-emerald-500" 
-                          : dim.score >= 50 
-                          ? "bg-amber-500" 
-                          : "bg-rose-500"
+                        dim.score >= 80
+                          ? "bg-secondary"
+                          : dim.score >= 50
+                          ? "bg-warning"
+                          : "bg-error"
                       }`}
                       style={{ width: `${dim.score}%` }}
                     ></div>
@@ -744,39 +761,40 @@ export default function NegotiationHubPage() {
           ) : redFlagReport && (
             <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 shadow-sm flex flex-col gap-3 animate-in fade-in duration-300">
               <div className="flex justify-between items-center border-b border-outline-variant pb-2">
-                <h4 className="text-[11px] font-extrabold text-[#070235] uppercase tracking-wider flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[18px] text-primary">security</span> Laporan Risiko Keamanan
+                <h4 className="text-[11px] font-extrabold text-primary uppercase tracking-wider flex items-center gap-1.5">
+                  <Shield className="text-primary size-[18px]" /> Laporan Risiko Keamanan
                 </h4>
-                <span className={`text-[9px] font-bold px-2 py-0.5 rounded uppercase border ${
-                  redFlagReport.riskLevel === "LOW"
-                    ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-                    : redFlagReport.riskLevel === "MEDIUM"
-                    ? "bg-amber-50 text-amber-800 border-amber-200 animate-pulse"
-                    : "bg-rose-50 text-rose-800 border-rose-200 animate-bounce"
-                }`}>
+                <Badge
+                  variant={redFlagReport.riskLevel === "LOW" ? "success" : redFlagReport.riskLevel === "MEDIUM" ? "warning" : "danger"}
+                  className={redFlagReport.riskLevel === "MEDIUM" ? "animate-pulse" : redFlagReport.riskLevel === "HIGH" ? "animate-bounce" : ""}
+                >
                   Risiko: {redFlagReport.riskLevel === "LOW" ? "Rendah" : redFlagReport.riskLevel === "MEDIUM" ? "Sedang" : "Tinggi"}
-                </span>
+                </Badge>
               </div>
 
               <div className="flex flex-col gap-3 mt-1">
-                {redFlagReport.flags.map((flag, idx) => (
+                {redFlagReport.flags.map((flag, idx) => {
+                  const FlagIcon = getIcon(flag.icon || "warning");
+                  return (
                   <div key={idx} className="flex gap-2.5 items-start bg-surface-bright/40 p-2.5 border border-outline-variant/40 rounded-lg">
-                    <span className={`material-symbols-outlined text-[18px] shrink-0 mt-0.5 ${
-                      redFlagReport.riskLevel === "LOW" ? "text-emerald-600" : "text-amber-600"
-                    }`}>
-                      {flag.icon || "warning"}
-                    </span>
+                    <FlagIcon
+                      className={cn(
+                        "size-[18px] shrink-0 mt-0.5",
+                        redFlagReport.riskLevel === "LOW" ? "text-secondary" : "text-warning"
+                      )}
+                    />
                     <div className="flex flex-col gap-0.5">
                       <span className="text-xs font-bold text-on-surface flex items-center gap-1">
                         {flag.title}
-                        {redFlagReport.riskLevel !== "LOW" && <span className="text-amber-600 font-bold">⚠️</span>}
+                        {redFlagReport.riskLevel !== "LOW" && <AlertTriangle className="size-3 text-warning" />}
                       </span>
                       <p className="text-[10px] text-on-surface-variant leading-relaxed font-medium">
                         {flag.description}
                       </p>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
@@ -786,18 +804,12 @@ export default function NegotiationHubPage() {
           {/* ========================================================================= */}
           <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 shadow-sm flex flex-col gap-4">
             <div className="flex items-center justify-between border-b border-outline-variant pb-2">
-              <h4 className="text-[11px] font-extrabold text-[#070235] uppercase tracking-wider flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[18px] text-primary">calculate</span> Kalkulator Harga Ekspor
+              <h4 className="text-[11px] font-extrabold text-primary uppercase tracking-wider flex items-center gap-1.5">
+                <Calculator className="text-primary size-[18px]" /> Kalkulator Harga Ekspor
               </h4>
-              <span className={`text-[9px] font-bold px-2 py-0.5 rounded uppercase border ${
-                pricing.status === "competitive" 
-                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                  : pricing.status === "high"
-                  ? "bg-rose-50 text-rose-700 border-rose-200"
-                  : "bg-blue-50 text-blue-700 border-blue-200"
-              }`}>
+              <Badge variant={pricing.status === "competitive" ? "success" : pricing.status === "high" ? "danger" : "info"}>
                 {pricing.status === "competitive" ? "Kompetitif BPS" : pricing.status === "high" ? "Terlalu Tinggi" : "Terlalu Murah"}
-              </span>
+              </Badge>
             </div>
 
             {/* Pricing Input Fields */}
@@ -892,7 +904,7 @@ export default function NegotiationHubPage() {
                 <span>2. CFR Value (Cost & Freight)</span>
                 <span className="font-mono text-primary">${pricing.cfr.toFixed(2)}/{unitLabel}</span>
               </div>
-              <div className="flex justify-between text-xs font-bold text-[#070235] border-t border-outline-variant/60 pt-1.5">
+              <div className="flex justify-between text-xs font-bold text-primary border-t border-outline-variant/60 pt-1.5">
                 <span>3. CIF Hamburg (Total Cost)</span>
                 <span className="font-mono text-primary">${pricing.cif.toFixed(2)}/{unitLabel}</span>
               </div>
@@ -904,7 +916,7 @@ export default function NegotiationHubPage() {
 
             {/* BPS market average note */}
             <div className="text-[10px] text-on-surface-variant leading-normal flex gap-1.5 border-t border-outline-variant/40 pt-2">
-              <span className="material-symbols-outlined text-[16px] text-primary">analytics</span>
+              <BarChart3 className="text-primary size-4" />
               <p>
                 Rata-rata ekspor BPS: <strong>${pricing.marketAvg.toFixed(2)}/{unitLabel}</strong>. 
                 {pricing.cif === (productType === "rattan" ? 50.00 : 2.75) 
@@ -925,9 +937,9 @@ export default function NegotiationHubPage() {
             <div className="bg-error-container border border-error rounded-xl p-4 shadow-sm relative overflow-hidden animate-in fade-in duration-300">
               <div className="absolute top-0 left-0 w-1.5 h-full bg-error"></div>
               <div className="flex items-start gap-3">
-                <span className="material-symbols-outlined text-on-error-container text-error">warning</span>
+                <AlertTriangle className="text-on-error-container size-6" />
                 <div>
-                  <h4 className="text-xs font-bold text-on-error-container mb-1 uppercase tracking-wider text-error-800">PERINGATAN HARGA DASAR</h4>
+                  <h4 className="text-xs font-bold text-on-error-container mb-1 uppercase tracking-wider">PERINGATAN HARGA DASAR</h4>
                   <p className="text-xs text-on-error-container leading-relaxed">
                     Pembeli meminta harga <strong>{productType === "rattan" ? "$45.00/unit" : "$2.50/kg"}</strong>. Estimasi harga CIF minimal Anda saat ini adalah <strong>${pricing.cif.toFixed(2)}/{unitLabel}</strong>.
                     <br/><br/>
@@ -937,13 +949,13 @@ export default function NegotiationHubPage() {
               </div>
             </div>
           ) : (
-            <div className="bg-emerald-50 border border-emerald-300 rounded-xl p-4 shadow-sm relative overflow-hidden animate-in fade-in duration-300">
-              <div className="absolute top-0 left-0 w-1.5 h-full bg-emerald-500"></div>
+            <div className="bg-secondary-container border border-secondary/40 rounded-xl p-4 shadow-sm relative overflow-hidden animate-in fade-in duration-300">
+              <div className="absolute top-0 left-0 w-1.5 h-full bg-secondary"></div>
               <div className="flex items-start gap-3">
-                <span className="material-symbols-outlined text-emerald-600">check_circle</span>
+                <CheckCircle2 className="text-on-secondary-container size-6" />
                 <div>
-                  <h4 className="text-xs font-bold text-emerald-800 mb-1 uppercase tracking-wider">HARGA DASAR AMAN</h4>
-                  <p className="text-xs text-emerald-700 leading-relaxed">
+                  <h4 className="text-xs font-bold text-on-secondary-container mb-1 uppercase tracking-wider">HARGA DASAR AMAN</h4>
+                  <p className="text-xs text-on-secondary-container leading-relaxed">
                     Estimasi CIF Anda saat ini adalah <strong>${pricing.cif.toFixed(2)}/{unitLabel}</strong>, berada di bawah atau sama dengan tawaran pembeli ({productType === "rattan" ? "$45.00/unit" : "$2.50/kg"}).
                     <br/><br/>
                     Tingkat profitabilitas Anda sangat terjamin untuk negosiasi ini!
@@ -958,18 +970,18 @@ export default function NegotiationHubPage() {
           {/* ========================================================================= */}
           <div>
             <h4 className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-3 flex items-center gap-2">
-              <span className="material-symbols-outlined text-[16px]">analytics</span> Analisis Taktis RAG
+              <BarChart3 className="size-4" /> Analisis Taktis RAG
             </h4>
             <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 flex flex-col gap-4 shadow-sm">
               <div className="flex gap-3">
-                <span className="material-symbols-outlined text-primary text-[20px]">info</span>
+                <Info className="text-primary size-5" />
                 <p className="text-xs text-on-surface leading-relaxed">
                   <strong>Konteks Pembeli:</strong> GlobalTech biasanya memulai negosiasi dengan diskon 15-20% dari harga penawaran awal (data historis 6 bulan terakhir).
                 </p>
               </div>
               <div className="w-full h-px bg-outline-variant"></div>
               <div className="flex gap-3">
-                <span className="material-symbols-outlined text-primary text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>lightbulb</span>
+                <Lightbulb className="text-primary size-5" />
                 <p className="text-xs text-on-surface leading-relaxed">
                   <strong>Strategi RAG:</strong> Tolak secara halus permintaan $2.50. Tawarkan kompromi di $2.75/kg, atau pertahankan $2.85/kg dengan menawarkan termin pembayaran yang lebih fleksibel (misal: 30% DP, 70% LC).
                 </p>
@@ -982,7 +994,7 @@ export default function NegotiationHubPage() {
           {/* ========================================================================= */}
           <div>
             <h4 className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-3 flex items-center gap-2">
-              <span className="material-symbols-outlined text-[16px]">edit_document</span> Draft Balasan Otomatis
+              <Edit3 className="size-4" /> Draft Balasan Otomatis
             </h4>
             
             {isDraftGenerating ? (
@@ -1014,26 +1026,26 @@ export default function NegotiationHubPage() {
                       <div className="grid grid-cols-3 gap-2 pt-2 border-t border-outline-variant/60 shrink-0">
                         <button 
                           onClick={() => handleApproveDraft(draft.text)}
-                          className="px-2 py-1.5 bg-[#85f8c4]/30 hover:bg-[#85f8c4]/50 text-emerald-800 rounded text-[10px] font-extrabold transition-colors flex items-center justify-center gap-1"
+                          className="px-2 py-1.5 bg-secondary-container hover:bg-secondary-fixed/50 text-on-secondary-container rounded text-[10px] font-extrabold transition-colors flex items-center justify-center gap-1"
                           title="Setujui dan kirim balasan langsung"
                         >
-                          <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                          <CheckCircle2 className="size-3" />
                           Approve
                         </button>
                         <button 
                           onClick={() => handleDraftSelect(draft.text)}
-                          className="px-2 py-1.5 bg-[#070235]/10 hover:bg-[#070235]/20 text-[#070235] rounded text-[10px] font-extrabold transition-colors flex items-center justify-center gap-1"
+                          className="px-2 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary rounded text-[10px] font-extrabold transition-colors flex items-center justify-center gap-1"
                           title="Salin teks draf ke kolom input untuk diedit"
                         >
-                          <span className="material-symbols-outlined text-[12px]">edit</span>
+                          <Pencil className="size-3" />
                           Edit
                         </button>
                         <button 
                           onClick={() => handleRejectDraft(draft.id)}
-                          className="px-2 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded text-[10px] font-extrabold transition-colors flex items-center justify-center gap-1"
+                          className="px-2 py-1.5 bg-error-container hover:bg-error/20 text-on-error-container rounded text-[10px] font-extrabold transition-colors flex items-center justify-center gap-1"
                           title="Tolak & buat draf alternatif baru"
                         >
-                          <span className="material-symbols-outlined text-[12px]">sync</span>
+                          <RefreshCw className="size-3" />
                           Reject
                         </button>
                       </div>

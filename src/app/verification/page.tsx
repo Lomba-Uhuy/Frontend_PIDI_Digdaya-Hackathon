@@ -1,13 +1,24 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import {
+  ArrowRight,
+  Award,
+  BadgeCheck,
+  Check,
+  CheckCircle2,
+  ClipboardCheck,
+  Gavel,
+  Tag,
+  TrendingUp,
+} from "lucide-react";
+import { ProgressRing } from "../../components/ui/progress-ring";
 
 export default function VerificationPage() {
   const router = useRouter();
   const [loadingStep, setLoadingStep] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
   const [score, setScore] = useState(0);
-  const [scoreOffset, setScoreOffset] = useState(352);
 
   const [companyName, setCompanyName] = useState("PT Nusantara Global Coffee");
   const [productName, setProductName] = useState("Premium Robusta Coffee Beans");
@@ -39,13 +50,9 @@ export default function VerificationPage() {
     };
   }, []);
 
-  // Score ticking and progress circle filling animation when complete
+  // Score ticking animation when complete; ProgressRing fills in step with the count
   useEffect(() => {
     if (isComplete) {
-      // 1. Animate SVG circle offset
-      const strokeTimer = setTimeout(() => setScoreOffset(53), 100);
-
-      // 2. Count up the score number
       let current = 0;
       const target = 85;
       const interval = setInterval(() => {
@@ -57,7 +64,6 @@ export default function VerificationPage() {
       }, 12); // ~1 second total count up
 
       return () => {
-        clearTimeout(strokeTimer);
         clearInterval(interval);
       };
     }
@@ -70,9 +76,7 @@ export default function VerificationPage() {
           <div className="relative w-20 h-20 mb-6 flex items-center justify-center">
             <div className="absolute inset-0 border-4 border-surface-variant rounded-full"></div>
             <div className="absolute inset-0 border-4 border-primary rounded-full border-t-transparent animate-spin"></div>
-            <span className="material-symbols-outlined text-primary text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>
-              rule
-            </span>
+            <ClipboardCheck className="text-primary size-8" />
           </div>
           
           <h2 className="text-xl font-bold text-primary mb-2">Menganalisis Profil Institusi</h2>
@@ -81,21 +85,21 @@ export default function VerificationPage() {
            <div className="w-full flex flex-col gap-4 text-left">
              <div className={`flex items-center gap-4 transition-opacity duration-500 ${loadingStep >= 0 ? 'opacity-100' : 'opacity-30'}`}>
                <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${loadingStep >= 1 ? 'bg-secondary text-on-secondary' : 'bg-surface-variant animate-pulse'}`}>
-                 {loadingStep >= 1 ? <span className="material-symbols-outlined text-[14px]">check</span> : <span className="w-2 h-2 bg-on-surface-variant rounded-full"></span>}
+                 {loadingStep >= 1 ? <Check className="size-3.5" /> : <span className="w-2 h-2 bg-on-surface-variant rounded-full"></span>}
                </div>
                <span className="text-sm font-medium text-on-surface">Menghubungkan ke OSS RBA (Kementerian Investasi)</span>
              </div>
  
              <div className={`flex items-center gap-4 transition-opacity duration-500 ${loadingStep >= 1 ? 'opacity-100' : 'opacity-30'}`}>
                <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${loadingStep >= 2 ? 'bg-secondary text-on-secondary' : 'bg-surface-variant animate-pulse'}`}>
-                 {loadingStep >= 2 ? <span className="material-symbols-outlined text-[14px]">check</span> : <span className="w-2 h-2 bg-on-surface-variant rounded-full"></span>}
+                 {loadingStep >= 2 ? <Check className="size-3.5" /> : <span className="w-2 h-2 bg-on-surface-variant rounded-full"></span>}
                </div>
                <span className="text-sm font-medium text-on-surface">Klasifikasi NLP untuk Pemetaan HS Code</span>
              </div>
  
              <div className={`flex items-center gap-4 transition-opacity duration-500 ${loadingStep >= 2 ? 'opacity-100' : 'opacity-30'}`}>
                <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${loadingStep >= 3 ? 'bg-secondary text-on-secondary' : 'bg-surface-variant animate-pulse'}`}>
-                 {loadingStep >= 3 ? <span className="material-symbols-outlined text-[14px]">check</span> : <span className="w-2 h-2 bg-on-surface-variant rounded-full"></span>}
+                 {loadingStep >= 3 ? <Check className="size-3.5" /> : <span className="w-2 h-2 bg-on-surface-variant rounded-full"></span>}
                </div>
                <span className="text-sm font-medium text-on-surface">Menghitung Skor Profil Terverifikasi</span>
              </div>
@@ -117,9 +121,9 @@ export default function VerificationPage() {
           </div>
           
           <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mb-4 shadow-lg z-10 border-4 border-on-primary/20">
-            <span className="material-symbols-outlined text-[32px] text-on-secondary">verified</span>
+            <BadgeCheck className="text-on-secondary size-8" />
           </div>
-          <h1 className="text-2xl md:text-3xl font-bold mb-2 z-10">Verifikasi Berhasil</h1>
+          <h1 className="text-2xl md:text-3xl font-bold mb-2 z-10 font-heading">Verifikasi Berhasil</h1>
           <p className="text-primary-fixed-dim text-sm z-10">Profil institusi Anda sekarang telah aktif dan terverifikasi.</p>
         </div>
 
@@ -130,13 +134,13 @@ export default function VerificationPage() {
           <div className="flex flex-col gap-4">
             <div className="bg-surface p-4 rounded-lg border border-outline-variant">
               <div className="flex items-center gap-2 mb-3">
-                <span className="material-symbols-outlined text-secondary text-[20px]">gavel</span>
+                <Gavel className="text-secondary size-5" />
                 <h3 className="text-base font-semibold text-on-surface">Validasi OSS RBA</h3>
               </div>
               <div className="grid grid-cols-2 gap-y-3 text-xs md:text-sm">
                 <div className="text-on-surface-variant">Status</div>
                 <div className="font-medium text-secondary flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[14px]">check_circle</span> Aktif &amp; Valid
+                  <CheckCircle2 className="size-3.5" /> Aktif &amp; Valid
                 </div>
                 
                 <div className="text-on-surface-variant">Jenis Entitas</div>
@@ -156,7 +160,7 @@ export default function VerificationPage() {
 
             <div className="bg-surface p-4 rounded-lg border border-outline-variant">
               <div className="flex items-center gap-2 mb-3">
-                <span className="material-symbols-outlined text-primary text-[20px]">category</span>
+                <Tag className="text-primary size-5" />
                 <h3 className="text-base font-semibold text-on-surface">Pemetaan HS Code AI</h3>
               </div>
               <p className="text-xs text-on-surface-variant mb-3">Model NLP memetakan deskripsi "{productName}" Anda ke:</p>
@@ -169,7 +173,7 @@ export default function VerificationPage() {
                   {productType === "rattan" ? "Seats of rattan (Kursi rotan anyaman)" : "Kopi, tidak disangrai, tidak didekafeinasi"}
                 </div>
                 <div className="mt-2 pt-2 border-t border-outline-variant flex items-center gap-1 text-[11px] text-secondary font-medium">
-                  <span className="material-symbols-outlined text-[14px]">trending_up</span>
+                  <TrendingUp className="size-3.5" />
                   Permintaan global tinggi terdeteksi
                 </div>
               </div>
@@ -180,23 +184,17 @@ export default function VerificationPage() {
           <div className="flex flex-col gap-4">
             <div className="bg-surface p-4 rounded-lg border border-outline-variant h-full flex flex-col">
               <div className="flex items-center gap-2 mb-4">
-                <span className="material-symbols-outlined text-primary text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>military_tech</span>
+                <Award className="text-primary size-5" />
                 <h3 className="text-base font-semibold text-on-surface">Skor Profil Terverifikasi</h3>
               </div>
               
               <div className="flex-1 flex flex-col items-center justify-center">
-                <div className="relative w-32 h-32 mb-4">
-                  {/* Background Circle */}
-                  <svg className="w-full h-full transform -rotate-90">
-                    <circle cx="64" cy="64" r="56" fill="none" stroke="currentColor" strokeWidth="10" className="text-surface-variant"></circle>
-                    {/* Progress Circle (85%) */}
-                    <circle cx="64" cy="64" r="56" fill="none" stroke="currentColor" strokeWidth="10" strokeDasharray="352" strokeDashoffset={scoreOffset} className="text-secondary drop-shadow-sm stroke-current transition-all duration-1000 ease-out"></circle>
-                  </svg>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <ProgressRing value={score} size={128} strokeWidth={10} className="mb-4">
+                  <div className="flex flex-col items-center justify-center">
                     <span className="text-4xl font-bold text-on-surface">{score}</span>
                     <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mt-1">dari 100</span>
                   </div>
-                </div>
+                </ProgressRing>
 
                 <p className="text-center text-xs text-on-surface-variant px-2">
                   Sangat Baik! Skor Anda membuka akses ke pembeli global premium dan prioritas pencocokan AI.
@@ -238,7 +236,7 @@ export default function VerificationPage() {
             className="px-6 py-2.5 text-xs font-medium bg-primary text-on-primary hover:bg-surface-tint rounded-md transition-colors flex items-center gap-2 shadow-sm"
           >
             Masuk ke Dasbor Eksportir
-            <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+            <ArrowRight className="size-4" />
           </button>
         </div>
       </div>

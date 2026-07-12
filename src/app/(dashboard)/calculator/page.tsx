@@ -3,6 +3,17 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getStep, setFinalPrice } from "../../../lib/state";
 import { calculatePrice } from "../../../lib/api";
+import {
+  BarChart3,
+  Check,
+  Info,
+  Lightbulb,
+  MessagesSquare,
+  Receipt,
+  Save,
+  SlidersHorizontal,
+} from "lucide-react";
+import { Badge } from "../../../components/ui/badge";
 
 export default function ExportCalculatorPage() {
   const router = useRouter();
@@ -89,16 +100,16 @@ export default function ExportCalculatorPage() {
       {/* Page Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-outline-variant pb-5 flex-shrink-0">
         <div>
-          <h1 className="text-2xl font-black text-[#070235]">Kalkulator Ekspor Mandiri</h1>
+          <h1 className="text-2xl font-black text-primary font-heading">Kalkulator Ekspor Mandiri</h1>
           <p className="text-sm text-on-surface-variant mt-1">
             Simulasikan struktur biaya ekspor Ex-Works sampai ke CIF negara tujuan secara akurat.
           </p>
         </div>
         <button 
           onClick={() => router.push('/negotiation')}
-          className="bg-[#070235] text-white hover:bg-surface-tint font-bold text-xs py-2.5 px-5 rounded-lg flex items-center gap-2 transition-all shadow-md"
+          className="bg-primary text-white hover:bg-surface-tint font-bold text-xs py-2.5 px-5 rounded-lg flex items-center gap-2 transition-all shadow-md"
         >
-          <span className="material-symbols-outlined text-[16px]">forum</span>
+          <MessagesSquare className="size-4" />
           Buka Pusat Negosiasi
         </button>
       </div>
@@ -110,8 +121,8 @@ export default function ExportCalculatorPage() {
         {/* ========================================================================= */}
         <section className="lg:col-span-5 bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 md:p-8 shadow-sm flex flex-col gap-6">
           <div className="flex items-center gap-2.5 border-b border-outline-variant pb-3">
-            <span className="material-symbols-outlined text-primary text-[24px]">tune</span>
-            <h2 className="text-base font-bold text-[#070235] uppercase tracking-wider">Komponen Biaya Ekspor</h2>
+            <SlidersHorizontal className="text-primary size-6" />
+            <h2 className="text-base font-bold text-primary uppercase tracking-wider">Komponen Biaya Ekspor</h2>
           </div>
 
           <div className="flex flex-col gap-5">
@@ -120,7 +131,9 @@ export default function ExportCalculatorPage() {
               <div className="flex justify-between text-xs font-semibold">
                 <span className="text-on-surface-variant flex items-center gap-1">
                   Harga Pokok Produksi (HPP/EXW)
-                  <span className="material-symbols-outlined text-[14px] text-on-surface-variant" title="Harga produk dasar di pintu gudang Anda (Ex-Works) sebelum logistik.">info</span>
+                  <span title="Harga produk dasar di pintu gudang Anda (Ex-Works) sebelum logistik.">
+                    <Info className="text-on-surface-variant size-3.5" />
+                  </span>
                 </span>
                 <span className="font-mono text-primary font-bold">${hpp.toFixed(2)}/{unitLabel}</span>
               </div>
@@ -254,10 +267,10 @@ export default function ExportCalculatorPage() {
           <div className="border-t border-outline-variant pt-5 mt-2 flex flex-col gap-3">
             <button 
               onClick={handleSavePrice}
-              className="bg-[#070235] text-white hover:bg-surface-tint font-bold text-sm py-3 px-6 rounded-xl flex items-center justify-center gap-2 transition-all active:translate-y-0.5 shadow-md"
+              className="bg-primary text-white hover:bg-surface-tint font-bold text-sm py-3 px-6 rounded-xl flex items-center justify-center gap-2 transition-all active:translate-y-0.5 shadow-md"
             >
-              <span className="material-symbols-outlined text-[20px]">save</span>
-              {savedPrice ? "Harga Berhasil Dikunci! ✓" : "Kunci & Simpan Harga Ekspor"}
+              {savedPrice ? <Check className="size-5" /> : <Save className="size-5" />}
+              {savedPrice ? "Harga Berhasil Dikunci!" : "Kunci & Simpan Harga Ekspor"}
             </button>
             <p className="text-[10px] text-on-surface-variant text-center font-medium leading-normal">
               *Mengunci harga akan memperbarui target harga CIF akhir pada modul negosiasi Anda dengan Klaus Weber secara otomatis.
@@ -273,12 +286,10 @@ export default function ExportCalculatorPage() {
           <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 md:p-8 shadow-sm flex flex-col gap-5">
             <div className="flex justify-between items-center border-b border-outline-variant pb-3">
               <div className="flex items-center gap-2.5">
-                <span className="material-symbols-outlined text-primary text-[24px]">receipt_long</span>
-                <h2 className="text-base font-bold text-[#070235] uppercase tracking-wider">Breakdown Harga Ekspor Resmi</h2>
+                <Receipt className="text-primary size-6" />
+                <h2 className="text-base font-bold text-primary uppercase tracking-wider">Breakdown Harga Ekspor Resmi</h2>
               </div>
-              <span className="bg-[#85f8c4]/20 border border-[#85f8c4]/40 text-[#070235] text-[10px] font-bold px-3 py-1 rounded font-mono">
-                1 USD = Rp 16.000
-              </span>
+              <Badge variant="neutral" className="normal-case font-mono">1 USD = Rp 16.000</Badge>
             </div>
 
             {/* Price Table */}
@@ -304,8 +315,8 @@ export default function ExportCalculatorPage() {
                   {/* Profit */}
                   <tr className="hover:bg-surface-container-low/20">
                     <td className="p-3">Ditambah: Profit Margin ({margin}%)</td>
-                    <td className="p-3 text-right font-mono text-emerald-700">+${profitAmt.toFixed(2)}</td>
-                    <td className="p-3 text-right font-mono text-emerald-700">+Rp {(profitAmt * 16000).toLocaleString()}</td>
+                    <td className="p-3 text-right font-mono text-secondary">+${profitAmt.toFixed(2)}</td>
+                    <td className="p-3 text-right font-mono text-secondary">+Rp {(profitAmt * 16000).toLocaleString()}</td>
                     <td className="p-3 text-on-surface-variant text-[11px]">HPP × Margin%</td>
                   </tr>
 
@@ -320,8 +331,8 @@ export default function ExportCalculatorPage() {
                   {/* Bea Keluar */}
                   <tr className="hover:bg-surface-container-low/20">
                     <td className="p-3">Ditambah: Bea Keluar / Pajak ({exportDuty}%)</td>
-                    <td className="p-3 text-right font-mono text-rose-700">+${dutyAmt.toFixed(2)}</td>
-                    <td className="p-3 text-right font-mono text-rose-700">+Rp {(dutyAmt * 16000).toLocaleString()}</td>
+                    <td className="p-3 text-right font-mono text-error">+${dutyAmt.toFixed(2)}</td>
+                    <td className="p-3 text-right font-mono text-error">+Rp {(dutyAmt * 16000).toLocaleString()}</td>
                     <td className="p-3 text-on-surface-variant text-[11px]">FOB Awal × Bea%</td>
                   </tr>
 
@@ -343,9 +354,9 @@ export default function ExportCalculatorPage() {
 
                   {/* CFR */}
                   <tr className="bg-surface-container-low/40 hover:bg-surface-container-low">
-                    <td className="p-3 font-semibold text-[#070235]">2. Nilai CFR (Cost & Freight)</td>
-                    <td className="p-3 text-right font-mono font-semibold text-[#070235]">${finalCfr.toFixed(2)}</td>
-                    <td className="p-3 text-right font-mono font-semibold text-[#070235]">Rp {(finalCfr * 16000).toLocaleString()}</td>
+                    <td className="p-3 font-semibold text-primary">2. Nilai CFR (Cost & Freight)</td>
+                    <td className="p-3 text-right font-mono font-semibold text-primary">${finalCfr.toFixed(2)}</td>
+                    <td className="p-3 text-right font-mono font-semibold text-primary">Rp {(finalCfr * 16000).toLocaleString()}</td>
                     <td className="p-3 text-on-surface-variant text-[11px]">FOB Final + Freight</td>
                   </tr>
 
@@ -372,46 +383,40 @@ export default function ExportCalculatorPage() {
           {/* BPS MARKET GAUGE CARD */}
           <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-sm flex flex-col gap-4">
             <div className="flex justify-between items-center border-b border-outline-variant pb-2.5">
-              <h3 className="text-xs font-bold text-[#070235] uppercase tracking-wider flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[18px] text-primary">analytics</span> Benchmark Unit Value BPS
+              <h3 className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-1.5">
+                <BarChart3 className="text-primary size-[18px]" /> Benchmark Unit Value BPS
               </h3>
-              <span className={`text-[10px] font-bold px-3 py-0.5 rounded border uppercase ${
-                status === "competitive" 
-                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                  : status === "high"
-                  ? "bg-rose-50 text-rose-700 border-rose-200"
-                  : "bg-blue-50 text-blue-700 border-blue-200"
-              }`}>
+              <Badge variant={status === "competitive" ? "success" : status === "high" ? "danger" : "info"}>
                 {status === "competitive" ? "Kompetitif Pasar Eropa" : status === "high" ? "Terlalu Mahal" : "Di Bawah Pasar (Risiko Dumping)"}
-              </span>
+              </Badge>
             </div>
 
             {/* Visual Bar / Gauge */}
             <div className="flex flex-col gap-2.5 my-2">
               <div className="relative w-full h-4 bg-surface-container-high border border-outline-variant rounded-full overflow-hidden flex">
-                <div className="w-[30%] h-full bg-blue-400/40 border-r border-outline-variant" title="Murah"></div>
-                <div className="w-[45%] h-full bg-emerald-400/40 border-r border-outline-variant" title="Ideal"></div>
-                <div className="w-[25%] h-full bg-rose-400/40" title="Mahal"></div>
+                <div className="w-[30%] h-full bg-info/40 border-r border-outline-variant" title="Murah"></div>
+                <div className="w-[45%] h-full bg-secondary/40 border-r border-outline-variant" title="Ideal"></div>
+                <div className="w-[25%] h-full bg-error/40" title="Mahal"></div>
 
                 {/* Marker pointer of calculated CIF value relative to benchmark */}
                 <div 
-                  className="absolute top-0 bottom-0 w-1 bg-[#070235] transition-all duration-500 shadow-lg"
+                  className="absolute top-0 bottom-0 w-1 bg-primary transition-all duration-500 shadow-lg"
                   style={{ left: `${Math.min(Math.max((finalCif / (productType === "rattan" ? 100.0 : 4.0)) * 100, 5), 95)}%` }}
                 >
-                  <div className="absolute -top-1.5 -left-1 w-3 h-3 bg-[#070235] rounded-full border border-white"></div>
+                  <div className="absolute -top-1.5 -left-1 w-3 h-3 bg-primary rounded-full border border-white"></div>
                 </div>
               </div>
 
               <div className="flex justify-between text-[10px] text-on-surface-variant font-mono">
                 <span>Rendah ({productType === "rattan" ? "< $48.00" : "< $2.55"})</span>
-                <span className="font-bold text-emerald-800">Ideal ({productType === "rattan" ? "$48.00 - $58.00" : "$2.55 - $2.95"})</span>
+                <span className="font-bold text-secondary">Ideal ({productType === "rattan" ? "$48.00 - $58.00" : "$2.55 - $2.95"})</span>
                 <span>Tinggi ({productType === "rattan" ? "> $58.00" : "> $2.95"})</span>
               </div>
             </div>
 
             {/* Explanatory block */}
             <div className="bg-primary/5 p-4 rounded-xl flex items-start gap-3 border border-primary/10">
-              <span className="material-symbols-outlined text-primary text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>lightbulb</span>
+              <Lightbulb className="text-primary size-5" />
               <div className="text-xs leading-relaxed text-on-surface">
                 <strong>Analisis Kelayakan Ekspor:</strong> {productType === "rattan" ? "Furnitur Kursi Rotan dengan HS Code 9401.52" : "Biji kopi robusta dengan HS Code 0901.11"} di Jerman mencatat rata-rata harga pasar impor BPS sebesar <strong>${marketAvg.toFixed(2)}/{unitLabel}</strong>. 
                 {status === "competitive" ? (

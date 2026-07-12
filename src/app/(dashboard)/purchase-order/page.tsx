@@ -3,6 +3,23 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getStep, setStep as setJourneyStep, getFinalPrice } from "../../../lib/state";
 import { ExportDocument } from "../../../types";
+import { getIcon } from "../../../lib/icon-map";
+import {
+  ArrowRight,
+  Building2,
+  CheckCircle2,
+  Download,
+  ExternalLink,
+  FolderArchive,
+  Handshake,
+  MailPlus,
+  PenTool,
+  Send,
+  Sparkles,
+  TrendingUp,
+  X,
+} from "lucide-react";
+import { Badge } from "../../../components/ui/badge";
 
 export default function PurchaseOrderPage() {
   const router = useRouter();
@@ -221,16 +238,16 @@ Status Verifikasi: Aktif & Terverifikasi Asli`
         <div className="w-full max-w-4xl bg-surface-container-lowest border border-outline-variant rounded-2xl shadow-xl overflow-hidden animate-in zoom-in-95 duration-500">
           
           {/* Success Header */}
-          <div className="bg-[#070235] p-8 md:p-12 text-center text-white flex flex-col items-center relative overflow-hidden">
+          <div className="bg-primary p-8 md:p-12 text-center text-white flex flex-col items-center relative overflow-hidden">
             <div className="absolute inset-0 opacity-10 pointer-events-none">
               <div className="absolute -top-24 -right-24 w-64 h-64 bg-white rounded-full blur-3xl"></div>
               <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-white rounded-full blur-3xl"></div>
             </div>
             
-            <div className="w-20 h-20 bg-[#85f8c4] rounded-full flex items-center justify-center mb-6 shadow-[0_0_20px_rgba(133,248,196,0.3)] z-10 border-4 border-white/10">
-              <span className="material-symbols-outlined text-[40px] text-[#070235]" style={{ fontVariationSettings: "'FILL' 1" }}>handshake</span>
+            <div className="w-20 h-20 bg-secondary-fixed rounded-full flex items-center justify-center mb-6 shadow-[0_0_20px_rgba(167,243,208,0.3)] z-10 border-4 border-white/10">
+              <Handshake className="text-primary size-10" />
             </div>
-            <h1 className="text-3xl md:text-5xl font-extrabold mb-3 z-10 tracking-tight">Transaksi Ekspor Berhasil!</h1>
+            <h1 className="text-3xl md:text-5xl font-extrabold mb-3 z-10 tracking-tight font-heading">Transaksi Ekspor Berhasil!</h1>
             <p className="text-white/80 text-base z-10 max-w-lg leading-relaxed">
               Klaus Weber telah menandatangani Purchase Order secara digital. Seluruh berkas ekspor resmi telah diterbitkan secara instan oleh TradeConnect AI.
             </p>
@@ -241,7 +258,7 @@ Status Verifikasi: Aktif & Terverifikasi Asli`
             {/* Score Increase Widget (Left 5 cols) */}
             <div className="md:col-span-5 bg-surface p-6 rounded-xl border border-outline-variant text-center shadow-sm flex flex-col justify-center h-full">
               <div className="flex items-center justify-center gap-2 mb-4">
-                <span className="material-symbols-outlined text-secondary text-[24px]">trending_up</span>
+                <TrendingUp className="text-secondary size-6" />
                 <h3 className="text-base font-bold text-on-surface">Peningkatan Profile Score</h3>
               </div>
               <div className="flex items-center justify-center gap-6 my-4">
@@ -249,7 +266,7 @@ Status Verifikasi: Aktif & Terverifikasi Asli`
                   <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-1">Sebelumnya</span>
                   <span className="text-3xl font-bold text-on-surface-variant line-through">85</span>
                 </div>
-                <span className="material-symbols-outlined text-outline-variant text-3xl">arrow_forward</span>
+                <ArrowRight className="text-outline-variant size-8" />
                 <div className="flex flex-col items-center">
                   <span className="text-[10px] font-bold text-secondary uppercase tracking-wider mb-1">Sekarang</span>
                   <span className="text-5xl font-black text-secondary animate-pulse">{score}</span>
@@ -263,31 +280,32 @@ Status Verifikasi: Aktif & Terverifikasi Asli`
             {/* Document Package Grid (Right 7 cols) */}
             <div className="md:col-span-7 space-y-4">
               <h3 className="text-sm font-bold text-on-surface-variant uppercase tracking-wider flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[18px] text-primary">folder_zip</span>
+                <FolderArchive className="text-primary size-[18px]" />
                 Paket Dokumen Resmi Ekspor
               </h3>
               
               <div className="grid grid-cols-1 gap-3">
-                {exportDocs.map((doc) => (
-                  <div 
-                    key={doc.id} 
+                {exportDocs.map((doc) => {
+                  const DocIcon = getIcon(doc.icon);
+                  return (
+                  <div
+                    key={doc.id}
                     onClick={() => setSelectedDoc(doc)}
                     className="flex justify-between items-center p-3.5 bg-surface-container-lowest border border-outline-variant hover:border-primary hover:shadow-md rounded-xl transition-all cursor-pointer group shadow-sm"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-indigo-50 border border-outline-variant/60 text-[#070235] rounded-lg flex items-center justify-center shrink-0">
-                        <span className="material-symbols-outlined text-[20px]">{doc.icon}</span>
+                      <div className="w-10 h-10 bg-primary-container border border-outline-variant/60 text-on-primary-container rounded-lg flex items-center justify-center shrink-0">
+                        <DocIcon className="size-5" />
                       </div>
                       <div>
                         <h4 className="text-sm font-bold text-on-surface group-hover:text-primary transition-colors">{doc.name}</h4>
                         <p className="text-[11px] font-mono text-on-surface-variant">{doc.type}</p>
                       </div>
                     </div>
-                    <span className="text-[10px] font-mono font-bold bg-[#85f8c4]/30 text-emerald-800 border border-[#85f8c4] px-2 py-0.5 rounded flex items-center gap-1">
-                      <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span> Siap
-                    </span>
+                    <Badge variant="success" icon={CheckCircle2}>Siap</Badge>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -298,23 +316,23 @@ Status Verifikasi: Aktif & Terverifikasi Asli`
               className="px-8 py-3 bg-primary text-on-primary rounded-lg font-bold text-base hover:bg-surface-tint transition-colors flex items-center gap-2 shadow-md hover:-translate-y-0.5 transition-all"
             >
               Kembali ke Dashboard
-              <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
+              <ArrowRight className="size-5" />
             </button>
           </div>
         </div>
 
         {/* DOCUMENT PREVIEW MODAL */}
         {selectedDoc && (
-          <div className="fixed inset-0 bg-[#070235]/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="fixed inset-0 bg-primary/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
             <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl w-full max-w-2xl shadow-2xl p-6 md:p-8 flex flex-col max-h-[85vh] overflow-hidden animate-in zoom-in-95 duration-300">
               
               <div className="flex justify-between items-center border-b border-outline-variant/60 pb-4 mb-6 shrink-0">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-indigo-50 border border-outline-variant text-[#070235] rounded-xl flex items-center justify-center">
-                    <span className="material-symbols-outlined text-xl">{selectedDoc.icon}</span>
+                  <div className="w-10 h-10 bg-primary-container border border-outline-variant text-on-primary-container rounded-xl flex items-center justify-center">
+                    {(() => { const SelectedDocIcon = getIcon(selectedDoc.icon); return <SelectedDocIcon className="size-5" />; })()}
                   </div>
                   <div>
-                    <h3 className="text-lg font-black text-[#070235] leading-tight">{selectedDoc.name}</h3>
+                    <h3 className="text-lg font-black text-primary leading-tight">{selectedDoc.name}</h3>
                     <p className="text-xs text-on-surface-variant font-mono">{selectedDoc.type} • {selectedDoc.fileSize}</p>
                   </div>
                 </div>
@@ -322,7 +340,7 @@ Status Verifikasi: Aktif & Terverifikasi Asli`
                   onClick={() => setSelectedDoc(null)}
                   className="text-on-surface-variant hover:text-error p-1.5 rounded-full hover:bg-surface-container-low transition-colors"
                 >
-                  <span className="material-symbols-outlined text-[22px]">close</span>
+                  <X className="size-[22px]" />
                 </button>
               </div>
 
@@ -344,7 +362,7 @@ Status Verifikasi: Aktif & Terverifikasi Asli`
                   }}
                   className="px-6 py-2 bg-primary text-on-primary hover:bg-surface-tint rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 shadow-md"
                 >
-                  <span className="material-symbols-outlined text-[16px]">download</span>
+                  <Download className="size-4" />
                   Unduh Dokumen Resmi
                 </button>
               </div>
@@ -362,31 +380,31 @@ Status Verifikasi: Aktif & Terverifikasi Asli`
       <div className="h-full w-full overflow-y-auto p-4 md:p-8 bg-surface-bright pb-16 flex flex-col items-center justify-center min-h-[calc(100vh-80px)] relative animate-in fade-in duration-500">
         
         {/* Floating Premium Demo Helper Bar */}
-        <div className="absolute top-4 w-full max-w-2xl bg-amber-50 border border-amber-200 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-center gap-3 shadow-md z-15 animate-bounce">
-          <div className="flex items-center gap-2 text-amber-800">
-            <span className="material-symbols-outlined text-[22px] animate-pulse">auto_awesome</span>
+        <div className="absolute top-4 w-full max-w-2xl bg-warning-container border border-warning/30 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-center gap-3 shadow-md z-15 animate-bounce">
+          <div className="flex items-center gap-2 text-on-warning-container">
+            <Sparkles className="animate-pulse size-[22px]" />
             <span className="text-xs font-semibold"><strong>DEMO HELPER:</strong> Klaus Weber telah menerima tautan PO digital via email!</span>
           </div>
           <a 
             href="/signing-board?token=klaus-weber-9918"
             target="_blank"
             rel="noopener noreferrer"
-            className="px-4 py-2 bg-[#070235] hover:bg-surface-tint text-[#85f8c4] rounded-lg text-xs font-extrabold shadow-md transition-colors flex items-center gap-1.5 shrink-0 select-none no-underline hover:no-underline"
+            className="px-4 py-2 bg-primary hover:bg-surface-tint text-secondary-fixed rounded-lg text-xs font-extrabold shadow-md transition-colors flex items-center gap-1.5 shrink-0 select-none no-underline hover:no-underline"
           >
             Buka Layar Buyer (Klaus)
-            <span className="material-symbols-outlined text-[16px]">open_in_new</span>
+            <ExternalLink className="size-4" />
           </a>
         </div>
 
         <div className="w-full max-w-xl bg-surface-container-lowest border border-outline-variant rounded-2xl shadow-xl p-8 text-center flex flex-col items-center gap-6 mt-16 animate-in zoom-in-95 duration-500">
           <div className="relative w-20 h-20 flex items-center justify-center">
             <div className="absolute inset-0 border-4 border-outline-variant rounded-full"></div>
-            <div className="absolute inset-0 border-4 border-[#070235] rounded-full border-t-transparent animate-spin"></div>
-            <span className="material-symbols-outlined text-[#070235] text-3xl animate-pulse">forward_to_inbox</span>
+            <div className="absolute inset-0 border-4 border-primary rounded-full border-t-transparent animate-spin"></div>
+            <MailPlus className="text-primary animate-pulse size-8" />
           </div>
 
           <div>
-            <h2 className="text-2xl font-black text-[#070235] mb-2 tracking-tight">PO Terkirim & Menunggu Tanda Tangan</h2>
+            <h2 className="text-2xl font-black text-primary mb-2 tracking-tight font-heading">PO Terkirim & Menunggu Tanda Tangan</h2>
             <p className="text-xs text-on-surface-variant font-bold uppercase tracking-widest mb-4">Menunggu Persetujuan Pembeli</p>
             <p className="text-sm text-on-surface-variant leading-relaxed max-w-sm mx-auto">
               Purchase Order <strong className="font-bold text-on-surface">{poNumber}</strong> telah berhasil dibuat secara resmi dan dikirimkan secara aman ke email Klaus Weber di <strong className="font-bold text-on-surface">GlobalTech Imports GmbH</strong>.
@@ -404,8 +422,8 @@ Status Verifikasi: Aktif & Terverifikasi Asli`
             </div>
             <div className="flex justify-between">
               <span>Status Dokumen</span>
-              <span className="text-amber-600 font-bold uppercase flex items-center gap-0.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping"></span> Menunggu Tanda Tangan
+              <span className="text-warning font-bold uppercase flex items-center gap-0.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-warning animate-ping"></span> Menunggu Tanda Tangan
               </span>
             </div>
           </div>
@@ -426,11 +444,11 @@ Status Verifikasi: Aktif & Terverifikasi Asli`
         {/* Page Header */}
         <div className="flex justify-between items-end border-b border-outline-variant pb-6">
           <div>
-            <h2 className="text-2xl font-bold text-on-surface">Finalisasi Dokumen Purchase Order</h2>
+            <h2 className="text-2xl font-bold text-on-surface font-heading">Finalisasi Dokumen Purchase Order</h2>
             <p className="text-sm text-on-surface-variant mt-1 font-medium">Tinjau dan terbitkan dokumen PO resmi yang telah dihasilkan dari kesepakatan negosiasi Anda.</p>
           </div>
           <button className="text-primary text-sm font-bold flex items-center gap-2 border border-outline-variant px-4 py-2 rounded hover:bg-surface-container-low transition-colors shadow-sm bg-surface-container-lowest">
-            <span className="material-symbols-outlined text-[20px]">download</span>
+            <Download className="size-5" />
             Unduh Draft PO
           </button>
         </div>
@@ -452,7 +470,7 @@ Status Verifikasi: Aktif & Terverifikasi Asli`
               </div>
               <div className="text-right">
                 <div className="w-12 h-12 bg-tertiary-container border border-outline-variant text-on-tertiary-container rounded-xl flex items-center justify-center ml-auto mb-2 shadow-inner">
-                  <span className="material-symbols-outlined text-2xl">domain</span>
+                  <Building2 className="size-6" />
                 </div>
                 <h3 className="text-base font-bold text-on-surface">GlobalTech Imports GmbH</h3>
                 <p className="text-xs text-on-surface-variant">Frankfurt, Jerman</p>
@@ -533,7 +551,7 @@ Status Verifikasi: Aktif & Terverifikasi Asli`
                 <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider mb-8">Pihak Penjual (Supplier)</span>
                 <div className="w-48 h-12 border-b-2 border-primary border-dashed flex items-end justify-center pb-1">
                   <span className="text-[10px] text-primary/75 font-bold uppercase tracking-widest flex items-center gap-1 animate-pulse">
-                    <span className="material-symbols-outlined text-[14px]">draw</span> Tanda Tangani Persetujuan
+                    <PenTool className="size-3.5" /> Tanda Tangani Persetujuan
                   </span>
                 </div>
                 <span className="text-xs font-semibold text-on-surface mt-2">Anda ({isRattan ? companyName : "PT Nusantara Coffee"})</span>
@@ -547,9 +565,9 @@ Status Verifikasi: Aktif & Terverifikasi Asli`
         <div className="sticky bottom-0 -mx-4 md:-mx-8 px-4 md:px-8 py-4 border-t border-outline-variant bg-surface-container-lowest flex justify-end z-20 shadow-[0_-8px_20px_rgba(0,0,0,0.03)] mt-8">
           <button 
             onClick={handleSendPO}
-            className="bg-[#070235] text-white shadow-xl px-8 py-4 rounded-xl text-lg font-bold flex items-center gap-3 hover:bg-[#5b598c] hover:-translate-y-1 transition-all active:translate-y-0 shadow-[0_0_20px_rgba(7,2,53,0.25)]"
+            className="bg-primary text-white shadow-xl px-8 py-4 rounded-xl text-lg font-bold flex items-center gap-3 hover:bg-primary-hover hover:-translate-y-1 transition-all active:translate-y-0 shadow-[0_0_20px_rgba(15,23,42,0.25)]"
           >
-            <span className="material-symbols-outlined text-[24px]">send_and_archive</span>
+            <Send className="size-6" />
             Setujui & Kirim PO ke Pembeli
           </button>
         </div>
