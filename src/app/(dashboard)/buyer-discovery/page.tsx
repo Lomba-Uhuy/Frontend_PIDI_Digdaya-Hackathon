@@ -647,8 +647,8 @@ export default function BuyerDiscoveryPage() {
                     </div>
                     <div className="flex justify-between">
                       <span>Riwayat Pabean & Kepatuhan</span>
-                      <span className="text-emerald-700 font-bold flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> {selectedBuyer.details.complianceHistory}
+                      <span className="text-secondary font-bold flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span> {selectedBuyer.details.complianceHistory}
                       </span>
                     </div>
                   </div>
@@ -736,7 +736,7 @@ export default function BuyerDiscoveryPage() {
                   <div className="bg-surface border border-outline-variant p-3.5 rounded-lg text-[10px] font-mono text-on-surface-variant shadow-inner max-h-24 overflow-y-auto animate-in slide-in-from-top-2 duration-300 w-full text-left">
                     <span className="text-primary font-bold">Subjek:</span> Perkenalan B2B: {productName}<br/>
                     <span className="text-primary font-bold">Kpd:</span> klaus.weber@globaltech.de<br/>
-                    <span className="text-slate-400">---</span><br/>
+                    <span className="text-on-surface-variant">---</span><br/>
                     Dear Mr. Weber,<br/>
                     {companyName} offers premium {productName} (HS {isRattan ? "9401.52" : "0901.11"}) crafted under highest standards. Our monthly production capacity is {capacity} and MOQ is {moq}. Our NIB ({nib}) is fully verified...
                   </div>

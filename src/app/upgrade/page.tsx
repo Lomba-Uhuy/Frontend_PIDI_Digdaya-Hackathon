@@ -47,7 +47,7 @@ export default function UpgradePage() {
             Pilih paket yang tumbuh bersama bisnis Anda
           </h1>
           <p className="mt-3 text-sm text-on-surface-variant md:text-base">
-            Naik kelas kapan saja. Semakin tinggi paket, semakin rendah komisi transaksi Anda — dan semakin banyak
+            Naik kelas kapan saja. Semakin tinggi paket, semakin rendah komisi transaksi Anda <br /> dan semakin banyak
             pembeli global yang bisa Anda jangkau.
           </p>
           <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-on-surface-variant">

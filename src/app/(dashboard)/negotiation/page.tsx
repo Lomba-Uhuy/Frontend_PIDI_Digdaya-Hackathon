@@ -401,7 +401,7 @@ export default function NegotiationHubPage() {
     return (
       <div className="h-full w-full flex flex-col items-center justify-center bg-surface-bright p-8">
         <div className="max-w-md text-center bg-surface-container-lowest p-8 border border-outline-variant rounded-2xl shadow-sm flex flex-col items-center">
-          <div className="w-16 h-16 bg-indigo-50 text-primary border border-outline-variant rounded-full flex items-center justify-center mb-4">
+          <div className="w-16 h-16 bg-primary-container text-on-primary-container border border-outline-variant rounded-full flex items-center justify-center mb-4">
             <MailWarning className="size-9" />
           </div>
           <h2 className="text-xl font-bold text-primary mb-2 font-heading">Tidak Ada Negosiasi Aktif</h2>
@@ -568,12 +568,12 @@ export default function NegotiationHubPage() {
           </div>
 
           {/* Outbound Pitch Alert */}
-          <div className="bg-indigo-50/50 border border-primary/20 p-4 rounded-xl max-w-2xl text-left shadow-sm self-start flex gap-3 animate-in fade-in duration-500">
-            <MailPlus className="text-primary shrink-0 mt-0.5 size-6" />
+          <div className="bg-primary-container/50 border border-primary/20 p-4 rounded-xl max-w-2xl text-left shadow-sm self-start flex gap-3 animate-in fade-in duration-500">
+            <MailPlus className="text-on-primary-container shrink-0 mt-0.5 size-6" />
             <div>
-              <div className="text-[10px] font-bold uppercase tracking-widest text-primary mb-1">Email Penawaran AI Terkirim</div>
+              <div className="text-[10px] font-bold uppercase tracking-widest text-on-primary-container mb-1">Email Penawaran AI Terkirim</div>
               <p className="text-xs text-on-surface-variant font-medium leading-relaxed">
-                Email penawaran resmi untuk <strong className="text-primary">{productName} {productType === "rattan" ? "(HS 9401.52)" : "Grade 1 (HS 0901.11)"}</strong> telah dikirim secara otomatis ke alamat importir <strong className="text-primary">klaus.weber@globaltech.de</strong> pada pukul 09:42.
+                Email penawaran resmi untuk <strong className="text-on-primary-container">{productName} {productType === "rattan" ? "(HS 9401.52)" : "Grade 1 (HS 0901.11)"}</strong> telah dikirim secara otomatis ke alamat importir <strong className="text-on-primary-container">klaus.weber@globaltech.de</strong> pada pukul 09:42.
               </p>
             </div>
           </div>

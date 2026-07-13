@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   description: "Institutional Export Terminal Initialization",
 };
 
-const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem('tradeconnect_theme');var isDark=t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme: dark)').matches);if(isDark)document.documentElement.classList.add('dark');}catch(e){}})();`;
+const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem('tradeconnect_theme');var isDark=t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);if(isDark)document.documentElement.classList.add('dark');}catch(e){}})();`;
 
 export default function RootLayout({
   children,

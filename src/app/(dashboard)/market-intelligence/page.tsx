@@ -299,8 +299,8 @@ Keamanan data pabean terjamin 100%.
               {/* Header */}
               <div className="flex justify-between items-center border-b border-outline-variant pb-4 mb-6 shrink-0">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-indigo-50 border border-outline-variant text-primary rounded-xl flex items-center justify-center">
-                    <Sparkles className="text-primary size-6" />
+                  <div className="w-10 h-10 bg-primary-container border border-outline-variant text-on-primary-container rounded-xl flex items-center justify-center">
+                    <Sparkles className="size-6" />
                   </div>
                   <div>
                     <h3 className="text-lg font-black text-primary leading-tight">

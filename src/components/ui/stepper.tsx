@@ -25,38 +25,42 @@ function Stepper({ steps, currentStep, className }: StepperProps) {
     return { label, status }
   })
 
-  const progressPercent =
-    normalized.length > 1 ? ((currentStep - 1) / (normalized.length - 1)) * 100 : 0
-
   return (
-    <div className={cn("relative flex w-full items-start justify-between", className)}>
-      <div className="absolute left-0 top-4 h-[2px] w-full bg-surface-container-high" />
-      <div
-        className="absolute left-0 top-4 h-[2px] bg-primary transition-all duration-300"
-        style={{ width: `${Math.min(100, Math.max(0, progressPercent))}%` }}
-      />
-
+    <div className={cn("flex w-full items-start", className)}>
       {normalized.map((step, idx) => (
-        <div key={idx} className="relative z-10 flex flex-col items-center gap-2 bg-background px-2">
-          <div
-            className={cn(
-              "flex size-8 items-center justify-center rounded-full border-2 text-sm font-semibold transition-colors",
-              step.status === "complete" && "bg-primary text-on-primary border-primary",
-              step.status === "active" && "bg-primary text-on-primary border-primary shadow-md",
-              step.status === "pending" &&
-                "bg-surface-container-lowest text-on-surface-variant border-outline-variant"
-            )}
-          >
-            {step.status === "complete" ? <Check className="size-4" /> : idx + 1}
+        <div
+          key={idx}
+          className={cn("flex items-start", idx < normalized.length - 1 ? "flex-1" : "shrink-0")}
+        >
+          <div className="flex shrink-0 flex-col items-center gap-2">
+            <div
+              className={cn(
+                "flex size-8 items-center justify-center rounded-full border-2 text-sm font-semibold transition-colors",
+                step.status === "complete" && "bg-primary text-on-primary border-primary",
+                step.status === "active" && "bg-primary text-on-primary border-primary shadow-md",
+                step.status === "pending" &&
+                  "bg-surface-container-lowest text-on-surface-variant border-outline-variant"
+              )}
+            >
+              {step.status === "complete" ? <Check className="size-4" /> : idx + 1}
+            </div>
+            <span
+              className={cn(
+                "text-[10px] sm:text-xs font-bold uppercase tracking-widest text-center",
+                step.status === "pending" ? "text-on-surface-variant" : "text-primary"
+              )}
+            >
+              {step.label}
+            </span>
           </div>
-          <span
-            className={cn(
-              "text-[10px] sm:text-xs font-bold uppercase tracking-widest text-center",
-              step.status === "pending" ? "text-on-surface-variant" : "text-primary"
-            )}
-          >
-            {step.label}
-          </span>
+          {idx < normalized.length - 1 && (
+            <div
+              className={cn(
+                "mx-2 mt-4 h-[2px] flex-1 transition-colors duration-300",
+                idx + 1 < currentStep ? "bg-primary" : "bg-surface-container-high"
+              )}
+            />
+          )}
         </div>
       ))}
     </div>

@@ -3,8 +3,8 @@ export type Theme = "light" | "dark" | "system";
 const STORAGE_KEY = "tradeconnect_theme";
 
 export function getStoredTheme(): Theme {
-  if (typeof window === "undefined") return "system";
-  return (localStorage.getItem(STORAGE_KEY) as Theme) || "system";
+  if (typeof window === "undefined") return "light";
+  return (localStorage.getItem(STORAGE_KEY) as Theme) || "light";
 }
 
 export function getSystemPrefersDark(): boolean {
