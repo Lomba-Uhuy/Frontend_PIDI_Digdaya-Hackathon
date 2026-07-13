@@ -6,10 +6,14 @@ import {
   Anchor,
   Bell,
   BadgeCheck,
+  Building2,
+  ChevronDown,
   HelpCircle,
+  LogOut,
   Menu,
   MessageCircle,
   Radar,
+  Rocket,
   Settings,
   Sparkles,
   Trophy,
@@ -19,6 +23,8 @@ import {
 } from "lucide-react";
 import { getStep, TradeConnectStep } from "../../lib/state";
 import { getIcon } from "../../lib/icon-map";
+import { getPlan, getPlanInfo, type Plan } from "../../lib/plan";
+import { cn } from "@/lib/utils";
 
 export default function DashboardLayout({
   children,
@@ -39,8 +45,13 @@ export default function DashboardLayout({
   const [showNotifications, setShowNotifications] = useState(false);
   const [hasNewNotifications, setHasNewNotifications] = useState(true);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [plan, setPlanState] = useState<Plan>("free");
   const [companyName, setCompanyName] = useState("CV Kopi Mandiri");
   const [productName, setProductName] = useState("Kopi Arabika");
+
+  const menuItemClass =
+    "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-on-surface hover:bg-surface-container-high transition-colors cursor-pointer";
 
   // Tour States
   const [tourStep, setTourStep] = useState(0);
@@ -100,6 +111,7 @@ export default function DashboardLayout({
 
   useEffect(() => {
     setCurrentStep(getStep());
+    setPlanState(getPlan());
     const savedCompany = localStorage.getItem("tradeconnect_company_name");
     if (savedCompany) setCompanyName(savedCompany);
     const savedProduct = localStorage.getItem("tradeconnect_product_name");
@@ -113,9 +125,12 @@ export default function DashboardLayout({
       const updatedProduct = localStorage.getItem("tradeconnect_product_name");
       if (updatedProduct) setProductName(updatedProduct);
     };
+    const handlePlanChange = () => setPlanState(getPlan());
     window.addEventListener("tradeconnect_state_change", handleStateChange);
+    window.addEventListener("tradeconnect_plan_change", handlePlanChange);
     return () => {
       window.removeEventListener("tradeconnect_state_change", handleStateChange);
+      window.removeEventListener("tradeconnect_plan_change", handlePlanChange);
     };
   }, []);
 
@@ -283,23 +298,30 @@ export default function DashboardLayout({
           })}
         </div>
 
-        <div className="mt-auto px-2 flex flex-col gap-1 pt-4 border-t border-outline-variant">
-          <Link href="/settings" className="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all">
-            <Settings className="size-[18px]" />
-            <span className="text-sm">Pengaturan</span>
-          </Link>
-          <Link href="/support" className="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all">
-            <HelpCircle className="size-[18px]" />
-            <span className="text-sm">Bantuan</span>
-          </Link>
-          <button
-            type="button"
-            onClick={handleStartTour}
-            className="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all w-full text-left cursor-pointer"
-          >
-            <Sparkles className="size-[18px]" />
-            <span className="text-sm font-medium">Lihat Tutorial</span>
-          </button>
+        <div className="mt-auto px-3 pt-4">
+          {plan !== "scale" ? (
+            <Link
+              href="/settings#tagihan"
+              className="block rounded-xl border border-primary/20 bg-primary/5 p-3 transition-colors hover:bg-primary/10"
+            >
+              <div className="flex items-center gap-2">
+                <Rocket className="size-4 text-primary" />
+                <span className="text-xs font-bold text-primary">Upgrade Paket</span>
+              </div>
+              <p className="mt-1 text-[11px] leading-snug text-on-surface-variant">
+                Paket <span className="font-bold text-on-surface">{getPlanInfo(plan).name}</span> — naik kelas untuk
+                komisi lebih rendah &amp; pembeli lebih banyak.
+              </p>
+            </Link>
+          ) : (
+            <div className="rounded-xl border border-secondary/30 bg-secondary-container/40 p-3">
+              <div className="flex items-center gap-2">
+                <Rocket className="size-4 text-secondary" />
+                <span className="text-xs font-bold text-on-secondary-container">Paket Scale Aktif</span>
+              </div>
+              <p className="mt-1 text-[11px] text-on-surface-variant">Anda menikmati seluruh fitur premium.</p>
+            </div>
+          )}
         </div>
       </nav>
 
@@ -326,6 +348,7 @@ export default function DashboardLayout({
               <button
                 onClick={() => {
                   setShowNotifications(!showNotifications);
+                  setShowProfileMenu(false);
                   if (hasNewNotifications) {
                     setHasNewNotifications(false);
                   }
@@ -387,19 +410,82 @@ export default function DashboardLayout({
               </div>
             )}
 
-            {/* Profile Avatar & Indonesian Company Label */}
-            <div className="flex items-center gap-3 border-l border-outline-variant pl-4 md:pl-6">
-              <div className="text-right hidden md:block">
-                <div className="text-xs font-black text-on-surface">{companyName}</div>
-                <div className="text-[9px] font-bold text-secondary uppercase tracking-wider">Eksportir Pemula</div>
-              </div>
-              <div className="w-8 h-8 rounded-full bg-surface-container-highest border border-outline-variant overflow-hidden flex-shrink-0">
-                <img 
-                  alt="Profil pengguna" 
-                  className="w-full h-full object-cover" 
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuBQpVJa8hieXzEItkyrzcOJjNGqQnUWgdvzRXjbALoURQ3UQZXDq2ecw3dgfu7DBAGJB2l_AJYyVdfeqhr2Rl--dT0FPs6DZJ8sOyOcQQjyuOoNPm7RqKgPbXBMc4-a3esYOA6tkx284IAaqU1zYfpUZwKOqXUehhOyOTPCu6p0eaW6JL9ufyc4g94hOOLc1MuuffzSUuzgWYZhh12Pigcxh5XcSr7km52-TL6yYUKKNYg4WOHMFgn-1Xqysb00cnUBP0geQjheNA"
+            {/* Profile menu (company account) */}
+            <div className="relative border-l border-outline-variant pl-4 md:pl-6">
+              <button
+                onClick={() => {
+                  setShowProfileMenu((v) => !v);
+                  setShowNotifications(false);
+                }}
+                aria-haspopup="menu"
+                aria-expanded={showProfileMenu}
+                className="flex items-center gap-2.5 rounded-lg p-1 pr-1 md:pr-2 transition-colors hover:bg-surface-container-low cursor-pointer"
+              >
+                <div className="text-right hidden md:block">
+                  <div className="text-xs font-black text-on-surface leading-tight">{companyName}</div>
+                  <div className="text-[9px] font-bold text-secondary uppercase tracking-wider">Eksportir Pemula</div>
+                </div>
+                <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary text-on-primary">
+                  <Building2 className="size-5" strokeWidth={2} />
+                </div>
+                <ChevronDown
+                  className={cn(
+                    "hidden md:block size-4 text-on-surface-variant transition-transform",
+                    showProfileMenu && "rotate-180"
+                  )}
                 />
-              </div>
+              </button>
+
+              {showProfileMenu && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowProfileMenu(false)} />
+                  <div className="absolute right-0 top-14 z-50 w-64 overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-xl animate-in fade-in slide-in-from-top-2 duration-200">
+                    {/* Header */}
+                    <div className="flex items-center gap-3 border-b border-outline-variant bg-surface p-4">
+                      <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary text-on-primary">
+                        <Building2 className="size-5" strokeWidth={2} />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-bold text-on-surface">{companyName}</p>
+                        <span className="mt-0.5 inline-block rounded-full bg-secondary-container px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-on-secondary-container">
+                          Paket {getPlanInfo(plan).name}
+                        </span>
+                      </div>
+                    </div>
+                    {/* Items */}
+                    <div className="p-1.5">
+                      <Link href="/settings#tagihan" onClick={() => setShowProfileMenu(false)} className={menuItemClass}>
+                        <Rocket className="size-[18px]" /> Upgrade Paket
+                      </Link>
+                      <Link href="/settings" onClick={() => setShowProfileMenu(false)} className={menuItemClass}>
+                        <Settings className="size-[18px]" /> Pengaturan
+                      </Link>
+                      <Link href="/settings#bantuan" onClick={() => setShowProfileMenu(false)} className={menuItemClass}>
+                        <HelpCircle className="size-[18px]" /> Bantuan
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowProfileMenu(false);
+                          handleStartTour();
+                        }}
+                        className={menuItemClass}
+                      >
+                        <Sparkles className="size-[18px]" /> Lihat Tutorial
+                      </button>
+                    </div>
+                    <div className="border-t border-outline-variant p-1.5">
+                      <Link
+                        href="/"
+                        onClick={() => setShowProfileMenu(false)}
+                        className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-error transition-colors hover:bg-error-container cursor-pointer"
+                      >
+                        <LogOut className="size-[18px]" /> Keluar
+                      </Link>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </header>

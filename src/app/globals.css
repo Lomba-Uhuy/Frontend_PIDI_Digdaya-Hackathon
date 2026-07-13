@@ -115,3 +115,12 @@
     @apply font-sans;
   }
 }
+
+@layer components {
+  .input-base {
+    @apply w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 text-sm text-on-surface outline-none transition-colors;
+  }
+  .input-base:focus {
+    @apply border-primary ring-2 ring-primary/20;
+  }
+}
