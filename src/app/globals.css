@@ -6,6 +6,127 @@
 
 :root {
   --radius: 0.625rem;
+
+  /* ==== Raw theme values (light) ====
+     These are the actual color values. @theme inline below only ever
+     references them via var(), so overriding them in .dark{} cascades
+     into every utility class automatically. Never assign a literal
+     color inside @theme inline — Tailwind v4 "inline" bakes literals
+     directly into each utility and .dark{} can no longer reach them. */
+
+  --primary: #0f172a; /* slate-900 navy */
+  --primary-hover: #1e3a5f;
+  --on-primary: #ffffff;
+  --primary-container: #e2e8f0;
+  --on-primary-container: #1e293b;
+  --primary-fixed: #e2e8f0;
+  --primary-fixed-dim: #cbd5e1;
+  --on-primary-fixed: #0f172a;
+  --on-primary-fixed-variant: #334155;
+  --inverse-primary: #cbd5e1;
+
+  --secondary: #059669; /* emerald-600 */
+  --on-secondary: #ffffff;
+  --secondary-container: #d1fae5;
+  --on-secondary-container: #065f46;
+  --secondary-fixed: #a7f3d0;
+  --secondary-fixed-dim: #34d399;
+  --on-secondary-fixed: #064e3b;
+  --on-secondary-fixed-variant: #047857;
+
+  --info: #2563eb; /* blue-600 — repurposed "tertiary" role */
+  --on-info: #ffffff;
+  --info-container: #dbeafe;
+  --on-info-container: #1e40af;
+  --tertiary-fixed: #bfdbfe;
+  --tertiary-fixed-dim: #93c5fd;
+  --on-tertiary-fixed: #1e3a8a;
+  --on-tertiary-fixed-variant: #1d4ed8;
+
+  --warning: #d97706; /* amber-600 */
+  --on-warning: #ffffff;
+  --warning-container: #fef3c7;
+  --on-warning-container: #92400e;
+
+  --error: #dc2626; /* red-600 */
+  --on-error: #ffffff;
+  --error-container: #fee2e2;
+  --on-error-container: #991b1b;
+
+  --background: #f8fafc;
+  --on-background: #0f172a;
+  --surface: #f8fafc;
+  --surface-bright: #f8fafc;
+  --surface-dim: #e2e8f0;
+  --surface-tint: var(--primary-hover);
+  --surface-variant: #f1f5f9;
+  --on-surface: #0f172a;
+  --on-surface-variant: #64748b;
+  --surface-container-lowest: #ffffff;
+  --surface-container-low: #f8fafc;
+  --surface-container: #f1f5f9;
+  --surface-container-high: #e2e8f0;
+  --surface-container-highest: #cbd5e1;
+  --outline: #94a3b8;
+  --outline-variant: #e2e8f0;
+  --inverse-surface: #1e293b;
+  --inverse-on-surface: #f8fafc;
+}
+
+.dark {
+  color-scheme: dark;
+
+  /* ==== Raw theme values (dark) ====
+     Mid-tone brand accents (visible against near-black surfaces, white
+     text stays legible on them) + M3-style dark containers (desaturated
+     dark fill, vivid light text). "Fixed" roles are intentionally
+     omitted — per M3 spec they stay identical across both schemes. */
+
+  --primary: #64748b; /* slate-500 */
+  --primary-hover: #94a3b8; /* lighten on hover in dark mode */
+  --on-primary: #ffffff;
+  --primary-container: #1e293b;
+  --on-primary-container: #cbd5e1;
+  --inverse-primary: #0f172a;
+
+  --secondary: #10b981; /* emerald-500 */
+  --on-secondary: #022c22;
+  --secondary-container: #064e3b;
+  --on-secondary-container: #6ee7b7;
+
+  --info: #3b82f6; /* blue-500 */
+  --on-info: #ffffff;
+  --info-container: #1e3a5f;
+  --on-info-container: #93c5fd;
+
+  --warning: #f59e0b; /* amber-500 */
+  --on-warning: #451a03;
+  --warning-container: #78350f;
+  --on-warning-container: #fde68a;
+
+  --error: #ef4444; /* red-500 */
+  --on-error: #ffffff;
+  --error-container: #7f1d1d;
+  --on-error-container: #fca5a5;
+
+  --background: #0b1220;
+  --on-background: #e2e8f0;
+  --surface: #0b1220;
+  --surface-bright: #1e293b;
+  --surface-dim: #0b1220;
+  --surface-tint: var(--primary-hover);
+  --surface-variant: #1e293b;
+  --on-surface: #e2e8f0;
+  --on-surface-variant: #94a3b8;
+  --surface-container-lowest: #0f172a;
+  --surface-container-low: #131c2e;
+  --surface-container: #182234;
+  --surface-container-high: #1e293b;
+  --surface-container-highest: #334155;
+  --outline: #64748b;
+  --outline-variant: #334155;
+  --inverse-surface: #e2e8f0;
+  --inverse-on-surface: #0f172a;
 }
 
 @theme inline {
@@ -22,68 +143,68 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 
   /* ---- Brand primitives ---- */
-  --color-primary: #0f172a; /* slate-900 navy — was #070235 */
-  --color-primary-hover: #1e3a5f;
-  --color-on-primary: #ffffff;
-  --color-primary-container: #e2e8f0;
-  --color-on-primary-container: #1e293b;
-  --color-primary-fixed: #e2e8f0;
-  --color-primary-fixed-dim: #cbd5e1;
-  --color-on-primary-fixed: #0f172a;
-  --color-on-primary-fixed-variant: #334155;
-  --color-inverse-primary: #cbd5e1;
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-on-primary: var(--on-primary);
+  --color-primary-container: var(--primary-container);
+  --color-on-primary-container: var(--on-primary-container);
+  --color-primary-fixed: var(--primary-fixed);
+  --color-primary-fixed-dim: var(--primary-fixed-dim);
+  --color-on-primary-fixed: var(--on-primary-fixed);
+  --color-on-primary-fixed-variant: var(--on-primary-fixed-variant);
+  --color-inverse-primary: var(--inverse-primary);
 
-  --color-secondary: #059669; /* emerald-600 — was #006c4a */
-  --color-on-secondary: #ffffff;
-  --color-secondary-container: #d1fae5;
-  --color-on-secondary-container: #065f46;
-  --color-secondary-fixed: #a7f3d0;
-  --color-secondary-fixed-dim: #34d399;
-  --color-on-secondary-fixed: #064e3b;
-  --color-on-secondary-fixed-variant: #047857;
+  --color-secondary: var(--secondary);
+  --color-on-secondary: var(--on-secondary);
+  --color-secondary-container: var(--secondary-container);
+  --color-on-secondary-container: var(--on-secondary-container);
+  --color-secondary-fixed: var(--secondary-fixed);
+  --color-secondary-fixed-dim: var(--secondary-fixed-dim);
+  --color-on-secondary-fixed: var(--on-secondary-fixed);
+  --color-on-secondary-fixed-variant: var(--on-secondary-fixed-variant);
 
-  --color-info: #2563eb; /* blue-600 — repurposed "tertiary" role */
-  --color-on-info: #ffffff;
-  --color-info-container: #dbeafe;
-  --color-on-info-container: #1e40af;
+  --color-info: var(--info);
+  --color-on-info: var(--on-info);
+  --color-info-container: var(--info-container);
+  --color-on-info-container: var(--on-info-container);
   --color-tertiary: var(--color-info);
   --color-on-tertiary: var(--color-on-info);
   --color-tertiary-container: var(--color-info-container);
   --color-on-tertiary-container: var(--color-on-info-container);
-  --color-tertiary-fixed: #bfdbfe;
-  --color-tertiary-fixed-dim: #93c5fd;
-  --color-on-tertiary-fixed: #1e3a8a;
-  --color-on-tertiary-fixed-variant: #1d4ed8;
+  --color-tertiary-fixed: var(--tertiary-fixed);
+  --color-tertiary-fixed-dim: var(--tertiary-fixed-dim);
+  --color-on-tertiary-fixed: var(--on-tertiary-fixed);
+  --color-on-tertiary-fixed-variant: var(--on-tertiary-fixed-variant);
 
-  --color-warning: #d97706; /* amber-600 — new, no prior token existed */
-  --color-on-warning: #ffffff;
-  --color-warning-container: #fef3c7;
-  --color-on-warning-container: #92400e;
+  --color-warning: var(--warning);
+  --color-on-warning: var(--on-warning);
+  --color-warning-container: var(--warning-container);
+  --color-on-warning-container: var(--on-warning-container);
 
-  --color-error: #dc2626; /* red-600 — was #ba1a1a */
-  --color-on-error: #ffffff;
-  --color-error-container: #fee2e2;
-  --color-on-error-container: #991b1b;
+  --color-error: var(--error);
+  --color-on-error: var(--on-error);
+  --color-error-container: var(--error-container);
+  --color-on-error-container: var(--on-error-container);
 
   /* ---- Neutral surface scale ---- */
-  --color-background: #f8fafc;
-  --color-on-background: #0f172a;
-  --color-surface: #f8fafc;
-  --color-surface-bright: #f8fafc;
-  --color-surface-dim: #e2e8f0;
-  --color-surface-tint: var(--color-primary-hover);
-  --color-surface-variant: #f1f5f9;
-  --color-on-surface: #0f172a;
-  --color-on-surface-variant: #64748b;
-  --color-surface-container-lowest: #ffffff;
-  --color-surface-container-low: #f8fafc;
-  --color-surface-container: #f1f5f9;
-  --color-surface-container-high: #e2e8f0;
-  --color-surface-container-highest: #cbd5e1;
-  --color-outline: #94a3b8;
-  --color-outline-variant: #e2e8f0;
-  --color-inverse-surface: #1e293b;
-  --color-inverse-on-surface: #f8fafc;
+  --color-background: var(--background);
+  --color-on-background: var(--on-background);
+  --color-surface: var(--surface);
+  --color-surface-bright: var(--surface-bright);
+  --color-surface-dim: var(--surface-dim);
+  --color-surface-tint: var(--surface-tint);
+  --color-surface-variant: var(--surface-variant);
+  --color-on-surface: var(--on-surface);
+  --color-on-surface-variant: var(--on-surface-variant);
+  --color-surface-container-lowest: var(--surface-container-lowest);
+  --color-surface-container-low: var(--surface-container-low);
+  --color-surface-container: var(--surface-container);
+  --color-surface-container-high: var(--surface-container-high);
+  --color-surface-container-highest: var(--surface-container-highest);
+  --color-outline: var(--outline);
+  --color-outline-variant: var(--outline-variant);
+  --color-inverse-surface: var(--inverse-surface);
+  --color-inverse-on-surface: var(--inverse-on-surface);
 
   /* ---- shadcn-standard aliases (consumed by components/ui/*) ---- */
   --color-foreground: var(--color-on-surface);
@@ -109,7 +230,7 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground transition-colors duration-200;
   }
   html {
     @apply font-sans;

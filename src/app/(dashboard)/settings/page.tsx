@@ -12,6 +12,7 @@ import {
   Check,
   Sun,
   Moon,
+  Laptop,
   LifeBuoy,
   BookOpen,
   MessageSquare,
@@ -21,6 +22,7 @@ import {
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { getStoredTheme, setTheme, type Theme } from "@/lib/theme";
 
 const TABS = [
   { id: "umum", label: "Umum", icon: SlidersHorizontal },
@@ -36,16 +38,23 @@ export default function SettingsPage() {
   const [companyName, setCompanyName] = useState("CV Kopi Mandiri");
   const [productName, setProductName] = useState("Kopi Arabika");
   const [saved, setSaved] = useState(false);
+  const [theme, setThemeState] = useState<Theme>("system");
 
   useEffect(() => {
     const savedCompany = localStorage.getItem("tradeconnect_company_name");
     if (savedCompany) setCompanyName(savedCompany);
     const savedProduct = localStorage.getItem("tradeconnect_product_name");
     if (savedProduct) setProductName(savedProduct);
+    setThemeState(getStoredTheme());
 
     const hash = window.location.hash.replace("#", "");
     if (TABS.some((t) => t.id === hash)) setActiveTab(hash as TabId);
   }, []);
+
+  const handleThemeChange = (next: Theme) => {
+    setThemeState(next);
+    setTheme(next);
+  };
 
   const handleSaveProfile = () => {
     localStorage.setItem("tradeconnect_company_name", companyName);
@@ -137,23 +146,25 @@ export default function SettingsPage() {
                   </Field>
                   <div>
                     <span className="mb-1.5 block text-xs font-bold text-on-surface-variant">Tampilan</span>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        className="flex items-center gap-2 rounded-lg border-2 border-primary bg-primary/5 px-4 py-2 text-sm font-semibold text-primary cursor-pointer"
-                      >
-                        <Sun className="size-4" /> Terang
-                      </button>
-                      <button
-                        type="button"
-                        disabled
-                        className="flex items-center gap-2 rounded-lg border border-outline-variant px-4 py-2 text-sm font-medium text-on-surface-variant opacity-60"
-                      >
-                        <Moon className="size-4" /> Gelap
-                        <span className="ml-1 rounded-full bg-surface-container-high px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide">
-                          Segera
-                        </span>
-                      </button>
+                    <div className="flex flex-wrap gap-2">
+                      <ThemeOption
+                        icon={Sun}
+                        label="Terang"
+                        active={theme === "light"}
+                        onClick={() => handleThemeChange("light")}
+                      />
+                      <ThemeOption
+                        icon={Moon}
+                        label="Gelap"
+                        active={theme === "dark"}
+                        onClick={() => handleThemeChange("dark")}
+                      />
+                      <ThemeOption
+                        icon={Laptop}
+                        label="Sistem"
+                        active={theme === "system"}
+                        onClick={() => handleThemeChange("system")}
+                      />
                     </div>
                   </div>
                 </Section>
@@ -304,6 +315,34 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       <span className="mb-1.5 block text-xs font-bold text-on-surface-variant">{label}</span>
       {children}
     </label>
+  );
+}
+
+function ThemeOption({
+  icon: Icon,
+  label,
+  active,
+  onClick,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={cn(
+        "flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold transition-colors cursor-pointer",
+        active
+          ? "border-primary bg-primary text-on-primary"
+          : "border-outline-variant font-medium text-on-surface-variant hover:bg-surface-container-high"
+      )}
+    >
+      <Icon className="size-4" /> {label}
+    </button>
   );
 }
 

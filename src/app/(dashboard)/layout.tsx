@@ -25,6 +25,7 @@ import { getStep, TradeConnectStep } from "../../lib/state";
 import { getIcon } from "../../lib/icon-map";
 import { getPlan, getPlanInfo, type Plan } from "../../lib/plan";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 export default function DashboardLayout({
   children,
@@ -344,6 +345,7 @@ export default function DashboardLayout({
           </div>
           <div className="flex items-center gap-4 md:gap-6 relative">
             <div className="flex items-center gap-1 md:gap-2 text-primary">
+              <ThemeToggle />
               {/* Bell Notification Button */}
               <button
                 onClick={() => {

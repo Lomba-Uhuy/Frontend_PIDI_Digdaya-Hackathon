@@ -308,7 +308,7 @@ export default function ExportCalculatorPage() {
                   <tr className="hover:bg-surface-container-low/20">
                     <td className="p-3 font-semibold">Harga Pokok Produksi (EXW)</td>
                     <td className="p-3 text-right font-mono">${hpp.toFixed(2)}</td>
-                    <td className="p-3 text-right font-mono">Rp {(hpp * 16000).toLocaleString()}</td>
+                    <td className="p-3 text-right font-mono">Rp {(hpp * 16000).toLocaleString('id-ID')}</td>
                     <td className="p-3 text-on-surface-variant text-[11px]">Harga pintu pabrik</td>
                   </tr>
                   
@@ -316,7 +316,7 @@ export default function ExportCalculatorPage() {
                   <tr className="hover:bg-surface-container-low/20">
                     <td className="p-3">Ditambah: Profit Margin ({margin}%)</td>
                     <td className="p-3 text-right font-mono text-secondary">+${profitAmt.toFixed(2)}</td>
-                    <td className="p-3 text-right font-mono text-secondary">+Rp {(profitAmt * 16000).toLocaleString()}</td>
+                    <td className="p-3 text-right font-mono text-secondary">+Rp {(profitAmt * 16000).toLocaleString('id-ID')}</td>
                     <td className="p-3 text-on-surface-variant text-[11px]">HPP × Margin%</td>
                   </tr>
 
@@ -324,7 +324,7 @@ export default function ExportCalculatorPage() {
                   <tr className="hover:bg-surface-container-low/20">
                     <td className="p-3">Ditambah: Ongkir Domestik & Port</td>
                     <td className="p-3 text-right font-mono">+${localHandling.toFixed(2)}</td>
-                    <td className="p-3 text-right font-mono">+Rp {(localHandling * 16000).toLocaleString()}</td>
+                    <td className="p-3 text-right font-mono">+Rp {(localHandling * 16000).toLocaleString('id-ID')}</td>
                     <td className="p-3 text-on-surface-variant text-[11px]">Handling pelabuhan lokal</td>
                   </tr>
 
@@ -332,7 +332,7 @@ export default function ExportCalculatorPage() {
                   <tr className="hover:bg-surface-container-low/20">
                     <td className="p-3">Ditambah: Bea Keluar / Pajak ({exportDuty}%)</td>
                     <td className="p-3 text-right font-mono text-error">+${dutyAmt.toFixed(2)}</td>
-                    <td className="p-3 text-right font-mono text-error">+Rp {(dutyAmt * 16000).toLocaleString()}</td>
+                    <td className="p-3 text-right font-mono text-error">+Rp {(dutyAmt * 16000).toLocaleString('id-ID')}</td>
                     <td className="p-3 text-on-surface-variant text-[11px]">FOB Awal × Bea%</td>
                   </tr>
 
@@ -340,7 +340,7 @@ export default function ExportCalculatorPage() {
                   <tr className="bg-primary/5 hover:bg-primary/10">
                     <td className="p-3 font-bold text-primary">1. Nilai FOB (Free on Board)</td>
                     <td className="p-3 text-right font-mono font-bold text-primary">${finalFob.toFixed(2)}</td>
-                    <td className="p-3 text-right font-mono font-bold text-primary">Rp {(finalFob * 16000).toLocaleString()}</td>
+                    <td className="p-3 text-right font-mono font-bold text-primary">Rp {(finalFob * 16000).toLocaleString('id-ID')}</td>
                     <td className="p-3 text-primary text-[11px] font-bold">HPP + Profit + Local + Bea</td>
                   </tr>
 
@@ -348,7 +348,7 @@ export default function ExportCalculatorPage() {
                   <tr className="hover:bg-surface-container-low/20">
                     <td className="p-3">Ditambah: Ocean Freight Internasional</td>
                     <td className="p-3 text-right font-mono">+${freight.toFixed(2)}</td>
-                    <td className="p-3 text-right font-mono">+Rp {(freight * 16000).toLocaleString()}</td>
+                    <td className="p-3 text-right font-mono">+Rp {(freight * 16000).toLocaleString('id-ID')}</td>
                     <td className="p-3 text-on-surface-variant text-[11px]">Kapal laut Hamburg</td>
                   </tr>
 
@@ -356,7 +356,7 @@ export default function ExportCalculatorPage() {
                   <tr className="bg-surface-container-low/40 hover:bg-surface-container-low">
                     <td className="p-3 font-semibold text-primary">2. Nilai CFR (Cost & Freight)</td>
                     <td className="p-3 text-right font-mono font-semibold text-primary">${finalCfr.toFixed(2)}</td>
-                    <td className="p-3 text-right font-mono font-semibold text-primary">Rp {(finalCfr * 16000).toLocaleString()}</td>
+                    <td className="p-3 text-right font-mono font-semibold text-primary">Rp {(finalCfr * 16000).toLocaleString('id-ID')}</td>
                     <td className="p-3 text-on-surface-variant text-[11px]">FOB Final + Freight</td>
                   </tr>
 
@@ -364,7 +364,7 @@ export default function ExportCalculatorPage() {
                   <tr className="hover:bg-surface-container-low/20">
                     <td className="p-3">Ditambah: Asuransi Maritim</td>
                     <td className="p-3 text-right font-mono">+${insurance.toFixed(2)}</td>
-                    <td className="p-3 text-right font-mono">+Rp {(insurance * 16000).toLocaleString()}</td>
+                    <td className="p-3 text-right font-mono">+Rp {(insurance * 16000).toLocaleString('id-ID')}</td>
                     <td className="p-3 text-on-surface-variant text-[11px]">Asuransi laut internasional</td>
                   </tr>
 
@@ -372,7 +372,7 @@ export default function ExportCalculatorPage() {
                   <tr className="bg-secondary/10 hover:bg-secondary/15">
                     <td className="p-3 font-bold text-secondary">3. Nilai CIF (Cost, Ins, Freight)</td>
                     <td className="p-3 text-right font-mono font-bold text-secondary">${finalCif.toFixed(2)}</td>
-                    <td className="p-3 text-right font-mono font-bold text-secondary">Rp {(finalCif * 16000).toLocaleString()}</td>
+                    <td className="p-3 text-right font-mono font-bold text-secondary">Rp {(finalCif * 16000).toLocaleString('id-ID')}</td>
                     <td className="p-3 text-secondary text-[11px] font-bold">CFR + Insurance</td>
                   </tr>
                 </tbody>

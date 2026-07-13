@@ -394,12 +394,12 @@ export default function SigningBoardPage() {
               {/* Mode Canvas */}
               {signatureMode === "draw" ? (
                 <div className="flex flex-col items-center gap-3">
-                  <div className="relative w-full max-w-lg bg-surface-container-lowest border-2 border-dashed border-outline-variant rounded-xl overflow-hidden shadow-inner h-40">
-                    <canvas 
-                      ref={canvasRef} 
-                      width={512} 
-                      height={160} 
-                      className="absolute inset-0 w-full h-full cursor-crosshair touch-none"
+                  <div className="relative w-full max-w-lg border-2 border-dashed border-outline-variant rounded-xl overflow-hidden shadow-inner h-40">
+                    <canvas
+                      ref={canvasRef}
+                      width={512}
+                      height={160}
+                      className="absolute inset-0 w-full h-full bg-white cursor-crosshair touch-none"
                     />
                     <div className="absolute top-2 right-2 flex items-center gap-1">
                       <span className="text-[9px] font-bold bg-primary/15 text-primary px-2 py-0.5 rounded tracking-widest uppercase">Secure Pad</span>
