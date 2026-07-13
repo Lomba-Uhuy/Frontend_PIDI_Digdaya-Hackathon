@@ -301,7 +301,7 @@ export default function DashboardLayout({
         <div className="mt-auto px-3 pt-4">
           {plan !== "scale" ? (
             <Link
-              href="/settings#tagihan"
+              href="/upgrade"
               className="block rounded-xl border border-primary/20 bg-primary/5 p-3 transition-colors hover:bg-primary/10"
             >
               <div className="flex items-center gap-2">
@@ -454,7 +454,7 @@ export default function DashboardLayout({
                     </div>
                     {/* Items */}
                     <div className="p-1.5">
-                      <Link href="/settings#tagihan" onClick={() => setShowProfileMenu(false)} className={menuItemClass}>
+                      <Link href="/upgrade" onClick={() => setShowProfileMenu(false)} className={menuItemClass}>
                         <Rocket className="size-[18px]" /> Upgrade Paket
                       </Link>
                       <Link href="/settings" onClick={() => setShowProfileMenu(false)} className={menuItemClass}>

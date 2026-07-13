@@ -21,7 +21,7 @@ export function PricingTiers() {
   }, []);
 
   return (
-    <div className="grid items-start gap-5 lg:grid-cols-3">
+    <div className="grid gap-5 lg:grid-cols-3">
       {PLANS.map((plan) => {
         const isCurrent = plan.id === current;
         const isUpgrade = planRank(plan.id) > planRank(current);
@@ -37,16 +37,10 @@ export function PricingTiers() {
             className={cn(
               "relative flex flex-col rounded-2xl border bg-surface-container-lowest p-6 transition-all",
               plan.highlight
-                ? "border-2 border-primary shadow-lg lg:-translate-y-2"
+                ? "border-2 border-primary shadow-lg"
                 : "border-outline-variant shadow-sm"
             )}
           >
-            {plan.highlight && (
-              <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-on-primary shadow-md">
-                Paling Populer
-              </span>
-            )}
-
             {/* Header */}
             <div className="space-y-1.5">
               <h3 className="font-heading text-xl font-black text-on-surface">{plan.name}</h3>

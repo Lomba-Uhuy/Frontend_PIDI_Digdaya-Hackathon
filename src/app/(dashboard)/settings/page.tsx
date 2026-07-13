@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import {
   SlidersHorizontal,
   Building2,
-  CreditCard,
+  Rocket,
   ShieldCheck,
   HelpCircle,
   BadgeCheck,
@@ -16,16 +17,14 @@ import {
   MessageSquare,
   Activity,
   Sparkles,
+  ArrowUpRight,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { PricingTiers } from "@/components/ui/pricing-tiers";
-import { getPlan, getPlanInfo, type Plan } from "@/lib/plan";
 
 const TABS = [
   { id: "umum", label: "Umum", icon: SlidersHorizontal },
   { id: "akun", label: "Akun", icon: Building2 },
-  { id: "tagihan", label: "Tagihan & Paket", icon: CreditCard },
   { id: "privasi", label: "Privasi & Keamanan", icon: ShieldCheck },
   { id: "bantuan", label: "Bantuan", icon: HelpCircle },
 ] as const;
@@ -36,7 +35,6 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<TabId>("umum");
   const [companyName, setCompanyName] = useState("CV Kopi Mandiri");
   const [productName, setProductName] = useState("Kopi Arabika");
-  const [plan, setPlanState] = useState<Plan>("free");
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
@@ -44,14 +42,9 @@ export default function SettingsPage() {
     if (savedCompany) setCompanyName(savedCompany);
     const savedProduct = localStorage.getItem("tradeconnect_product_name");
     if (savedProduct) setProductName(savedProduct);
-    setPlanState(getPlan());
 
     const hash = window.location.hash.replace("#", "");
     if (TABS.some((t) => t.id === hash)) setActiveTab(hash as TabId);
-
-    const syncPlan = () => setPlanState(getPlan());
-    window.addEventListener("tradeconnect_plan_change", syncPlan);
-    return () => window.removeEventListener("tradeconnect_plan_change", syncPlan);
   }, []);
 
   const handleSaveProfile = () => {
@@ -62,8 +55,6 @@ export default function SettingsPage() {
     setTimeout(() => setSaved(false), 2000);
   };
 
-  const planInfo = getPlanInfo(plan);
-
   return (
     <div className="h-full overflow-y-auto">
       <div className="mx-auto w-full max-w-5xl px-4 py-8 md:px-8">
@@ -71,33 +62,28 @@ export default function SettingsPage() {
         <div className="mb-6">
           <h1 className="font-heading text-2xl font-black text-on-surface md:text-3xl">Pengaturan</h1>
           <p className="mt-1 text-sm text-on-surface-variant">
-            Kelola profil perusahaan, paket langganan, privasi, dan bantuan Anda.
+            Kelola profil perusahaan, langganan, privasi, dan bantuan Anda.
           </p>
         </div>
 
         <div className="flex flex-col gap-6 md:flex-row">
           {/* Tab rail */}
           <nav className="flex gap-1 overflow-x-auto md:w-56 md:flex-col md:overflow-visible">
-            {TABS.map((tab) => {
-              const Icon = tab.icon;
-              const isActive = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => setActiveTab(tab.id)}
-                  className={cn(
-                    "flex shrink-0 items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-all cursor-pointer md:w-full",
-                    isActive
-                      ? "bg-secondary-container font-semibold text-on-secondary-container"
-                      : "text-on-surface-variant hover:bg-surface-container-high"
-                  )}
-                >
-                  <Icon className="size-[18px] shrink-0" strokeWidth={isActive ? 2.5 : 2} />
-                  <span className="whitespace-nowrap">{tab.label}</span>
-                </button>
-              );
-            })}
+            <TabButton tab={TABS[0]} activeTab={activeTab} onSelect={setActiveTab} />
+            <TabButton tab={TABS[1]} activeTab={activeTab} onSelect={setActiveTab} />
+
+            {/* Upgrade — navigates to the dedicated showcase page */}
+            <Link
+              href="/upgrade"
+              className="flex shrink-0 items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-semibold text-primary transition-all hover:bg-primary/10 md:w-full cursor-pointer"
+            >
+              <Rocket className="size-[18px] shrink-0" strokeWidth={2.25} />
+              <span className="whitespace-nowrap">Upgrade Paket</span>
+              <ArrowUpRight className="ml-auto hidden size-4 text-primary/60 md:block" />
+            </Link>
+
+            <TabButton tab={TABS[2]} activeTab={activeTab} onSelect={setActiveTab} />
+            <TabButton tab={TABS[3]} activeTab={activeTab} onSelect={setActiveTab} />
           </nav>
 
           {/* Content */}
@@ -216,52 +202,13 @@ export default function SettingsPage() {
               </div>
             )}
 
-            {activeTab === "tagihan" && (
-              <div className="space-y-6">
-                {/* Current plan banner */}
-                <div className="flex flex-col gap-3 rounded-xl border border-outline-variant bg-surface-container-low p-5 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">Paket Anda saat ini</p>
-                    <p className="mt-1 font-heading text-2xl font-black text-on-surface">{planInfo.name}</p>
-                    <p className="mt-0.5 text-xs text-on-surface-variant">
-                      Komisi transaksi {planInfo.commission} per deal · {planInfo.target}
-                    </p>
-                  </div>
-                  <div className="flex size-12 items-center justify-center rounded-xl bg-primary text-on-primary">
-                    <CreditCard className="size-6" />
-                  </div>
-                </div>
-
-                <div>
-                  <h2 className="font-heading text-lg font-black text-on-surface">Pilih paket yang tepat untuk Anda</h2>
-                  <p className="mt-1 text-sm text-on-surface-variant">
-                    Naik kelas kapan saja. Semakin tinggi paket, semakin rendah komisi transaksi Anda.
-                  </p>
-                </div>
-
-                <PricingTiers />
-
-                <div className="flex items-start gap-3 rounded-xl border border-secondary/30 bg-secondary-container/40 p-4">
-                  <BadgeCheck className="mt-0.5 size-5 shrink-0 text-secondary" />
-                  <p className="text-xs leading-relaxed text-on-surface">
-                    <span className="font-bold">Model komisi berbasis keberhasilan.</span> Anda hanya membayar komisi saat
-                    transaksi ekspor berhasil dikonfirmasi — tanpa biaya di muka. Barrier masuk serendah mungkin untuk UMKM
-                    yang baru pertama kali ekspor.
-                  </p>
-                </div>
-              </div>
-            )}
-
             {activeTab === "privasi" && (
-              <div className="space-y-6">
-                <Section title="Keamanan" description="Lindungi akun perusahaan Anda.">
-                  <ToggleRow label="Autentikasi dua faktor (2FA)" description="Wajib kode verifikasi saat login dari perangkat baru." defaultOn />
-                  <ToggleRow label="Notifikasi email transaksi" description="Terima ringkasan aktivitas deal via email." defaultOn />
-                </Section>
-                <Section title="Data & Visibilitas" description="Kontrol bagaimana data Anda digunakan.">
-                  <ToggleRow label="Tampilkan profil ke pembeli global" description="Perusahaan Anda dapat ditemukan di pencarian pembeli." defaultOn />
-                  <ToggleRow label="Bagi hasil data (opt-in)" description="Izinkan data agregat anonim untuk riset pasar — tersedia bagi hasil pada paket Scale." />
-                </Section>
+              <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-outline-variant bg-surface-container-low py-20 text-center">
+                <ShieldCheck className="size-10 text-on-surface-variant/40" strokeWidth={1.75} />
+                <p className="mt-3 text-sm font-semibold text-on-surface">Pengaturan Privasi & Keamanan</p>
+                <p className="mt-1 max-w-xs text-xs text-on-surface-variant">
+                  Kontrol keamanan akun dan visibilitas data sedang kami siapkan. Segera hadir.
+                </p>
               </div>
             )}
 
@@ -288,6 +235,34 @@ export default function SettingsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+function TabButton({
+  tab,
+  activeTab,
+  onSelect,
+}: {
+  tab: (typeof TABS)[number];
+  activeTab: TabId;
+  onSelect: (id: TabId) => void;
+}) {
+  const Icon = tab.icon;
+  const isActive = activeTab === tab.id;
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(tab.id)}
+      className={cn(
+        "flex shrink-0 items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-all cursor-pointer md:w-full",
+        isActive
+          ? "bg-secondary-container font-semibold text-on-secondary-container"
+          : "text-on-surface-variant hover:bg-surface-container-high"
+      )}
+    >
+      <Icon className="size-[18px] shrink-0" strokeWidth={isActive ? 2.5 : 2} />
+      <span className="whitespace-nowrap">{tab.label}</span>
+    </button>
   );
 }
 
@@ -329,44 +304,6 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       <span className="mb-1.5 block text-xs font-bold text-on-surface-variant">{label}</span>
       {children}
     </label>
-  );
-}
-
-function ToggleRow({
-  label,
-  description,
-  defaultOn,
-}: {
-  label: string;
-  description: string;
-  defaultOn?: boolean;
-}) {
-  const [on, setOn] = useState(!!defaultOn);
-  return (
-    <div className="flex items-start justify-between gap-4">
-      <div className="min-w-0">
-        <p className="text-sm font-semibold text-on-surface">{label}</p>
-        <p className="text-xs text-on-surface-variant">{description}</p>
-      </div>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={on}
-        aria-label={label}
-        onClick={() => setOn((v) => !v)}
-        className={cn(
-          "relative mt-0.5 h-6 w-11 shrink-0 rounded-full transition-colors cursor-pointer",
-          on ? "bg-secondary" : "bg-surface-container-highest"
-        )}
-      >
-        <span
-          className={cn(
-            "absolute top-0.5 size-5 rounded-full bg-surface-container-lowest shadow-sm transition-all",
-            on ? "left-[22px]" : "left-0.5"
-          )}
-        />
-      </button>
-    </div>
   );
 }
 
