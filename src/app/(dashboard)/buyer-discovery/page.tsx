@@ -2,6 +2,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { setStep as setJourneyStep } from "../../../lib/state";
+import { createDeal } from "../../../lib/deals";
+import { createReminder } from "../../../lib/reminders";
 import {
   AlertTriangle,
   ArrowRight,
@@ -127,6 +129,8 @@ export default function BuyerDiscoveryPage() {
       id: Date.now()
     });
     localStorage.setItem("tradeconnect_reminders", JSON.stringify(reminders));
+    // Persist to backend (M7) — best-effort.
+    void createReminder({ title: reminderTitle, date: reminderDate, time: reminderTime, type: reminderType });
     setShowReminderModal(false);
     showToast(`Pengingat "${reminderTitle}" berhasil dijadwalkan!`);
     setReminderTitle("");
@@ -173,6 +177,13 @@ export default function BuyerDiscoveryPage() {
       return () => clearTimeout(timer);
     } else if (pitchStep === 4) {
       const timer = setTimeout(() => {
+        // Persist a real deal (M4) for the contacted buyer (GlobalTech) — best-effort.
+        void createDeal({
+          buyerName: "GlobalTech Imports GmbH",
+          buyerCountry: "Germany",
+          status: "negotiating",
+          lastMessage: "Email penawaran AI terkirim ke pembeli.",
+        });
         setJourneyStep("contacted_klaus");
         setIsPitching(false);
         router.push('/negotiation');
@@ -236,7 +247,7 @@ export default function BuyerDiscoveryPage() {
     }
   ];
 
-  // Update filtered buyers when productType or companyName changes
+  // Initialise the visible buyer list from the derived buyers after hydration.
   useEffect(() => {
     setFilteredBuyers(buyers);
   }, [productType, companyName]);
@@ -411,7 +422,7 @@ export default function BuyerDiscoveryPage() {
                 </div>
                 <h3 className="text-xl font-bold text-on-surface mb-2">Tidak Ada Pembeli yang Cocok</h3>
                 <p className="text-xs text-on-surface-variant max-w-md leading-relaxed mb-6">
-                  Maaf, kriteria penyaringan Anda saat ini tidak menemukan pembeli terdaftar yang cocok di pasar global. Coba ganti Negara Tujuan atau HS Code produk Anda (misal masukkan 'kopi').
+                  Maaf, kriteria penyaringan Anda saat ini tidak menemukan pembeli terdaftar yang cocok di pasar global. Coba ganti Negara Tujuan atau HS Code produk Anda (misal masukkan &apos;kopi&apos;).
                 </p>
                 <button 
                   onClick={handleResetFilter}
@@ -661,7 +672,7 @@ export default function BuyerDiscoveryPage() {
                   </h4>
                   <div className="bg-secondary-fixed/10 border-l-4 border-secondary p-4 rounded-r-xl">
                     <p className="text-xs text-on-surface-variant font-medium leading-relaxed italic">
-                      "{selectedBuyer.rationale}"
+                      &ldquo;{selectedBuyer.rationale}&rdquo;
                     </p>
                   </div>
                 </div>

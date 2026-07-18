@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { getFinalPrice, setStep } from "../../lib/state";
+import { updateActiveDeal } from "../../lib/deals";
 import {
   BadgeCheck,
   Building2,
@@ -125,6 +126,7 @@ export default function SigningBoardPage() {
   };
 
   const handleSignConfirm = () => {
+    void updateActiveDeal({ status: "po_signed" });
     setStep("po_signed");
     setIsSigned(true);
   };

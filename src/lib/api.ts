@@ -1,4 +1,6 @@
 import { API_CONFIG } from "./config";
+import { apiGet, apiPost, isLive } from "./http";
+import { getStoredIds } from "./entities";
 
 export interface DraftReply {
   id: string;
@@ -22,14 +24,18 @@ export interface PricingResponse {
 
 // 1. INTENT CLASSIFIER SERVICE
 export async function classifyIntent(text: string): Promise<IntentResponse> {
-  if (API_CONFIG.mode === "live") {
+  if (isLive()) {
     try {
-      const res = await fetch(`${API_CONFIG.baseUrl}/classify-intent`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
-      });
-      if (res.ok) return await res.json();
+      // Gateway: POST /api/v1/negotiations/classify-intent (JwtAuthGuard)
+      // Backend DTO field is `email_text`.
+      const raw = await apiPost<{ intent: string; confidence: number }>(
+        "/negotiations/classify-intent",
+        { email_text: text },
+      );
+      // Backend may return "spam" — map it into the frontend's 3-class union.
+      const intent =
+        raw.intent === "inquiry" || raw.intent === "complaint" ? raw.intent : "negotiation";
+      return { intent, confidence: raw.confidence ?? 0.85 };
     } catch (e) {
       console.warn("Live backend failed, falling back to mock classifier:", e);
     }
@@ -90,18 +96,40 @@ export async function generateReply(
   productContext: string,
   floorPrice: number = 2.68
 ): Promise<{ drafts: DraftReply[] }> {
-  if (API_CONFIG.mode === "live") {
+  if (isLive()) {
     try {
-      const res = await fetch(`${API_CONFIG.baseUrl}/generate-reply`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email_content: emailContent,
-          product_name: productContext,
-          floor_price: floorPrice,
-        }),
+      // Gateway: POST /api/v1/negotiations/generate-reply (JwtAuthGuard)
+      // Returns a SINGLE draft { draft_en, intent, warnings, confidence } — adapt
+      // it into the { drafts: DraftReply[] } shape the UI renders.
+      const raw = await apiPost<{
+        draft_en: string;
+        intent?: string;
+        warnings?: string[];
+        confidence?: number;
+      }>("/negotiations/generate-reply", {
+        // Backend DTO fields: importer_email + product_id (UUID for pricing context).
+        // Prefer the real product created during onboarding; fall back to the demo product.
+        importer_email: emailContent,
+        product_id: getStoredIds().productId || API_CONFIG.demoProductId,
       });
-      if (res.ok) return await res.json();
+      if (raw?.draft_en) {
+        const warn =
+          raw.warnings && raw.warnings.length > 0
+            ? ` (Catatan guardrail: ${raw.warnings.join("; ")})`
+            : "";
+        return {
+          drafts: [
+            {
+              id: "draft-live-1",
+              title: `Balasan AI (${raw.intent ?? "negotiation"})`,
+              strategy: `Dibuat oleh pipeline RAG + LLM backend dengan tingkat keyakinan ${Math.round(
+                (raw.confidence ?? 0.85) * 100,
+              )}%.${warn}`,
+              text: raw.draft_en,
+            },
+          ],
+        };
+      }
     } catch (e) {
       console.warn("Live backend failed, falling back to mock reply generator:", e);
     }
@@ -244,15 +272,56 @@ export interface RedFlagReport {
   flags: { icon: string; title: string; description: string }[];
 }
 
+// Maps a known demo buyerId → the structured profile + history the gateway needs.
+const _BUYER_PROFILES: Record<
+  string,
+  { profile: Record<string, unknown>; history: { sender: string; message: string }[] }
+> = {
+  klaus: {
+    profile: { companyName: "GlobalTech Imports GmbH", country: "Germany", countryCode: "DE" },
+    history: [
+      { sender: "buyer", message: "We are interested in a full container of your robusta coffee. Please share FOB and CIF Hamburg pricing and your export certificates." },
+    ],
+  },
+  nippon: {
+    profile: { companyName: "Nippon Organic Trading", country: "Japan", countryCode: "JP", requestedSampleBeforeContract: true },
+    history: [
+      { sender: "buyer", message: "Please send a green tea sample within 3 days before we sign the contract." },
+    ],
+  },
+};
+
+const _CATEGORY_ICON: Record<string, string> = {
+  SAMPLE: "schedule",
+  JURISDICTION: "gavel",
+  COMMUNICATION: "forum",
+  PAYMENT: "payments",
+};
+
 export async function checkRedFlag(buyerId: string): Promise<RedFlagReport> {
-  if (API_CONFIG.mode === "live") {
+  if (isLive()) {
     try {
-      const res = await fetch(`${API_CONFIG.baseUrl}/check-red-flag`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ buyer_id: buyerId }),
+      const known = _BUYER_PROFILES[buyerId] ?? {
+        profile: { companyName: buyerId, country: "Unknown" },
+        history: [{ sender: "buyer", message: "Initial trade inquiry." }],
+      };
+      // Gateway: POST /api/v1/check-red-flag (JwtAuthGuard)
+      const raw = await apiPost<{
+        riskLevel: "LOW" | "MEDIUM" | "HIGH";
+        flags: { id: string; description: string; category: string; severity: string }[];
+        recommendation?: string;
+      }>("/check-red-flag", {
+        buyerProfile: known.profile,
+        communicationHistory: known.history,
       });
-      if (res.ok) return await res.json();
+      return {
+        riskLevel: raw.riskLevel,
+        flags: (raw.flags ?? []).map((f) => ({
+          icon: _CATEGORY_ICON[f.category] ?? "flag",
+          title: `${f.category} • ${f.severity}`,
+          description: f.description,
+        })),
+      };
     } catch (e) {
       console.warn("Live backend failed, falling back to mock red flag checker:", e);
     }
@@ -322,6 +391,182 @@ export function getCredibilityDimensions(buyerId: string): CredibilityDimension[
       { name: "Risiko Negara", score: 85, description: "Rating risiko komersial stabil." },
       { name: "Responsivitas", score: 80, description: "Komunikasi rata-rata di bawah 12 jam." }
     ];
+  }
+}
+
+// 6. MARKET INTELLIGENCE SERVICE (BPS + UN Comtrade — real ingested data)
+export interface MarketStat {
+  partner: string;
+  flow: string;
+  tradeValueUsd: number | null;
+  netWeightKg?: number | null;
+  period?: number | null;
+  source?: string;
+}
+
+export interface MarketAlert {
+  type: string;
+  title: string;
+  description: string;
+}
+
+export interface MarketIntelligenceResponse {
+  hsCode: string;
+  region: string;
+  totalValueUsd?: number | null;
+  topRegion?: string | null;
+  topMarkets: MarketStat[];
+  analysis?: string;
+  alerts: MarketAlert[];
+  raw?: unknown;
+}
+
+// The readiness service returns { bpsStats:[{countryName,tradeValueUsd,netWeightKg,period,unitValueUsd}],
+// comtradeStats:[...], totalValueUsd, topRegion, insights:{analysis, alerts:[{type,title,description}]} }.
+function normalizeStat(s: Record<string, unknown>): MarketStat {
+  return {
+    partner: (s.countryName as string) || (s.partner as string) || "—",
+    flow: (s.flow as string) || "Export",
+    tradeValueUsd: (s.tradeValueUsd as number) ?? (s.trade_value_usd as number) ?? null,
+    netWeightKg: (s.netWeightKg as number) ?? null,
+    period: (s.period as number) ?? null,
+  };
+}
+
+/**
+ * Global market intelligence for an HS code, backed by the trade_flows table
+ * (BPS + UN Comtrade). Gateway: POST /api/v1/readiness/market-intelligence.
+ * Returns null when live mode is off or the backend is unreachable, so callers
+ * can render their own fallback.
+ */
+export async function getMarketIntelligence(
+  hsCode: string = "0901",
+  region: string = "global",
+): Promise<MarketIntelligenceResponse | null> {
+  if (!isLive()) return null;
+  try {
+    const raw = await apiPost<Record<string, unknown>>("/readiness/market-intelligence", {
+      hsCode,
+      region,
+    });
+    const bps = (Array.isArray(raw.bpsStats) ? raw.bpsStats : []) as Record<string, unknown>[];
+    const comtrade = (Array.isArray(raw.comtradeStats)
+      ? raw.comtradeStats
+      : []) as Record<string, unknown>[];
+    const source = bps.length > 0 ? bps : comtrade;
+    const insights = (raw.insights as Record<string, unknown>) || {};
+    return {
+      hsCode,
+      region,
+      totalValueUsd: (raw.totalValueUsd as number) ?? null,
+      topRegion: (raw.topRegion as string) ?? null,
+      topMarkets: source.map(normalizeStat),
+      analysis: (insights.analysis as string) || "",
+      alerts: Array.isArray(insights.alerts) ? (insights.alerts as MarketAlert[]) : [],
+      raw,
+    };
+  } catch (e) {
+    console.warn("Live market-intelligence failed:", e);
+    return null;
+  }
+}
+
+// 6a. MARKET REFERENCE DATA (real, derived from ingested BPS data)
+export interface HsOption {
+  code: string;
+  label: string;
+  count: number;
+}
+export interface RegionOption {
+  name: string;
+  count: number;
+  valueUsd: number;
+}
+
+/** HS codes that actually have ingested trade data. Gateway: GET /market/hs-codes. */
+export async function getHsCodes(): Promise<HsOption[] | null> {
+  if (!isLive()) return null;
+  try {
+    return await apiGet<HsOption[]>("/market/hs-codes");
+  } catch (e) {
+    console.warn("getHsCodes failed:", e);
+    return null;
+  }
+}
+
+/** Top destination countries for an HS chapter (real BPS aggregation). Gateway: GET /market/top-markets. */
+export async function getTopMarkets(hs: string): Promise<MarketStat[] | null> {
+  if (!isLive()) return null;
+  try {
+    const rows = await apiGet<Array<{ partner: string; tradeValueUsd: number; netWeightKg: number; period: number | null }>>(
+      `/market/top-markets?hs=${encodeURIComponent(hs)}`,
+    );
+    return rows.map((r) => ({
+      partner: r.partner,
+      flow: "Export",
+      tradeValueUsd: r.tradeValueUsd,
+      netWeightKg: r.netWeightKg,
+      period: r.period,
+    }));
+  } catch (e) {
+    console.warn("getTopMarkets failed:", e);
+    return null;
+  }
+}
+
+/** Destination countries present in the trade data. Gateway: GET /market/regions. */
+export async function getRegions(): Promise<RegionOption[] | null> {
+  if (!isLive()) return null;
+  try {
+    return await apiGet<RegionOption[]>("/market/regions");
+  } catch (e) {
+    console.warn("getRegions failed:", e);
+    return null;
+  }
+}
+
+// 6b. EXPORT DOCUMENT CHECKLIST (readiness service)
+export interface ChecklistItem {
+  id: string;
+  label: string;
+  description: string;
+  required: boolean;
+}
+
+/** Gateway: GET /api/v1/documents/checklist. Returns null on failure. */
+export async function getDocumentChecklist(): Promise<ChecklistItem[] | null> {
+  if (!isLive()) return null;
+  try {
+    const raw = await apiGet<{ items: ChecklistItem[] }>("/documents/checklist");
+    return raw?.items ?? null;
+  } catch (e) {
+    console.warn("getDocumentChecklist failed:", e);
+    return null;
+  }
+}
+
+// 7. AI BUYER DISCOVERY SERVICE (pgvector semantic match)
+export interface BuyerMatch {
+  buyerId?: string;
+  companyName?: string;
+  country?: string;
+  score?: number;
+  [key: string]: unknown;
+}
+
+/**
+ * Semantic buyer matches for a product. Gateway: POST /api/v1/matching/search.
+ * Requires the matching-service (embeddings) to be running; returns null on any
+ * failure so the buyer-discovery page can fall back to its curated list.
+ */
+export async function matchBuyers(productId: string, limit: number = 10): Promise<BuyerMatch[] | null> {
+  if (!isLive()) return null;
+  try {
+    // Backend DTO: { product_id, top_k } — server loads the product's precomputed embedding.
+    return await apiPost<BuyerMatch[]>("/matching/search", { product_id: productId, top_k: limit });
+  } catch (e) {
+    console.warn("Live buyer matching failed:", e);
+    return null;
   }
 }
 

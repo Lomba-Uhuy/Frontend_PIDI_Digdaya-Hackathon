@@ -1015,7 +1015,7 @@ export default function NegotiationHubPage() {
                       <span className="bg-surface-container-low text-on-surface-variant text-[9px] px-2 py-0.5 rounded font-mono font-bold border border-outline-variant/60">DRAFT {idx + 1}</span>
                     </div>
                     <p className="text-xs text-on-surface-variant leading-relaxed font-medium">
-                      "{draft.text}"
+                      &ldquo;{draft.text}&rdquo;
                     </p>
                     <div className="bg-primary/5 p-2.5 rounded-lg text-[10px] text-on-surface-variant leading-normal border border-primary/10">
                       <strong>Strategi AI:</strong> {draft.strategy}

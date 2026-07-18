@@ -24,6 +24,7 @@ import {
   X,
 } from "lucide-react";
 import { resetState, setStep as setJourneyStep } from "../lib/state";
+import { ensureUmkmAndProduct } from "../lib/entities";
 import { Stepper } from "../components/ui/stepper";
 
 export default function OnboardingWizard() {
@@ -38,6 +39,7 @@ export default function OnboardingWizard() {
   const [floorPrice, setFloorPrice] = useState("");
   const [askingPrice, setAskingPrice] = useState("");
   const [nib, setNib] = useState("");
+  const [nibError, setNibError] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [moq, setMoq] = useState("");
   const [capacity, setCapacity] = useState("");
@@ -62,7 +64,7 @@ export default function OnboardingWizard() {
 
 
 
-  const handleCompleteSetup = () => {
+  const handleCompleteSetup = async () => {
     if (typeof window !== "undefined") {
       localStorage.setItem("tradeconnect_product_name", productName || "Biji Kopi Robusta Premium");
       localStorage.setItem("tradeconnect_product_desc", productDesc || "Biji kopi robusta Grade 1 premium buatan petani lokal Indonesia dengan keasaman seimbang.");
@@ -94,6 +96,24 @@ export default function OnboardingWizard() {
       localStorage.setItem("tradeconnect_floor_price", finalFloorPriceUsd.toFixed(2));
       localStorage.setItem("tradeconnect_asking_price", finalAskingPriceUsd.toFixed(2));
       localStorage.setItem("tradeconnect_final_price", finalAskingPriceUsd.toFixed(2));
+
+      // Best-effort real persistence: create UMKM + Product in the backend and
+      // cache their UUIDs (used by generate-reply / matching). Never blocks the
+      // demo — falls back to the localStorage-only flow if the backend is down.
+      try {
+        await ensureUmkmAndProduct({
+          companyName: companyName || "PT Nusantara Global Coffee",
+          nib: nib || "1234567890123",
+          productName: productName || "Biji Kopi Robusta Premium",
+          productDesc: productDesc || "Biji kopi robusta Grade 1 premium buatan petani lokal Indonesia.",
+          moq: moq || "1000",
+          capacity: capacity || "50000",
+          floorPriceUsd: finalFloorPriceUsd,
+          askingPriceUsd: finalAskingPriceUsd,
+        });
+      } catch {
+        /* ignore — demo continues with localStorage */
+      }
     }
     setJourneyStep("verified");
     router.push('/verification');
@@ -110,6 +130,20 @@ export default function OnboardingWizard() {
   };
 
   const nextStep = () => {
+    // Step 2 (Legalitas): NIB is mandatory and must be exactly 13 digits — the
+    // verification step validates it live against OSS RBA.
+    if (step === 2) {
+      const digits = nib.replace(/\D/g, "");
+      if (digits.length !== 13) {
+        setNibError("NIB wajib diisi dan harus terdiri dari tepat 13 digit angka.");
+        return;
+      }
+      if (!companyName.trim()) {
+        setNibError("Nama perusahaan terdaftar wajib diisi.");
+        return;
+      }
+      setNibError("");
+    }
     if (step < 3) setStep(step + 1);
   };
 
@@ -298,16 +332,23 @@ export default function OnboardingWizard() {
                   </label>
                   <div className="relative">
                     <IdCard className="absolute left-3 top-1/2 -translate-y-1/2 text-outline size-6" />
-                    <input 
-                      className="w-full pl-10 pr-4 py-3 bg-surface border border-outline-variant rounded-md text-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors" 
-                      id="nib" 
-                      placeholder="13 digit nomor identifikasi resmi" 
-                      required 
+                    <input
+                      className={`w-full pl-10 pr-4 py-3 bg-surface border rounded-md text-sm text-on-surface focus:ring-1 focus:outline-none transition-colors ${nibError ? "border-error focus:border-error focus:ring-error" : "border-outline-variant focus:border-primary focus:ring-primary"}`}
+                      id="nib"
+                      placeholder="13 digit nomor identifikasi resmi"
+                      required
+                      inputMode="numeric"
+                      maxLength={13}
                       type="text"
                       value={nib}
-                      onChange={(e) => setNib(e.target.value)}
+                      onChange={(e) => { setNib(e.target.value.replace(/\D/g, "").slice(0, 13)); if (nibError) setNibError(""); }}
                     />
                   </div>
+                  {nibError && (
+                    <p className="text-[11px] text-error font-medium flex items-center gap-1.5">
+                      {nibError}
+                    </p>
+                  )}
                 </div>
 
                 <div className="flex flex-col gap-2">

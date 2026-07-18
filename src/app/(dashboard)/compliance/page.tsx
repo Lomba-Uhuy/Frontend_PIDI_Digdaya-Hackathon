@@ -2,6 +2,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getFinalPrice, setStep as setJourneyStep } from "../../../lib/state";
+import { updateActiveDeal } from "../../../lib/deals";
+import { getDocumentChecklist, ChecklistItem } from "../../../lib/api";
 import {
   BadgeCheck,
   Bot,
@@ -21,10 +23,12 @@ export default function CompliancePage() {
   const [agreedPrice, setAgreedPrice] = useState(2.75);
   const [isScanning, setIsScanning] = useState(false);
   const [scanStep, setScanStep] = useState(0);
+  const [checklist, setChecklist] = useState<ChecklistItem[] | null>(null);
 
-  // Sync price from negotiation
+  // Sync price from negotiation + load the live export document checklist (E18).
   useEffect(() => {
     setAgreedPrice(getFinalPrice());
+    getDocumentChecklist().then((items) => items && setChecklist(items));
   }, []);
 
   // Scan simulation pipeline
@@ -41,6 +45,7 @@ export default function CompliancePage() {
       return () => clearTimeout(timer);
     } else if (scanStep === 4) {
       const timer = setTimeout(() => {
+        void updateActiveDeal({ status: "po_sent", agreedPrice: agreedPrice });
         setJourneyStep("po_sent");
         setIsScanning(false);
         router.push('/purchase-order');
@@ -99,19 +104,34 @@ export default function CompliancePage() {
                   Langkah 1: Dokumen Utama
                 </h3>
               </div>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-2.5 rounded-lg bg-surface border border-outline-variant shadow-sm">
-                  <span className="text-sm font-semibold text-on-surface">NIB (Nomor Induk Berusaha)</span>
-                  <Badge variant="success" icon={BadgeCheck}>Valid</Badge>
-                </div>
-                <div className="flex items-center justify-between p-2.5 rounded-lg bg-surface border border-outline-variant shadow-sm">
-                  <span className="text-sm font-semibold text-on-surface">Validasi Kode HS</span>
-                  <Badge variant="success" icon={BadgeCheck}>0901.11</Badge>
-                </div>
-                <div className="flex items-center justify-between p-2.5 rounded-lg bg-surface border border-outline-variant shadow-sm">
-                  <span className="text-sm font-semibold text-on-surface">Sertifikasi BPOM / Halal</span>
-                  <Badge variant="success" icon={BadgeCheck}>Disetujui</Badge>
-                </div>
+              <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
+                {checklist ? (
+                  checklist.map((item) => (
+                    <div key={item.id} className="flex items-center justify-between gap-2 p-2.5 rounded-lg bg-surface border border-outline-variant shadow-sm" title={item.description}>
+                      <span className="text-sm font-semibold text-on-surface truncate">{item.label}</span>
+                      {item.required ? (
+                        <Badge variant="success" icon={BadgeCheck}>Wajib</Badge>
+                      ) : (
+                        <Badge variant="neutral">Opsional</Badge>
+                      )}
+                    </div>
+                  ))
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between p-2.5 rounded-lg bg-surface border border-outline-variant shadow-sm">
+                      <span className="text-sm font-semibold text-on-surface">NIB (Nomor Induk Berusaha)</span>
+                      <Badge variant="success" icon={BadgeCheck}>Valid</Badge>
+                    </div>
+                    <div className="flex items-center justify-between p-2.5 rounded-lg bg-surface border border-outline-variant shadow-sm">
+                      <span className="text-sm font-semibold text-on-surface">Validasi Kode HS</span>
+                      <Badge variant="success" icon={BadgeCheck}>0901.11</Badge>
+                    </div>
+                    <div className="flex items-center justify-between p-2.5 rounded-lg bg-surface border border-outline-variant shadow-sm">
+                      <span className="text-sm font-semibold text-on-surface">Sertifikasi BPOM / Halal</span>
+                      <Badge variant="success" icon={BadgeCheck}>Disetujui</Badge>
+                    </div>
+                  </>
+                )}
               </div>
             </section>
             

@@ -23,6 +23,7 @@ import {
 
 import { cn } from "@/lib/utils";
 import { getStoredTheme, setTheme, type Theme } from "@/lib/theme";
+import { getMyUmkm, updateUmkm, updateProduct, getStoredIds } from "@/lib/entities";
 
 const TABS = [
   { id: "umum", label: "Umum", icon: SlidersHorizontal },
@@ -47,6 +48,11 @@ export default function SettingsPage() {
     if (savedProduct) setProductName(savedProduct);
     setThemeState(getStoredTheme());
 
+    // Prefer the real persisted UMKM profile (E4) when the backend is reachable.
+    getMyUmkm().then((umkm) => {
+      if (umkm?.legalName) setCompanyName(umkm.legalName);
+    });
+
     const hash = window.location.hash.replace("#", "");
     if (TABS.some((t) => t.id === hash)) setActiveTab(hash as TabId);
   }, []);
@@ -62,6 +68,11 @@ export default function SettingsPage() {
     window.dispatchEvent(new Event("tradeconnect_state_change"));
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
+
+    // Persist to backend (M12) — best-effort, never blocks the UI.
+    const { umkmId, productId } = getStoredIds();
+    if (umkmId) void updateUmkm(umkmId, { legalName: companyName });
+    if (umkmId && productId) void updateProduct(umkmId, productId, { name: productName });
   };
 
   return (

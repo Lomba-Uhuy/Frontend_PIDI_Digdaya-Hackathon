@@ -44,3 +44,14 @@ next-env.d.ts
 
 # claude
 .claude/
+
+# IDEs and Editors
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS Files
+.DS_Store
+Thumbs.db
+
