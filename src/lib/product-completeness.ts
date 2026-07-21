@@ -1,4 +1,4 @@
-import { Product } from "./models/product";
+import type { ProductView } from "./product-view";
 import { getStoredIds } from "./entities";
 
 export interface CompletenessSection {
@@ -22,7 +22,7 @@ export interface Completeness {
  * ACTUAL persisted product field (localStorage `Product` + backend product id).
  * No fabricated scores; a section is "done" only when its real data exists.
  */
-export function computeCompleteness(p: Product | null): Completeness {
+export function computeCompleteness(p: ProductView | null): Completeness {
   const ids = getStoredIds();
   const hasEmbedding = Boolean(ids.productId); // saved to backend → embedded/indexed
   const sections: CompletenessSection[] = p

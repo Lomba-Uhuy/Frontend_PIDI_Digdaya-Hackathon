@@ -24,7 +24,7 @@ import {
   HsOption,
   RegionOption,
 } from "../../../lib/api";
-import { Product } from "../../../lib/models/product";
+import { useProductView } from "../../../lib/app-data";
 
 const fmtUsd = (v: number | null | undefined) =>
   v == null ? "—" : "$" + Math.round(v).toLocaleString("en-US");
@@ -60,15 +60,13 @@ export default function MarketIntelligencePage() {
   // chapters, and keep only those that actually have ingested market data. Falls
   // back to all data-backed chapters if classification is unavailable so the page
   // always works.
+  // The HS chapters relevant to the product come from the backend-persisted RAG
+  // candidates (workflow hs_classification stage) — no client-side classification.
+  const product = useProductView();
   useEffect(() => {
     let cancelled = false;
 
-    // Read the ranked RAG HS candidates cached on the Product at verification time
-    // (ordered most → least relevant). `ensureHsClassification` only hits the
-    // classifier if nothing was cached yet, so normally this resolves instantly.
-    const product = Product.current();
-
-    Promise.all([getHsCodes(), product.ensureHsClassification(6)]).then(([opts]) => {
+    getHsCodes().then((opts) => {
       if (cancelled || !opts || opts.length === 0) return;
 
       // Relevant 2-digit chapters that also have ingested market data, in the
@@ -92,7 +90,7 @@ export default function MarketIntelligencePage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [product]);
 
   useEffect(() => {
     if (!hsCode) return;

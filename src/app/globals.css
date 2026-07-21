@@ -245,3 +245,14 @@
     @apply border-primary ring-2 ring-primary/20;
   }
 }
+
+/* Landing page: subtle floating illustration accents (200–500ms feel). */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-\[float_6s_ease-in-out_infinite\],
+  .animate-\[float_5s_ease-in-out_infinite\],
+  .animate-\[float_7s_ease-in-out_infinite\] { animation: none; }
+}

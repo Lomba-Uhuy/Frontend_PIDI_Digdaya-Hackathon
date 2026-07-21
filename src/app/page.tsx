@@ -1,528 +1,366 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
-  ArrowLeft,
-  ArrowRight,
-  Building2,
-  CheckCircle2,
-  ChevronDown,
-  Factory,
-  FileText,
-  FileUp,
-  Globe,
-  IdCard,
-  Image,
-  ImagePlus,
-  Info,
-  Lock,
-  Package,
-  ShoppingBasket,
-  Sparkles,
-  Trash2,
-  Truck,
-  X,
+  ArrowRight, BarChart3, CheckCircle2, ChevronDown, ClipboardCheck, Compass,
+  FileText, Globe, Loader2, Lightbulb, Package, ShieldCheck, Sparkles, Users,
 } from "lucide-react";
-import { resetState, setStep as setJourneyStep } from "../lib/state";
 import { hasSession } from "../lib/auth";
-import { ensureUmkmAndProduct } from "../lib/entities";
-import { Product } from "../lib/models/product";
-import { Stepper } from "../components/ui/stepper";
+import { getPlanCatalogue, postAuthRedirect, type PlanCatalogueItem } from "../lib/entitlements";
+import { Logo } from "../components/ui/logo";
 
-export default function OnboardingWizard() {
+// ── Lightweight fade-in-up on scroll (200–500ms, subtle) ─────────────────────
+function Reveal({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [shown, setShown] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setShown(true); io.disconnect(); } },
+      { threshold: 0.12 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  return (
+    <div ref={ref} style={{ transitionDelay: `${delay}ms` }}
+      className={`transition-all duration-500 ease-out ${shown ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"} ${className}`}>
+      {children}
+    </div>
+  );
+}
+
+const TRUST = [
+  "Dirancang untuk UMKM Indonesia",
+  "Fokus pada persiapan ekspor",
+  "Alur bisnis yang terintegrasi",
+  "Pengelolaan data yang aman",
+  "Wawasan bisnis yang profesional",
+];
+
+const CHALLENGES = [
+  { pain: "“Saya tidak tahu harus mulai ekspor dari mana.”", fix: "Panduan langkah demi langkah menuntun Anda dari awal hingga siap ekspor." },
+  { pain: "“Saya tidak tahu negara mana yang membutuhkan produk saya.”", fix: "Wawasan pasar menunjukkan peluang di berbagai negara tujuan." },
+  { pain: "“Saya kesulitan menyiapkan dokumen ekspor.”", fix: "Dokumen bisnis penting Anda tertata rapi dalam satu tempat." },
+  { pain: "“Saya tidak yakin produk saya sudah siap ekspor.”", fix: "Penilaian produk membantu Anda memahami kesiapan ekspor dengan jelas." },
+  { pain: "“Saya tidak tahu cara menemukan pembeli luar negeri.”", fix: "Temukan peluang bisnis internasional yang relevan dengan produk Anda." },
+];
+
+const FEATURES = [
+  { icon: ClipboardCheck, title: "Penilaian Produk", body: "Pahami tingkat kesiapan ekspor produk Anda secara jelas dan terukur." },
+  { icon: Users, title: "Temukan Pembeli", body: "Jelajahi peluang bisnis internasional yang potensial untuk produk Anda." },
+  { icon: Compass, title: "Wawasan Pasar", body: "Kenali peluang ekspor di berbagai pasar dan negara tujuan." },
+  { icon: Lightbulb, title: "Konsultasi Bisnis", body: "Dapatkan rekomendasi cerdas untuk mendukung keputusan ekspor Anda." },
+  { icon: FileText, title: "Bantuan Dokumen", body: "Kelola dan rapikan dokumen bisnis penting dalam satu platform." },
+  { icon: BarChart3, title: "Dasbor Bisnis", body: "Pantau kemajuan persiapan ekspor Anda dari satu tampilan terpusat." },
+];
+
+const STEPS = [
+  { icon: ShieldCheck, title: "Daftar", body: "Buat akun secara gratis dalam hitungan menit." },
+  { icon: Globe, title: "Lengkapi Profil Bisnis", body: "Isi informasi perusahaan Anda." },
+  { icon: Package, title: "Tambahkan Produk", body: "Masukkan produk yang ingin Anda ekspor." },
+  { icon: Sparkles, title: "Terima Wawasan", body: "Dapatkan rekomendasi personal untuk bisnis Anda." },
+  { icon: Compass, title: "Jelajahi Peluang", body: "Mulai temukan peluang pasar internasional." },
+];
+
+const WHY = [
+  "Semua dalam satu platform",
+  "Dirancang khusus untuk UMKM Indonesia",
+  "Mudah digunakan",
+  "Dipandu langkah demi langkah",
+  "Wawasan berorientasi bisnis",
+  "Aman dan tertata",
+  "Tumbuh seiring bisnis Anda",
+];
+
+const FAQ = [
+  { q: "Untuk siapa platform ini?", a: "Untuk pelaku UMKM Indonesia yang ingin menyiapkan produknya menuju pasar internasional — baik yang baru memulai maupun yang sudah berjalan." },
+  { q: "Apakah saya perlu pengalaman ekspor?", a: "Tidak. Platform ini memandu Anda langkah demi langkah, sehingga Anda tetap percaya diri meski baru pertama kali." },
+  { q: "Bisakah saya mengelola beberapa produk?", a: "Ya. Anda dapat menambah dan mengelola beberapa produk sesuai kebutuhan bisnis Anda." },
+  { q: "Apakah saya bisa upgrade nanti?", a: "Tentu. Anda bisa mulai gratis dan meningkatkan paket kapan saja saat bisnis Anda berkembang." },
+  { q: "Bagaimana cara memulai?", a: "Daftar gratis, lengkapi profil bisnis, tambahkan produk pertama Anda — dan Anda akan langsung menerima wawasan." },
+];
+
+const PLAN_TAGLINE: Record<string, string> = {
+  free: "Mulai persiapan ekspor Anda tanpa biaya.",
+  premium: "Buka seluruh potensi ekspor bisnis Anda.",
+  enterprise: "Solusi khusus untuk kebutuhan skala besar.",
+};
+
+export default function LandingPage() {
   const router = useRouter();
-  const [step, setStep] = useState(1);
-  const [productPhotos, setProductPhotos] = useState<File[]>([]);
-  const [certFiles, setCertFiles] = useState<File[]>([]);
-
-  // Controlled States for Form Inputs
-  const [productName, setProductName] = useState("");
-  const [productDesc, setProductDesc] = useState("");
-  const [floorPrice, setFloorPrice] = useState("");
-  const [askingPrice, setAskingPrice] = useState("");
-  const [nib, setNib] = useState("");
-  const [nibError, setNibError] = useState("");
-  const [companyName, setCompanyName] = useState("");
-  const [moq, setMoq] = useState("");
-  const [capacity, setCapacity] = useState("");
-  const [logistics, setLogistics] = useState("fob");
+  const [authed, setAuthed] = useState<boolean | null>(null);
+  const [plans, setPlans] = useState<PlanCatalogueItem[]>([]);
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
 
   useEffect(() => {
-    // Auth guard — onboarding is only for authenticated users.
-    if (typeof window !== "undefined" && !hasSession()) {
-      router.replace("/login");
-      return;
-    }
-    resetState();
-    // Clear custom localStorage items on onboarding
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("tradeconnect_product_name");
-      localStorage.removeItem("tradeconnect_product_desc");
-      localStorage.removeItem("tradeconnect_floor_price");
-      localStorage.removeItem("tradeconnect_asking_price");
-      localStorage.removeItem("tradeconnect_nib");
-      localStorage.removeItem("tradeconnect_company_name");
-      localStorage.removeItem("tradeconnect_moq");
-      localStorage.removeItem("tradeconnect_capacity");
-      localStorage.removeItem("tradeconnect_logistics");
-      localStorage.removeItem("tradeconnect_product_type");
-      // Reset the consolidated Product model (incl. any cached HS classification)
-      // so a fresh onboarding re-classifies for the new product.
-      localStorage.removeItem("tradeconnect_product");
-    }
-  }, []);
+    const s = hasSession();
+    setAuthed(s);
+    if (s) { router.replace(postAuthRedirect()); return; } // admins → admin platform
+    getPlanCatalogue().then(setPlans);
+  }, [router]);
 
+  if (authed === null || authed) {
+    return <div className="h-screen w-full flex items-center justify-center bg-background text-on-surface-variant"><Loader2 className="size-6 animate-spin text-primary" /></div>;
+  }
 
-
-  const handleCompleteSetup = async () => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("tradeconnect_product_name", productName);
-      localStorage.setItem("tradeconnect_product_desc", productDesc);
-      localStorage.setItem("tradeconnect_nib", nib);
-      localStorage.setItem("tradeconnect_company_name", companyName);
-      localStorage.setItem("tradeconnect_moq", moq);
-      localStorage.setItem("tradeconnect_capacity", capacity);
-      localStorage.setItem("tradeconnect_logistics", logistics || "fob");
-      
-      const isRattan = (productName || "").toLowerCase().includes("rotan") || (productName || "").toLowerCase().includes("rattan") || (productName || "").toLowerCase().includes("kursi");
-      localStorage.setItem("tradeconnect_product_type", isRattan ? "rattan" : "coffee");
-
-      const convertToUsd = (rpOrUsdStr: string, defaultValueUsd: number): number => {
-        const val = parseFloat(rpOrUsdStr);
-        if (isNaN(val)) return defaultValueUsd;
-        // Jika nilainya besar (> 1000), asumsikan dalam Rupiah dan konversi ke USD (kurs 16.000)
-        if (val > 1000) {
-          return val / 16000;
-        }
-        return val;
-      };
-
-      const defaultFloor = isRattan ? 45.00 : 2.68;
-      const defaultAsking = isRattan ? 55.00 : 2.85;
-
-      const finalFloorPriceUsd = convertToUsd(floorPrice, defaultFloor);
-      const finalAskingPriceUsd = convertToUsd(askingPrice, defaultAsking);
-      
-      localStorage.setItem("tradeconnect_floor_price", finalFloorPriceUsd.toFixed(2));
-      localStorage.setItem("tradeconnect_asking_price", finalAskingPriceUsd.toFixed(2));
-      localStorage.setItem("tradeconnect_final_price", finalAskingPriceUsd.toFixed(2));
-
-      // Build the product as a first-class object (single source of truth). It
-      // hydrates the name/description/type just written above, then we attach the
-      // remaining editable fields and persist (this also mirrors the legacy keys).
-      Product.current()
-        .update({
-          companyName: companyName,
-          nib: nib,
-          moq: moq,
-          capacity: capacity,
-          logistics: logistics || "fob",
-          productType: isRattan ? "rattan" : "coffee",
-          floorPriceUsd: finalFloorPriceUsd,
-          askingPriceUsd: finalAskingPriceUsd,
-        })
-        .save();
-
-      // Backend-first: the company + product MUST persist in the backend before
-      // onboarding may continue. Ownership is authoritative on the server.
-      const persisted = await ensureUmkmAndProduct({
-        companyName: companyName,
-        nib: nib,
-        productName: productName,
-        productDesc: productDesc,
-        moq: moq,
-        capacity: capacity,
-        floorPriceUsd: finalFloorPriceUsd,
-        askingPriceUsd: finalAskingPriceUsd,
-      }).catch(() => null);
-      if (!persisted) {
-        window.alert(
-          "Gagal menyimpan data perusahaan & produk ke server. Pastikan NIB 13 digit valid dan koneksi stabil, lalu coba lagi.",
-        );
-        return;
-      }
-    }
-    setJourneyStep("verified");
-    router.push('/verification');
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, setter: React.Dispatch<React.SetStateAction<File[]>>) => {
-    if (e.target.files) {
-      setter((prev) => [...prev, ...Array.from(e.target.files!)]);
-    }
-  };
-
-  const removeFile = (index: number, setter: React.Dispatch<React.SetStateAction<File[]>>) => {
-    setter((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const nextStep = () => {
-    // Step 2 (Legalitas): NIB is mandatory and must be exactly 13 digits — the
-    // verification step validates it live against OSS RBA.
-    if (step === 2) {
-      const digits = nib.replace(/\D/g, "");
-      if (digits.length !== 13) {
-        setNibError("NIB wajib diisi dan harus terdiri dari tepat 13 digit angka.");
-        return;
-      }
-      if (!companyName.trim()) {
-        setNibError("Nama perusahaan terdaftar wajib diisi.");
-        return;
-      }
-      setNibError("");
-    }
-    if (step < 3) setStep(step + 1);
-  };
-
-  const prevStep = () => {
-    if (step > 1) setStep(step - 1);
+  // Plain-language plan value (dynamic from backend quotas — no technical labels).
+  const planHighlights = (p: PlanCatalogueItem): string[] => {
+    const q = p.quotas ?? {};
+    const cap = (v: number | null | undefined, unit: string, plural: string) =>
+      v == null ? `${plural} tak terbatas` : `${v.toLocaleString("id-ID")} ${unit}`;
+    return [
+      cap(q.products, "produk", "Produk"),
+      cap(q.ai_consultations, "konsultasi bisnis / bulan", "Konsultasi bisnis"),
+      cap(q.buyer_matches, "peluang pembeli / bulan", "Peluang pembeli"),
+      "Wawasan pasar & dasbor bisnis",
+    ];
   };
 
   return (
-    <main className="w-full max-w-[1440px] mx-auto px-4 md:px-8 py-12 flex flex-col items-center justify-center min-h-screen">
-      {/* Header / Brand Anchor */}
-      <header className="text-center mb-8 w-full max-w-3xl">
-        <h1 className="text-4xl md:text-[48px] font-bold tracking-tight text-primary mb-2 flex items-center justify-center gap-3 font-heading">
-          <Globe className="size-10" strokeWidth={2.25} />
-          TradeConnect
-        </h1>
-        <p className="text-base text-on-surface-variant">Institutional Export Terminal Initialization</p>
+    <main className="min-h-screen bg-background text-on-surface antialiased">
+      {/* NAV */}
+      <header className="sticky top-0 z-30 border-b border-outline-variant/50 bg-background/70 backdrop-blur-xl">
+        <div className="max-w-6xl mx-auto px-5 md:px-8 h-16 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2 font-semibold text-lg tracking-tight">
+            <Logo size={28} priority /> TradeConnect
+          </Link>
+          <nav className="hidden md:flex items-center gap-8 text-sm text-on-surface-variant">
+            <a href="#features" className="hover:text-on-surface transition-colors">Fitur</a>
+            <a href="#how" className="hover:text-on-surface transition-colors">Cara Kerja</a>
+            <a href="#pricing" className="hover:text-on-surface transition-colors">Harga</a>
+            <a href="#faq" className="hover:text-on-surface transition-colors">FAQ</a>
+          </nav>
+          <div className="flex items-center gap-2">
+            <Link href="/login" className="px-3.5 py-2 text-sm font-medium hover:bg-surface-container rounded-full transition-colors">Masuk</Link>
+            <Link href="/login?mode=register" className="px-4 py-2 text-sm font-semibold bg-primary text-on-primary rounded-full hover:shadow-md hover:shadow-primary/20 transition-all inline-flex items-center gap-1.5">Mulai Gratis</Link>
+          </div>
+        </div>
       </header>
 
+      {/* HERO */}
+      <section className="max-w-6xl mx-auto px-5 md:px-8 pt-16 md:pt-28 pb-16">
+        <div className="grid md:grid-cols-2 gap-12 items-center">
+          <Reveal>
+            <div className="inline-flex items-center gap-2 rounded-full border border-outline-variant bg-surface-container-low px-3 py-1 text-xs text-on-surface-variant mb-6">
+              <Sparkles className="size-3.5 text-primary" /> Platform ekspor untuk UMKM Indonesia
+            </div>
+            <h1 className="text-4xl md:text-[56px] font-bold tracking-tight leading-[1.05]">
+              Kembangkan Bisnis Anda <span className="text-primary">ke Pasar Internasional.</span>
+            </h1>
+            <p className="mt-6 text-base md:text-lg text-on-surface-variant max-w-lg leading-relaxed">
+              Bantu UMKM Indonesia menyiapkan produk, menemukan peluang internasional, mengelola kesiapan ekspor, dan tumbuh dengan percaya diri — semua dalam satu platform terpadu.
+            </p>
+            <div className="mt-8 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+              <Link href="/login?mode=register" className="px-6 py-3 text-sm font-semibold bg-primary text-on-primary rounded-full hover:shadow-lg hover:shadow-primary/20 hover:-translate-y-0.5 transition-all inline-flex items-center gap-2">
+                Mulai Gratis <ArrowRight className="size-4" />
+              </Link>
+              <a href="#how" className="px-6 py-3 text-sm font-semibold border border-outline-variant rounded-full hover:bg-surface-container transition-colors">Lihat Cara Kerjanya</a>
+            </div>
+          </Reveal>
 
+          {/* Illustration: product → international market */}
+          <Reveal delay={120}>
+            <div className="relative mx-auto w-full max-w-xl">
+              <div className="absolute -inset-3 md:-inset-5 rounded-[2.5rem] bg-gradient-to-br from-primary/5 to-secondary/5 -z-10" />
+              <Image
+                src="/landingpage.png"
+                alt="Ilustrasi UMKM Indonesia menyiapkan produk untuk pasar internasional"
+                width={2816}
+                height={1536}
+                priority
+                sizes="(max-width: 768px) 100vw, 576px"
+                className="w-full h-auto rounded-2xl shadow-sm animate-[float_7s_ease-in-out_infinite]"
+              />
+            </div>
+          </Reveal>
+        </div>
+      </section>
 
-      {/* Onboarding Wizard Card */}
-      <div className="w-full max-w-3xl bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden flex flex-col shadow-sm">
+      {/* TRUST */}
+      <section className="border-y border-outline-variant/50 bg-surface-container-low/40">
+        <div className="max-w-6xl mx-auto px-5 md:px-8 py-8">
+          <Reveal className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm text-on-surface-variant">
+            {TRUST.map((t) => (
+              <span key={t} className="inline-flex items-center gap-2"><CheckCircle2 className="size-4 text-secondary" /> {t}</span>
+            ))}
+          </Reveal>
+        </div>
+      </section>
 
-        {/* Progress Stepper Header */}
-        <div className="bg-surface-container-low border-b border-outline-variant p-6 md:px-10 relative overflow-hidden">
-          <div className="max-w-lg mx-auto">
-            <Stepper steps={["Produk", "Legalitas", "Kapabilitas"]} currentStep={step} />
+      {/* CHALLENGES */}
+      <section className="max-w-5xl mx-auto px-5 md:px-8 py-20">
+        <Reveal className="text-center">
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Tantangan yang Sering Dihadapi</h2>
+          <p className="mt-3 text-on-surface-variant">Kami mengubah setiap kesulitan menjadi langkah yang jelas.</p>
+        </Reveal>
+        <div className="mt-12 space-y-4">
+          {CHALLENGES.map((c, i) => (
+            <Reveal key={c.pain} delay={i * 60}>
+              <div className="grid md:grid-cols-2 gap-4 items-center rounded-2xl border border-outline-variant bg-surface-container-lowest p-5 md:p-6 hover:shadow-md transition-all duration-300">
+                <p className="text-lg font-medium text-on-surface-variant italic">{c.pain}</p>
+                <div className="flex items-start gap-3">
+                  <ArrowRight className="size-5 text-primary mt-0.5 shrink-0" />
+                  <p className="text-sm md:text-base">{c.fix}</p>
+                </div>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* FEATURES */}
+      <section id="features" className="max-w-6xl mx-auto px-5 md:px-8 py-20">
+        <Reveal className="text-center">
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Semua yang Anda Butuhkan untuk Ekspor</h2>
+          <p className="mt-3 text-on-surface-variant max-w-2xl mx-auto">Fokus pada manfaat bisnis nyata, bukan kerumitan teknis.</p>
+        </Reveal>
+        <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-5">
+          {FEATURES.map((f, i) => (
+            <Reveal key={f.title} delay={(i % 3) * 80}>
+              <div className="h-full rounded-2xl border border-outline-variant bg-surface-container-lowest p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+                <div className="size-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-4"><f.icon className="size-5" /></div>
+                <h3 className="font-semibold text-lg">{f.title}</h3>
+                <p className="text-sm text-on-surface-variant mt-2 leading-relaxed">{f.body}</p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* HOW IT WORKS */}
+      <section id="how" className="bg-surface-container-low/40 border-y border-outline-variant/50">
+        <div className="max-w-6xl mx-auto px-5 md:px-8 py-20">
+          <Reveal className="text-center">
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Mulai dalam Lima Langkah Sederhana</h2>
+          </Reveal>
+          <div className="mt-14 grid grid-cols-1 md:grid-cols-5 gap-5">
+            {STEPS.map((s, i) => (
+              <Reveal key={s.title} delay={i * 90}>
+                <div className="relative text-center">
+                  <div className="mx-auto size-14 rounded-2xl bg-surface-container-lowest border border-outline-variant shadow-sm flex items-center justify-center text-primary">
+                    <s.icon className="size-6" />
+                  </div>
+                  <div className="mt-1 text-xs font-mono-data text-on-surface-variant/50">Langkah {i + 1}</div>
+                  <h3 className="mt-1 font-semibold text-sm">{s.title}</h3>
+                  <p className="text-xs text-on-surface-variant mt-1 px-2">{s.body}</p>
+                </div>
+              </Reveal>
+            ))}
           </div>
         </div>
+      </section>
 
-        {/* Form Content Area */}
-        <div className="p-6 md:p-10 flex flex-col gap-8 min-h-[500px]">
-          
-          {/* STEP 1: PRODUCT */}
-          {step === 1 && (
-            <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-right-4 duration-500">
-              <div>
-                <h2 className="text-2xl font-semibold text-primary">Data Produk</h2>
-                <p className="text-sm text-on-surface-variant mt-4 max-w-2xl">
-                  Harap berikan detail tentang produk utama yang ingin Anda ekspor.
-                </p>
+      {/* WHY CHOOSE */}
+      <section className="max-w-6xl mx-auto px-5 md:px-8 py-20">
+        <Reveal className="text-center">
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Mengapa Memilih Kami</h2>
+        </Reveal>
+        <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {WHY.map((w, i) => (
+            <Reveal key={w} delay={(i % 3) * 70}>
+              <div className="flex items-center gap-3 rounded-xl border border-outline-variant bg-surface-container-lowest p-4 hover:shadow-md transition-all duration-300">
+                <CheckCircle2 className="size-5 text-secondary shrink-0" />
+                <span className="font-medium text-sm">{w}</span>
               </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
 
-              <div className="bg-surface border-l-4 border-primary p-4 rounded-r-md flex items-start gap-4">
-                <Sparkles className="text-primary mt-1 size-6" />
-                <div>
-                  <p className="text-sm text-on-surface font-semibold mb-1">Pemetaan HS Code AI TradeConnect</p>
-                  <p className="text-sm text-on-surface-variant">
-                    Model NLP kami akan memetakan deskripsi produk Anda secara otomatis ke HS Code 6 digit yang paling relevan untuk pasar global.
-                  </p>
-                </div>
-              </div>
-
-              <form className="grid grid-cols-1 gap-6" onSubmit={(e) => e.preventDefault()}>
-                <div className="flex flex-col gap-2">
-                  <label className="flex flex-col" htmlFor="product_name">
-                    <span className="text-sm font-medium text-on-surface">Nama Produk *</span>
-                  </label>
-                  <div className="relative">
-                    <Package className="absolute left-3 top-1/2 -translate-y-1/2 text-outline size-6" />
-                    <input 
-                      className="w-full pl-10 pr-4 py-3 bg-surface border border-outline-variant rounded-md text-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors" 
-                      id="product_name" 
-                      placeholder="misal: Biji Kopi Robusta Premium" 
-                      required 
-                      type="text"
-                      value={productName}
-                      onChange={(e) => setProductName(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <label className="flex flex-col" htmlFor="product_desc">
-                    <span className="text-sm font-medium text-on-surface">Deskripsi Produk *</span>
-                  </label>
-                  <textarea 
-                    className="w-full p-4 bg-surface border border-outline-variant rounded-md text-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors min-h-[120px]" 
-                    id="product_desc" 
-                    placeholder="Gambarkan bahan, asal, kualitas, dan keunggulan produk..." 
-                    required
-                    value={productDesc}
-                    onChange={(e) => setProductDesc(e.target.value)}
-                  ></textarea>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="flex flex-col gap-2">
-                    <label className="flex flex-col" htmlFor="floor_price">
-                      <span className="text-sm font-medium text-on-surface">Harga Dasar Minimum (Rp/unit) *</span>
-                    </label>
-                    <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-on-surface-variant select-none">Rp</span>
-                      <input 
-                        className="w-full pl-12 pr-4 py-3 bg-surface border border-outline-variant rounded-md text-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors" 
-                        id="floor_price" 
-                        placeholder="misal: 42880" 
-                        required 
-                        type="number" 
-                        min="0" 
-                        value={floorPrice}
-                        onChange={(e) => setFloorPrice(e.target.value)}
-                      />
+      {/* PRICING (dynamic, value-focused) */}
+      <section id="pricing" className="bg-surface-container-low/40 border-y border-outline-variant/50">
+        <div className="max-w-6xl mx-auto px-5 md:px-8 py-20">
+          <Reveal className="text-center">
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Harga yang Sederhana</h2>
+            <p className="mt-3 text-on-surface-variant">Mulai gratis. Tingkatkan saat bisnis Anda tumbuh.</p>
+          </Reveal>
+          {plans.length === 0 ? (
+            <div className="text-center text-on-surface-variant mt-10 text-sm"><Loader2 className="size-4 animate-spin inline" /> Memuat paket…</div>
+          ) : (
+            <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-5 items-stretch">
+              {plans.map((p, i) => (
+                <Reveal key={p.id} delay={i * 90} className="h-full">
+                  <div className={`h-full flex flex-col rounded-2xl border p-7 bg-surface-container-lowest transition-all duration-300 ${p.id === "premium" ? "border-primary shadow-lg" : "border-outline-variant hover:shadow-md"}`}>
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-xl font-bold">{p.label}</h3>
+                      {p.comingSoon && <span className="text-[10px] uppercase tracking-wide text-on-surface-variant border border-outline-variant rounded-full px-2 py-0.5">Segera</span>}
+                      {p.id === "premium" && <span className="text-[10px] uppercase tracking-wide text-on-primary bg-primary rounded-full px-2 py-0.5">Populer</span>}
                     </div>
-                    <p className="text-[11px] text-on-surface-variant flex items-start gap-1.5">
-                      <Lock className="text-primary mt-0.5 size-3.5" />
-                      Harga ini bersifat rahasia dan hanya digunakan AI untuk melindungi margin Anda saat negosiasi.
-                    </p>
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <label className="flex flex-col" htmlFor="asking_price">
-                      <span className="text-sm font-medium text-on-surface">Harga Penawaran Awal (Rp/unit) *</span>
-                    </label>
-                    <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-on-surface-variant select-none">Rp</span>
-                      <input 
-                        className="w-full pl-12 pr-4 py-3 bg-surface border border-outline-variant rounded-md text-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors" 
-                        id="asking_price" 
-                        placeholder="misal: 45600" 
-                        required 
-                        type="number" 
-                        min="0" 
-                        value={askingPrice}
-                        onChange={(e) => setAskingPrice(e.target.value)}
-                      />
-                    </div>
-                    <p className="text-[11px] text-on-surface-variant flex items-start gap-1.5">
-                      <Info className="text-secondary mt-0.5 size-3.5" />
-                      Harga yang ditampilkan ke pembeli. AI akan menjaga agar tidak jatuh di bawah Floor Price.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <label className="flex flex-col">
-                    <span className="text-sm font-medium text-on-surface">Foto Produk *</span>
-                  </label>
-                  <label className="border-2 border-dashed border-outline-variant rounded-md p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-surface-variant/50 transition-colors">
-                    <input type="file" multiple accept="image/png, image/jpeg" className="hidden" onChange={(e) => handleFileChange(e, setProductPhotos)} />
-                    <ImagePlus className="text-outline mb-2 size-9" />
-                    <p className="text-sm text-on-surface font-medium">Klik untuk mengunggah atau seret dan lepas file di sini</p>
-                    <p className="text-xs text-on-surface-variant mt-1">PNG, JPG hingga 5MB</p>
-                  </label>
-                  {productPhotos.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {productPhotos.map((file, i) => (
-                        <div key={i} className="flex items-center gap-2 bg-surface-variant px-3 py-1.5 rounded-md">
-                          <Image className="text-on-surface-variant size-4" />
-                          <span className="text-xs text-on-surface truncate max-w-[120px]">{file.name}</span>
-                          <button type="button" onClick={() => removeFile(i, setProductPhotos)} className="text-error hover:text-on-error-container ml-1">
-                            <X className="size-4" />
-                          </button>
-                        </div>
+                    <p className="text-sm text-on-surface-variant mt-2 min-h-[40px]">{PLAN_TAGLINE[p.id] ?? ""}</p>
+                    <ul className="mt-5 space-y-2.5 flex-1">
+                      {(p.comingSoon ? ["Fitur khusus sesuai kebutuhan", "Dukungan prioritas", "Skala tanpa batas"] : planHighlights(p)).map((h) => (
+                        <li key={h} className="flex items-start gap-2.5 text-sm">
+                          <CheckCircle2 className="size-4 text-secondary shrink-0 mt-0.5" /><span>{h}</span>
+                        </li>
                       ))}
-                    </div>
-                  )}
-                </div>
-              </form>
-            </div>
-          )}
-
-          {/* STEP 2: LEGAL */}
-          {step === 2 && (
-            <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-right-4 duration-500">
-              <div>
-                <h2 className="text-2xl font-semibold text-primary">Data Legalitas &amp; Kepatuhan</h2>
-                <p className="text-sm text-on-surface-variant mt-4 max-w-2xl">
-                  Harap berikan detail pendaftaran bisnis resmi Anda untuk membuat profil institusional Anda.
-                </p>
-              </div>
-
-              <div className="bg-surface border-l-4 border-primary p-4 rounded-r-md flex items-start gap-4">
-                <Sparkles className="text-primary mt-1 size-6" />
-                <div>
-                  <p className="text-sm text-on-surface font-semibold mb-1">Verifikasi AI TradeConnect</p>
-                  <p className="text-sm text-on-surface-variant">
-                    NIB Anda bertindak sebagai kunci utama. Kami menyinkronkannya dengan aman dengan sistem OSS untuk memetakan tingkat kepatuhan Anda secara instan dan membuka pasar ekspor tujuan.
-                  </p>
-                </div>
-              </div>
-
-              <form className="grid grid-cols-1 gap-6" onSubmit={(e) => e.preventDefault()}>
-                <div className="flex flex-col gap-2">
-                  <label className="flex flex-col" htmlFor="nib">
-                    <span className="text-sm font-medium text-on-surface">NIB (Nomor Induk Berusaha) *</span>
-                  </label>
-                  <div className="relative">
-                    <IdCard className="absolute left-3 top-1/2 -translate-y-1/2 text-outline size-6" />
-                    <input
-                      className={`w-full pl-10 pr-4 py-3 bg-surface border rounded-md text-sm text-on-surface focus:ring-1 focus:outline-none transition-colors ${nibError ? "border-error focus:border-error focus:ring-error" : "border-outline-variant focus:border-primary focus:ring-primary"}`}
-                      id="nib"
-                      placeholder="13 digit nomor identifikasi resmi"
-                      required
-                      inputMode="numeric"
-                      maxLength={13}
-                      type="text"
-                      value={nib}
-                      onChange={(e) => { setNib(e.target.value.replace(/\D/g, "").slice(0, 13)); if (nibError) setNibError(""); }}
-                    />
-                  </div>
-                  {nibError && (
-                    <p className="text-[11px] text-error font-medium flex items-center gap-1.5">
-                      {nibError}
-                    </p>
-                  )}
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <label className="flex flex-col" htmlFor="company_name">
-                    <span className="text-sm font-medium text-on-surface">Nama Perusahaan Terdaftar *</span>
-                  </label>
-                  <div className="relative">
-                    <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 text-outline size-6" />
-                    <input 
-                      className="w-full pl-10 pr-4 py-3 bg-surface border border-outline-variant rounded-md text-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors" 
-                      id="company_name" 
-                      placeholder="misal: PT. Nusantara Global" 
-                      required 
-                      type="text"
-                      value={companyName}
-                      onChange={(e) => setCompanyName(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <label className="flex flex-col">
-                    <span className="text-sm font-medium text-on-surface">Unggah Sertifikasi Pendukung (Opsional)</span>
-                  </label>
-                  <label className="border-2 border-dashed border-outline-variant rounded-md p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-surface-variant/50 transition-colors">
-                    <input type="file" multiple accept=".pdf, image/png, image/jpeg" className="hidden" onChange={(e) => handleFileChange(e, setCertFiles)} />
-                    <FileUp className="text-outline mb-2 size-9" />
-                    <p className="text-sm text-on-surface font-medium">Klik untuk mengunggah sertifikat (Halal, BPOM, SNI, dll.)</p>
-                    <p className="text-xs text-on-surface-variant mt-1">PDF, PNG, JPG hingga 5MB</p>
-                  </label>
-                  {certFiles.length > 0 && (
-                    <div className="flex flex-col gap-2 mt-2">
-                      {certFiles.map((file, i) => (
-                        <div key={i} className="flex items-center gap-3 bg-surface border border-outline-variant px-3 py-2 rounded-md">
-                          <FileText className="text-primary size-6" />
-                          <div className="flex flex-col flex-1 min-w-0">
-                            <span className="text-sm text-on-surface font-medium truncate">{file.name}</span>
-                            <span className="text-[10px] text-on-surface-variant uppercase">{(file.size / 1024 / 1024).toFixed(2)} MB</span>
-                          </div>
-                          <button type="button" onClick={() => removeFile(i, setCertFiles)} className="text-error hover:text-on-error-container p-1 rounded hover:bg-error-container/30 transition-colors">
-                            <Trash2 className="size-5" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </form>
-            </div>
-          )}
-
-          {/* STEP 3: CAPABILITY */}
-          {step === 3 && (
-            <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-right-4 duration-500">
-              <div>
-                <h2 className="text-2xl font-semibold text-primary">Kapasitas Produksi &amp; Logistik</h2>
-                <p className="text-sm text-on-surface-variant mt-4 max-w-2xl">
-                  Beri tahu pembeli global kapasitas produksi dan pengiriman Anda.
-                </p>
-              </div>
-
-              <form className="grid grid-cols-1 md:grid-cols-2 gap-6" onSubmit={(e) => e.preventDefault()}>
-                <div className="flex flex-col gap-2">
-                  <label className="flex flex-col" htmlFor="moq">
-                    <span className="text-sm font-medium text-on-surface">Batas Pesanan Minimum (MOQ) *</span>
-                  </label>
-                  <div className="relative">
-                    <ShoppingBasket className="absolute left-3 top-1/2 -translate-y-1/2 text-outline size-6" />
-                    <input 
-                      className="w-full pl-10 pr-4 py-3 bg-surface border border-outline-variant rounded-md text-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors" 
-                      id="moq" 
-                      placeholder="misal: 1000 Pcs atau 1 Kontainer 20ft" 
-                      required 
-                      type="text"
-                      value={moq}
-                      onChange={(e) => setMoq(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <label className="flex flex-col" htmlFor="capacity">
-                    <span className="text-sm font-medium text-on-surface">Kapasitas Produksi Bulanan *</span>
-                  </label>
-                  <div className="relative">
-                    <Factory className="absolute left-3 top-1/2 -translate-y-1/2 text-outline size-6" />
-                    <input 
-                      className="w-full pl-10 pr-4 py-3 bg-surface border border-outline-variant rounded-md text-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors" 
-                      id="capacity" 
-                      placeholder="misal: 50.000 Unit" 
-                      required 
-                      type="text"
-                      value={capacity}
-                      onChange={(e) => setCapacity(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-2 md:col-span-2">
-                  <label className="flex flex-col" htmlFor="logistics">
-                    <span className="text-sm font-medium text-on-surface">Preferensi Syarat Logistik (Incoterms)</span>
-                  </label>
-                  <div className="relative">
-                    <Truck className="absolute left-3 top-1/2 -translate-y-1/2 text-outline size-6" />
-                    <select 
-                      className="w-full pl-10 pr-10 py-3 bg-surface border border-outline-variant rounded-md text-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none appearance-none transition-colors cursor-pointer" 
-                      id="logistics"
-                      value={logistics}
-                      onChange={(e) => setLogistics(e.target.value)}
+                    </ul>
+                    <Link
+                      href={p.comingSoon ? "#" : "/login?mode=register"}
+                      aria-disabled={p.comingSoon}
+                      className={`mt-7 block text-center px-4 py-2.5 rounded-full text-sm font-semibold transition-all ${
+                        p.comingSoon ? "bg-surface-container text-on-surface-variant pointer-events-none" : p.id === "premium" ? "bg-primary text-on-primary hover:shadow-lg hover:shadow-primary/20" : "border border-outline-variant hover:bg-surface-container"
+                      }`}
                     >
-                      <option value="fob">FOB (Free on Board) - Direkomendasikan</option>
-                      <option value="exw">EXW (Ex Works)</option>
-                      <option value="cif">CIF (Cost, Insurance, and Freight)</option>
-                      <option value="negotiable">Terbuka untuk Negosiasi</option>
-                    </select>
-                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-outline pointer-events-none size-6" />
+                      {p.comingSoon ? "Segera Hadir" : p.id === "free" ? "Mulai Gratis" : "Pilih Premium"}
+                    </Link>
                   </div>
-                </div>
-              </form>
+                </Reveal>
+              ))}
             </div>
           )}
-
-          {/* Action Footer */}
-          <div className="mt-auto pt-6 border-t border-surface-variant flex justify-between items-center">
-            {step > 1 ? (
-              <button 
-                onClick={prevStep}
-                className="text-primary hover:bg-surface px-6 py-3 rounded-md font-medium text-sm transition-colors flex items-center gap-2"
-                type="button"
-              >
-                <ArrowLeft className="size-[18px]" />
-                Kembali
-              </button>
-            ) : <div></div>}
-            
-            <button 
-              onClick={step < 3 ? nextStep : handleCompleteSetup}
-              className="bg-primary hover:bg-surface-tint text-on-primary font-medium text-sm px-8 py-3 rounded-md transition-colors flex items-center gap-2 ml-auto" 
-              type="button"
-            >
-              {step < 3 ? 'Langkah Selanjutnya' : 'Selesaikan Konfigurasi'}
-              {step < 3 && <ArrowRight className="size-[18px]" />}
-              {step === 3 && <CheckCircle2 className="size-[18px]" />}
-            </button>
-          </div>
         </div>
-      </div>
+      </section>
+
+      {/* FAQ */}
+      <section id="faq" className="max-w-3xl mx-auto px-5 md:px-8 py-20">
+        <Reveal className="text-center">
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Pertanyaan Umum</h2>
+        </Reveal>
+        <Reveal className="mt-12 divide-y divide-outline-variant border-y border-outline-variant">
+          {FAQ.map((f, i) => (
+            <div key={f.q}>
+              <button onClick={() => setOpenFaq(openFaq === i ? null : i)} className="w-full flex items-center justify-between gap-4 py-5 text-left">
+                <span className="font-medium">{f.q}</span>
+                <ChevronDown className={`size-4 shrink-0 text-on-surface-variant transition-transform duration-300 ${openFaq === i ? "rotate-180" : ""}`} />
+              </button>
+              <div className={`overflow-hidden transition-all duration-300 ${openFaq === i ? "max-h-40 pb-5" : "max-h-0"}`}>
+                <p className="text-sm text-on-surface-variant leading-relaxed">{f.a}</p>
+              </div>
+            </div>
+          ))}
+        </Reveal>
+      </section>
+
+      {/* FINAL CTA */}
+      <section className="max-w-6xl mx-auto px-5 md:px-8 pb-24">
+        <Reveal>
+          <div className="rounded-[2rem] bg-primary text-on-primary px-6 py-16 text-center overflow-hidden relative">
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Siap Menjangkau Pasar Internasional?</h2>
+            <p className="mt-4 opacity-90 max-w-lg mx-auto">Mulai bangun perjalanan ekspor Anda hari ini dengan satu platform terpadu.</p>
+            <Link href="/login?mode=register" className="mt-8 inline-flex items-center gap-2 px-7 py-3.5 text-sm font-semibold bg-on-primary text-primary rounded-full hover:-translate-y-0.5 hover:shadow-lg transition-all">
+              Mulai Gratis <ArrowRight className="size-4" />
+            </Link>
+          </div>
+        </Reveal>
+      </section>
+
+      {/* FOOTER */}
+      <footer className="border-t border-outline-variant/50">
+        <div className="max-w-6xl mx-auto px-5 md:px-8 py-10 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-on-surface-variant">
+          <div className="flex items-center gap-2 font-semibold text-on-surface"><Logo size={22} /> TradeConnect</div>
+          <nav className="flex items-center gap-6">
+            <a href="#features" className="hover:text-on-surface transition-colors">Fitur</a>
+            <a href="#pricing" className="hover:text-on-surface transition-colors">Harga</a>
+            <a href="#faq" className="hover:text-on-surface transition-colors">FAQ</a>
+            <Link href="/login" className="hover:text-on-surface transition-colors">Masuk</Link>
+          </nav>
+          <span className="text-xs">© {new Date().getFullYear()} TradeConnect · Untuk UMKM Indonesia</span>
+        </div>
+      </footer>
     </main>
   );
 }

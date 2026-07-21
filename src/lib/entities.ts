@@ -218,21 +218,33 @@ export interface HsClassification {
   [key: string]: unknown;
 }
 
-export async function classifyHs(
-  description: string,
-  topK = 3,
-): Promise<HsClassification | null> {
+/**
+ * Read the product's PERSISTED HS classification from the backend. The HS code +
+ * ranked candidates are produced and stored by the Product Initialization Workflow
+ * (hs_classification stage) — the frontend never classifies client-side. Returns
+ * an HsClassification-shaped view (or null if not yet classified).
+ */
+export async function getProductClassification(): Promise<HsClassification | null> {
   if (!isLive()) return null;
   try {
-    // MatchingProxy: POST /matching/classify-hs (forwards to hs-classifier).
-    // Cold model load can be slow — cap it so the UI never hangs; fall back on timeout.
-    return await apiPost<HsClassification>(
-      "/matching/classify-hs",
-      { description, top_k: topK },
-      { timeoutMs: 12000 },
-    );
+    const { umkmId, productId } = getStoredIds();
+    const uid = umkmId ?? (await getMyUmkm())?.id ?? null;
+    if (!uid) return null;
+    const products = await apiGet<Array<Record<string, unknown>>>(`/umkm/${uid}/products`).catch(() => []);
+    const p = (productId ? products.find((x) => x.id === productId) : products[0]) ?? products[0];
+    if (!p) return null;
+    const candidates: HsCandidate[] = Array.isArray(p.hsCandidates) ? (p.hsCandidates as HsCandidate[]) : [];
+    const hsCode = (p.hsCode as string) || candidates[0]?.hs_code || "";
+    if (!hsCode && candidates.length === 0) return null; // not classified yet
+    return {
+      hs_code: hsCode,
+      confidence: p.hsConfidence != null ? Number(p.hsConfidence) : candidates[0]?.confidence,
+      description: candidates[0]?.description,
+      category: candidates[0]?.category,
+      top_k: candidates,
+    };
   } catch (e) {
-    console.warn("classifyHs failed:", e);
+    console.warn("getProductClassification failed:", e);
     return null;
   }
 }

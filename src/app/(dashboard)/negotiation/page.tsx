@@ -8,7 +8,7 @@ import { getSelectedBuyer, SelectedBuyer } from "../../../lib/selected-buyer";
 import { getMessages, sendMessage, requestBuyerReply, getActiveDealId, type DealMessage } from "../../../lib/deals";
 import { getIcon } from "../../../lib/icon-map";
 import { cn } from "../../../lib/utils";
-import { Product } from "../../../lib/models/product";
+import { useProductView } from "../../../lib/app-data";
 import {
   AlertTriangle,
   ArrowRight,
@@ -245,9 +245,9 @@ export default function NegotiationHubPage() {
   };
 
   // Load product/pricing context + the persisted thread on mount.
+  const product = useProductView();
   useEffect(() => {
     setCurrentStep(getStep());
-    const product = Product.current();
     setProductName(product.name);
     setProductType(product.productType);
     setCompanyName(product.companyName);
@@ -262,7 +262,11 @@ export default function NegotiationHubPage() {
     setLocalHandling(Number((s * 0.06).toFixed(2)));
     setFreight(Number((s * 0.08).toFixed(2)));
     setInsurance(Number((s * 0.04).toFixed(2)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product]);
 
+  // Load the persisted deal thread once on mount.
+  useEffect(() => {
     const id = getActiveDealId();
     setDealId(id);
     if (id) void loadThread(id);

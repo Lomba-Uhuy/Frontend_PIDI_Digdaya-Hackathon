@@ -19,6 +19,7 @@ import {
   Radar,
   Rocket,
   Settings,
+  ShieldAlert,
   Sparkles,
   Trophy,
   X,
@@ -27,11 +28,15 @@ import {
 } from "lucide-react";
 import { getStep, TradeConnectStep } from "../../lib/state";
 import { getActivity, ActivityEvent } from "../../lib/api";
-import { Product } from "../../lib/models/product";
+import { getWorkflowNotifications } from "../../lib/workflow";
+import { getStoredIds } from "../../lib/entities";
+import { fetchProductView } from "../../lib/product-view";
 import { getIcon } from "../../lib/icon-map";
 import { getPlan, getPlanInfo, type Plan } from "../../lib/plan";
+import { getSubscription, getRole } from "../../lib/entitlements";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { Logo } from "../../components/ui/logo";
 
 // Module-level (pure w.r.t. render) so the React compiler doesn't flag Date.now().
 function notifRelTime(iso: string): string {
@@ -64,13 +69,19 @@ export default function DashboardLayout({
       router.replace("/login");
       return;
     }
+    // Admins are platform operators, not UMKM users — they never belong in the
+    // UMKM dashboard or onboarding. Send them to the admin platform.
+    if (getRole() === "admin") {
+      router.replace("/admin/dashboard");
+      return;
+    }
     let cancelled = false;
     getOnboardingStatus()
       .then((s) => {
         if (cancelled) return;
         if (!s.complete) {
           const step = !s.hasCompany ? "company" : "product";
-          router.replace(`/?onboarding=${step}`);
+          router.replace(`/onboarding?onboarding=${step}`);
         } else {
           setGate("ok");
         }
@@ -101,6 +112,9 @@ export default function DashboardLayout({
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [plan, setPlanState] = useState<Plan>("free");
+  // Authoritative plan label from the backend subscription (overrides local copy).
+  const [backendPlanLabel, setBackendPlanLabel] = useState<string | null>(null);
+  const [isAdminUser, setIsAdminUser] = useState(false);
   const [companyName, setCompanyName] = useState("");
   const [productName, setProductName] = useState("");
 
@@ -166,21 +180,32 @@ export default function DashboardLayout({
   useEffect(() => {
     setCurrentStep(getStep());
     setPlanState(getPlan());
-    const product = Product.current();
-    if (product.companyName) setCompanyName(product.companyName);
-    if (product.name) setProductName(product.name);
+    setIsAdminUser(getRole() === "admin");
+    let cancelled = false;
+    const loadProfile = () => {
+      // Backend-sourced (layout is the provider's parent, so it can't use the hook).
+      fetchProductView().then((v) => {
+        if (cancelled) return;
+        if (v.companyName) setCompanyName(v.companyName);
+        if (v.name) setProductName(v.name);
+      });
+      // Authoritative subscription plan for the topbar badge.
+      getSubscription().then((s) => {
+        if (!cancelled && s) setBackendPlanLabel(s.entitlements.label);
+      });
+    };
+    loadProfile();
 
     const handleStateChange = () => {
       setCurrentStep(getStep());
       setHasNewNotifications(true);
-      const updated = Product.current();
-      if (updated.companyName) setCompanyName(updated.companyName);
-      if (updated.name) setProductName(updated.name);
+      loadProfile();
     };
     const handlePlanChange = () => setPlanState(getPlan());
     window.addEventListener("tradeconnect_state_change", handleStateChange);
     window.addEventListener("tradeconnect_plan_change", handlePlanChange);
     return () => {
+      cancelled = true;
       window.removeEventListener("tradeconnect_state_change", handleStateChange);
       window.removeEventListener("tradeconnect_plan_change", handlePlanChange);
     };
@@ -190,9 +215,16 @@ export default function DashboardLayout({
   // events: PO signed, deal closed, sync completed/failed). No scripted content.
   useEffect(() => {
     let cancelled = false;
-    getActivity(15).then((all) => {
+    const pid = getStoredIds().productId;
+    Promise.all([
+      getActivity(15),
+      pid ? getWorkflowNotifications(pid) : Promise.resolve([] as ActivityEvent[]),
+    ]).then(([all, wf]) => {
       if (cancelled) return;
-      const notable = all.filter((e) => e.severity !== "info");
+      // Notable persisted activity + persisted workflow notifications, newest first.
+      const notable = [...all.filter((e) => e.severity !== "info"), ...wf].sort(
+        (x, y) => new Date(y.timestamp).getTime() - new Date(x.timestamp).getTime(),
+      );
       setNotifications(notable);
       const seen =
         typeof window !== "undefined"
@@ -229,9 +261,7 @@ export default function DashboardLayout({
       {/* SideNavBar */}
       <nav className="left-0 h-screen w-64 border-r border-outline-variant bg-surface-container-low flex-col py-6 overflow-y-auto hidden md:flex flex-shrink-0 z-50">
         <div className="px-4 mb-8 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-on-primary">
-            <Anchor className="size-5" strokeWidth={2.25} />
-          </div>
+          <Logo size={40} priority />
           <div>
             <h1 className="text-xl font-black text-primary font-heading">TradeConnect</h1>
             <p className="text-[10px] text-on-surface-variant uppercase tracking-wider font-bold">Siap Ekspor</p>
@@ -249,6 +279,15 @@ export default function DashboardLayout({
         </div>
 
         <div className="flex-1 px-2 flex flex-col gap-0.5">
+          {isAdminUser && (
+            <Link
+              href="/admin/dashboard"
+              className="flex items-center gap-3 px-3 py-2.5 mb-1 rounded-lg bg-amber-500/15 text-amber-700 dark:text-amber-300 font-semibold hover:bg-amber-500/25 transition-colors"
+            >
+              <ShieldAlert className="size-[18px]" />
+              <span className="text-sm">Panel Admin</span>
+            </Link>
+          )}
           {navItems.map((item, idx) => {
             const isActive = pathname === item.path;
             const tourClass = getTourHighlightClass(item.path);
@@ -305,7 +344,7 @@ export default function DashboardLayout({
                 <span className="text-xs font-bold text-primary">Upgrade Paket</span>
               </div>
               <p className="mt-1 text-[11px] leading-snug text-on-surface-variant">
-                Paket <span className="font-bold text-on-surface">{getPlanInfo(plan).name}</span> — naik kelas untuk
+                Paket <span className="font-bold text-on-surface">{backendPlanLabel ?? getPlanInfo(plan).name}</span> — naik kelas untuk
                 komisi lebih rendah &amp; pembeli lebih banyak.
               </p>
             </Link>
@@ -454,7 +493,7 @@ export default function DashboardLayout({
                       <div className="min-w-0">
                         <p className="truncate text-sm font-bold text-on-surface">{companyName}</p>
                         <span className="mt-0.5 inline-block rounded-full bg-secondary-container px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-on-secondary-container">
-                          Paket {getPlanInfo(plan).name}
+                          Paket {backendPlanLabel ?? getPlanInfo(plan).name}
                         </span>
                       </div>
                     </div>

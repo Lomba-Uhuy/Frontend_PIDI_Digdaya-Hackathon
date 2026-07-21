@@ -1,5 +1,5 @@
 import { apiPost, isLive } from "./http";
-import { Product } from "./models/product";
+import { fetchProductView } from "./product-view";
 import { getBuyerStats, getDealAnalytics, getTopMarkets } from "./api";
 
 export interface ChatMsg {
@@ -50,7 +50,7 @@ export async function chatAI(
 export async function gatherContext(): Promise<AiBusinessContext> {
   const ctx: AiBusinessContext = {};
   if (typeof window !== "undefined") {
-    const p = Product.current();
+    const p = await fetchProductView();
     if (p.name) ctx.product_name = p.name;
     if (p.hsCode) ctx.hs_code = p.hsCode;
     if (p.hsCategory) ctx.hs_category = p.hsCategory;

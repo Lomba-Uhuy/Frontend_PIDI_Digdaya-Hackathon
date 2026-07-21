@@ -24,7 +24,7 @@ import {
 import { cn } from "@/lib/utils";
 import { getStoredTheme, setTheme, type Theme } from "@/lib/theme";
 import { getMyUmkm, updateUmkm, updateProduct, getStoredIds } from "@/lib/entities";
-import { Product } from "@/lib/models/product";
+import { useProductView, useAppData } from "@/lib/app-data";
 
 const TABS = [
   { id: "umum", label: "Umum", icon: SlidersHorizontal },
@@ -42,20 +42,17 @@ export default function SettingsPage() {
   const [saved, setSaved] = useState(false);
   const [theme, setThemeState] = useState<Theme>("system");
 
+  const product = useProductView();
+  const { refresh } = useAppData();
   useEffect(() => {
-    const product = Product.current();
+    // Company + product come from the backend-sourced view (single source of truth).
     if (product.companyName) setCompanyName(product.companyName);
     if (product.name) setProductName(product.name);
     setThemeState(getStoredTheme());
 
-    // Prefer the real persisted UMKM profile (E4) when the backend is reachable.
-    getMyUmkm().then((umkm) => {
-      if (umkm?.legalName) setCompanyName(umkm.legalName);
-    });
-
     const hash = window.location.hash.replace("#", "");
     if (TABS.some((t) => t.id === hash)) setActiveTab(hash as TabId);
-  }, []);
+  }, [product]);
 
   const handleThemeChange = (next: Theme) => {
     setThemeState(next);
@@ -63,17 +60,19 @@ export default function SettingsPage() {
   };
 
   const handleSaveProfile = () => {
-    // Edit through the Product model — persists the consolidated object and mirrors
-    // the legacy keys other screens read.
-    Product.current().update({ companyName, name: productName }).save();
-    window.dispatchEvent(new Event("tradeconnect_state_change"));
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
 
-    // Persist to backend (M12) — best-effort, never blocks the UI.
+    // Persist to the backend (authoritative), then refresh the shared view so every
+    // screen reflects the change. No localStorage product model.
     const { umkmId, productId } = getStoredIds();
-    if (umkmId) void updateUmkm(umkmId, { legalName: companyName });
-    if (umkmId && productId) void updateProduct(umkmId, productId, { name: productName });
+    const tasks: Promise<unknown>[] = [];
+    if (umkmId) tasks.push(updateUmkm(umkmId, { legalName: companyName }));
+    if (umkmId && productId) tasks.push(updateProduct(umkmId, productId, { name: productName }));
+    void Promise.all(tasks).then(() => {
+      void refresh();
+      window.dispatchEvent(new Event("tradeconnect_state_change"));
+    });
   };
 
   return (
