@@ -1,322 +1,149 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getFinalPrice, setStep as setJourneyStep } from "../../../lib/state";
-import { updateActiveDeal } from "../../../lib/deals";
-import { getDocumentChecklist, ChecklistItem } from "../../../lib/api";
 import {
+  getActiveDealId,
+  getCompliance,
+  runCompliance,
+  type ComplianceCheck,
+  type ComplianceStatus,
+} from "../../../lib/deals";
+import {
+  AlertTriangle,
+  ArrowRight,
   BadgeCheck,
-  Bot,
-  Calculator,
-  Check,
-  FileSignature,
-  FolderCheck,
-  ScrollText,
+  Loader2,
   Shield,
+  ShieldAlert,
   ShieldCheck,
+  XCircle,
 } from "lucide-react";
 import { Badge } from "../../../components/ui/badge";
-import { Stepper } from "../../../components/ui/stepper";
+
+const STATUS_META: Record<ComplianceStatus, { label: string; variant: "success" | "warning" | "danger"; Icon: typeof BadgeCheck }> = {
+  pass: { label: "Lolos", variant: "success", Icon: BadgeCheck },
+  warn: { label: "Perlu Ditinjau", variant: "warning", Icon: AlertTriangle },
+  fail: { label: "Gagal", variant: "danger", Icon: XCircle },
+};
 
 export default function CompliancePage() {
   const router = useRouter();
-  const [agreedPrice, setAgreedPrice] = useState(2.75);
-  const [isScanning, setIsScanning] = useState(false);
-  const [scanStep, setScanStep] = useState(0);
-  const [checklist, setChecklist] = useState<ChecklistItem[] | null>(null);
+  const [dealId, setDealId] = useState<string | null>(null);
+  const [checks, setChecks] = useState<ComplianceCheck[] | null>(null);
+  const [overall, setOverall] = useState<ComplianceStatus | null>(null);
+  const [running, setRunning] = useState(false);
 
-  // Sync price from negotiation + load the live export document checklist (E18).
-  useEffect(() => {
-    setAgreedPrice(getFinalPrice());
-    getDocumentChecklist().then((items) => items && setChecklist(items));
+  const applyResult = useCallback((r: { checks: ComplianceCheck[]; overall: ComplianceStatus } | null) => {
+    if (!r) return;
+    setChecks(r.checks);
+    setOverall(r.overall);
   }, []);
 
-  // Scan simulation pipeline
   useEffect(() => {
-    if (!isScanning) return;
-    if (scanStep === 1) {
-      const timer = setTimeout(() => setScanStep(2), 800);
-      return () => clearTimeout(timer);
-    } else if (scanStep === 2) {
-      const timer = setTimeout(() => setScanStep(3), 1600);
-      return () => clearTimeout(timer);
-    } else if (scanStep === 3) {
-      const timer = setTimeout(() => setScanStep(4), 2400);
-      return () => clearTimeout(timer);
-    } else if (scanStep === 4) {
-      const timer = setTimeout(() => {
-        void updateActiveDeal({ status: "po_sent", agreedPrice: agreedPrice });
-        setJourneyStep("po_sent");
-        setIsScanning(false);
-        router.push('/purchase-order');
-      }, 1200);
-      return () => clearTimeout(timer);
-    }
-  }, [isScanning, scanStep]);
+    const id = getActiveDealId();
+    setDealId(id);
+    if (id) getCompliance(id).then((r) => { if (r && r.checks.length > 0) applyResult(r); });
+  }, [applyResult]);
 
-  const handleStartScan = () => {
-    setIsScanning(true);
-    setScanStep(1);
+  const handleRun = async () => {
+    if (!dealId) return;
+    setRunning(true);
+    applyResult(await runCompliance(dealId));
+    setRunning(false);
   };
 
-  // PO Calculations aligned with final price
-  const coffeeQuantityKg = 18 * 1000; // 18 MT
-  const coffeeTotal = agreedPrice * coffeeQuantityKg;
-  const shippingTotal = 2100;
-  const grandTotal = coffeeTotal + shippingTotal;
-
-  // Format currency helper
-  const formatCurrency = (val: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(val);
-  };
+  const canProceed = overall === "pass" || overall === "warn";
 
   return (
-    <div className="h-full w-full overflow-y-auto p-4 md:p-8 bg-surface-bright pb-16 relative">
-
-      <div className="max-w-6xl mx-auto space-y-6">
-        
-        {/* Page Header & Stepper */}
-        <div className="flex flex-col gap-4 border-b border-outline-variant pb-6">
-          <div>
-            <h2 className="text-2xl font-bold text-on-surface font-heading">Pemeriksa Kesiapan Transaksi & Kepatuhan</h2>
-            <p className="text-sm text-on-surface-variant mt-1 font-medium">Meninjau Transaksi Ekspor: <span className="font-bold text-primary">#TRX-892-IDN</span></p>
-          </div>
-
-          <div className="w-full max-w-3xl mt-4">
-            <Stepper steps={["Dokumen Utama", "Penetapan Harga", "Indikator Risiko"]} currentStep={2} />
-          </div>
+    <div className="h-full w-full overflow-y-auto p-4 md:p-8 bg-surface-bright pb-16">
+      <div className="max-w-3xl mx-auto space-y-6">
+        <div className="border-b border-outline-variant pb-6">
+          <h2 className="text-2xl font-bold text-on-surface font-heading">Pemeriksa Kesiapan & Kepatuhan Ekspor</h2>
+          <p className="text-sm text-on-surface-variant mt-1 font-medium">
+            Pemeriksaan dijalankan dari data nyata: NIB, klasifikasi HS, harga kesepakatan vs harga dasar, dan kapasitas produksi.
+          </p>
         </div>
 
-        {/* Bento Grid Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-          
-          {/* Left Column (Span 4): Step 1 Summary */}
-          <div className="md:col-span-4 flex flex-col gap-6">
-            
-            {/* Document Checklist Widget */}
-            <section className="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 shadow-sm">
-              <div className="flex justify-between items-center mb-4 border-b border-outline-variant/50 pb-3">
-                <h3 className="text-lg font-bold text-on-surface flex items-center gap-2">
-                  <FolderCheck className="text-primary size-5" />
-                  Langkah 1: Dokumen Utama
-                </h3>
-              </div>
-              <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
-                {checklist ? (
-                  checklist.map((item) => (
-                    <div key={item.id} className="flex items-center justify-between gap-2 p-2.5 rounded-lg bg-surface border border-outline-variant shadow-sm" title={item.description}>
-                      <span className="text-sm font-semibold text-on-surface truncate">{item.label}</span>
-                      {item.required ? (
-                        <Badge variant="success" icon={BadgeCheck}>Wajib</Badge>
-                      ) : (
-                        <Badge variant="neutral">Opsional</Badge>
-                      )}
-                    </div>
-                  ))
-                ) : (
-                  <>
-                    <div className="flex items-center justify-between p-2.5 rounded-lg bg-surface border border-outline-variant shadow-sm">
-                      <span className="text-sm font-semibold text-on-surface">NIB (Nomor Induk Berusaha)</span>
-                      <Badge variant="success" icon={BadgeCheck}>Valid</Badge>
-                    </div>
-                    <div className="flex items-center justify-between p-2.5 rounded-lg bg-surface border border-outline-variant shadow-sm">
-                      <span className="text-sm font-semibold text-on-surface">Validasi Kode HS</span>
-                      <Badge variant="success" icon={BadgeCheck}>0901.11</Badge>
-                    </div>
-                    <div className="flex items-center justify-between p-2.5 rounded-lg bg-surface border border-outline-variant shadow-sm">
-                      <span className="text-sm font-semibold text-on-surface">Sertifikasi BPOM / Halal</span>
-                      <Badge variant="success" icon={BadgeCheck}>Disetujui</Badge>
-                    </div>
-                  </>
-                )}
-              </div>
-            </section>
-            
-            {/* Preview of Step 3 */}
-            <section className="bg-surface-container-low border border-outline-variant border-dashed rounded-xl p-5 opacity-80">
-              <div className="flex items-center gap-2 text-on-surface-variant">
-                <ScrollText className="size-5" />
-                <span className="text-base font-bold">Berikutnya: Pemindai Risiko</span>
-              </div>
-              <p className="text-xs text-on-surface-variant mt-2 leading-relaxed font-medium">Menunggu finalisasi harga untuk menjalankan analisis risiko OFAC & Rute secara komprehensif.</p>
-            </section>
-            
+        {!dealId ? (
+          <div className="border border-dashed border-outline-variant rounded-xl p-10 text-center text-sm text-on-surface-variant">
+            Belum ada transaksi aktif. Selesaikan negosiasi terlebih dahulu untuk menjalankan pemeriksaan kepatuhan.
           </div>
-          
-          {/* Right Column (Span 8): Step 2 Active Area */}
-          <div className="md:col-span-8">
-            <section className="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm overflow-hidden flex flex-col h-full">
-              
-              {/* Header */}
-              <div className="bg-surface p-5 border-b border-outline-variant flex justify-between items-start">
-                <div>
-                  <h3 className="text-xl font-bold text-on-surface flex items-center gap-2">
-                    <Calculator className="text-primary size-6" />
-                    Kalkulator Harga Ekspor
-                  </h3>
-                  <p className="text-xs text-on-surface-variant mt-1 font-medium">Konversi biaya dasar Ex-Works ke incoterm internasional standar (FOB/CIF).</p>
-                </div>
-                <div className="bg-primary-container/10 text-primary px-3 py-1 rounded text-[10px] font-bold uppercase border border-primary/20 tracking-wider">
-                  Mata Uang: USD
-                </div>
+        ) : (
+          <section className="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+            <div className="bg-surface p-5 border-b border-outline-variant flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <Shield className="text-primary size-6" />
+                <h3 className="text-lg font-bold text-on-surface">Hasil Pemeriksaan Kepatuhan</h3>
               </div>
-              
-              {/* Main Calculator Body */}
-              <div className="p-6 flex-1 flex flex-col gap-6">
-                
-                {/* Input Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
-                  {/* Group 1: Base Costs */}
-                  <div className="space-y-4">
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Biaya Dasar Produk (Ex-Works)</label>
-                      <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant font-medium">$</span>
-                        <input className="w-full pl-7 pr-3 py-2 border border-outline-variant rounded-md bg-surface-container-low text-on-surface-variant text-sm font-bold outline-none shadow-inner" type="text" readOnly value={formatCurrency(coffeeTotal * 0.77).replace('$', '')}/>
-                      </div>
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Margin Target (%)</label>
-                      <div className="relative">
-                        <input className="w-full pl-3 pr-8 py-2 border border-outline-variant rounded-md bg-surface-container-low text-on-surface-variant text-sm font-bold outline-none shadow-inner" type="text" readOnly value="23.00"/>
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant font-medium">%</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Group 2: Logistics */}
-                  <div className="space-y-4">
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Penanganan & Transportasi Lokal (ke Pelabuhan)</label>
-                      <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant font-medium">$</span>
-                        <input className="w-full pl-7 pr-3 py-2 border border-outline-variant rounded-md bg-surface-container-low text-on-surface-variant text-sm font-bold outline-none shadow-inner" type="text" readOnly value="0.00 (Termasuk dalam FOB)"/>
-                      </div>
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Pengangkutan Laut & Asuransi (Estimasi)</label>
-                      <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant font-medium">$</span>
-                        <input className="w-full pl-7 pr-3 py-2 border border-outline-variant rounded-md bg-surface text-sm font-bold text-on-surface outline-none shadow-inner" type="text" readOnly value={formatCurrency(shippingTotal).replace('$', '')}/>
-                      </div>
-                    </div>
-                  </div>
+              {overall && (
+                <Badge variant={STATUS_META[overall].variant} icon={STATUS_META[overall].Icon}>
+                  {overall === "pass" ? "Siap Ekspor" : overall === "warn" ? "Perlu Ditinjau" : "Terdapat Kegagalan"}
+                </Badge>
+              )}
+            </div>
+
+            <div className="p-5">
+              {!checks ? (
+                <div className="text-center py-10 flex flex-col items-center gap-4">
+                  <ShieldAlert className="size-10 text-outline" />
+                  <p className="text-sm text-on-surface-variant max-w-sm">
+                    Jalankan pemeriksaan kepatuhan untuk memvalidasi kesiapan transaksi ekspor ini terhadap data profil dan produk Anda.
+                  </p>
+                  <button
+                    onClick={handleRun}
+                    disabled={running}
+                    className="px-5 py-2.5 rounded-lg bg-primary text-on-primary text-sm font-bold hover:bg-surface-tint transition-colors flex items-center gap-2 disabled:opacity-50"
+                  >
+                    {running ? <Loader2 className="size-4 animate-spin" /> : <ShieldCheck className="size-4" />}
+                    Jalankan Pemeriksaan Kepatuhan
+                  </button>
                 </div>
-                
-                <hr className="border-outline-variant border-t my-2"/>
-                
-                {/* Results Board */}
-                <div className="bg-surface p-5 rounded-xl border border-outline-variant grid grid-cols-2 gap-4 relative overflow-hidden shadow-sm">
-                  <div className="absolute inset-0 bg-gradient-to-br from-surface to-surface-container-low opacity-50 pointer-events-none"></div>
-                  <div className="relative z-10 flex flex-col">
-                    <span className="text-[10px] font-bold text-on-surface-variant uppercase mb-1 tracking-wider">Nilai FOB (Free On Board)</span>
-                    <span className="text-3xl font-black text-on-surface tracking-tight">{formatCurrency(coffeeTotal)}</span>
+              ) : (
+                <div className="space-y-3">
+                  {checks.map((c) => {
+                    const meta = STATUS_META[c.status];
+                    return (
+                      <div key={c.id} className="flex items-center justify-between gap-3 p-3.5 rounded-lg bg-surface border border-outline-variant shadow-sm">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <meta.Icon
+                            className={`size-5 shrink-0 ${c.status === "pass" ? "text-secondary" : c.status === "warn" ? "text-warning" : "text-error"}`}
+                          />
+                          <span className="text-sm font-semibold text-on-surface truncate">{c.label}</span>
+                        </div>
+                        <Badge variant={meta.variant}>{meta.label}</Badge>
+                      </div>
+                    );
+                  })}
+
+                  <div className="flex items-center justify-between pt-3">
+                    <button
+                      onClick={handleRun}
+                      disabled={running}
+                      className="px-4 py-2 rounded-md border border-outline-variant text-on-surface text-sm font-bold hover:bg-surface transition-colors flex items-center gap-2 disabled:opacity-50"
+                    >
+                      {running ? <Loader2 className="size-4 animate-spin" /> : null}
+                      Jalankan Ulang
+                    </button>
+                    <button
+                      onClick={() => router.push("/purchase-order")}
+                      disabled={!canProceed}
+                      className="px-5 py-2.5 rounded-lg bg-primary text-on-primary text-sm font-bold hover:bg-surface-tint transition-colors flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+                      title={canProceed ? "" : "Perbaiki pemeriksaan yang gagal sebelum melanjutkan"}
+                    >
+                      Lanjut ke Purchase Order <ArrowRight className="size-4" />
+                    </button>
                   </div>
-                  <div className="relative z-10 flex flex-col border-l border-outline-variant pl-5">
-                    <span className="text-[10px] font-bold text-on-surface-variant uppercase mb-1 tracking-wider">Nilai CIF (Cost, Insurance, Freight)</span>
-                    <span className="text-3xl font-black text-primary tracking-tight">{formatCurrency(grandTotal)}</span>
-                  </div>
-                </div>
-                
-                {/* Mentor Callout Component */}
-                <div className="bg-primary-container/5 border-l-[4px] border-primary rounded-r-xl p-4 flex gap-3 mt-auto shadow-sm">
-                  <div className="text-primary mt-0.5">
-                    <Bot className="size-5" />
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-bold text-primary mb-1">Mentor AI: Kepatuhan Harga</h4>
-                    <p className="text-xs text-on-surface-variant leading-relaxed font-medium">
-                      Harga final Anda sebesar <strong>{formatCurrency(agreedPrice)}/kg</strong> aman berada dalam parameter Anda. Ini menjaga margin keuntungan yang sehat sebesar 15%+. Kepatuhan dan rute pengiriman siap untuk dipindai!
+                  {overall === "fail" && (
+                    <p className="text-xs text-error font-medium pt-1">
+                      Terdapat pemeriksaan yang gagal (mis. NIB belum terdaftar atau harga di bawah harga dasar). Perbaiki sebelum menerbitkan PO.
                     </p>
-                  </div>
+                  )}
                 </div>
-              </div>
-              
-              {/* Footer Actions */}
-              <div className="bg-surface-container-low p-4 border-t border-outline-variant flex justify-end gap-3 bg-surface-container-low">
-                <button className="px-5 py-2 rounded-md border border-outline-variant text-on-surface text-sm font-bold hover:bg-surface transition-colors shadow-sm bg-surface-container-lowest">Hitung Ulang</button>
-                <button onClick={handleStartScan} className="px-5 py-2 rounded-md bg-primary text-on-primary text-sm font-bold hover:bg-surface-tint transition-colors flex items-center gap-2 shadow-sm">
-                  Jalankan Kepatuhan AI & Buat PO
-                  <FileSignature className="size-[18px]" />
-                </button>
-              </div>
-            </section>
-          </div>
-        </div>
+              )}
+            </div>
+          </section>
+        )}
       </div>
-
-      {/* AI LASER SCANNING OVERLAY MODAL */}
-      {isScanning && (
-        <div className="fixed inset-0 bg-primary/70 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
-          
-
-          <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl w-full max-w-lg shadow-2xl p-6 md:p-8 flex flex-col items-center relative overflow-hidden z-10 animate-in zoom-in-95 duration-300">
-            
-            {/* Spinning Radar Icon */}
-            <div className="relative w-20 h-20 mb-6 flex items-center justify-center shrink-0">
-              <div className="absolute inset-0 border-4 border-secondary/20 rounded-full"></div>
-              <div className="absolute inset-0 border-4 border-secondary rounded-full border-t-transparent animate-spin"></div>
-              <Shield className="text-secondary animate-pulse size-9" />
-            </div>
-
-            <h3 className="text-xl font-bold text-primary mb-1 font-heading">Pemindai Kepatuhan Transaksi AI</h3>
-            <p className="text-xs text-on-surface-variant mb-6 uppercase tracking-wider font-bold">Kesiapan Transaksi & Pemeriksa Bendera Merah</p>
-
-            {/* Scanning Checks */}
-            <div className="w-full space-y-4 mb-6">
-              {/* Check 1 */}
-              <div className="flex items-center gap-3">
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${scanStep >= 2 ? 'bg-secondary text-on-secondary border-none' : 'bg-surface-variant animate-pulse text-on-surface-variant'}`}>
-                  {scanStep >= 2 ? <Check className="size-3.5" /> : '1'}
-                </div>
-                <span className={`text-xs font-semibold ${scanStep >= 1 ? 'text-primary' : 'text-on-surface-variant'}`}>Memindai kredensial hukum terhadap OSS & INATRADE</span>
-              </div>
-
-              {/* Check 2 */}
-              <div className={`flex items-center gap-3 transition-opacity duration-300 ${scanStep >= 2 ? 'opacity-100' : 'opacity-30'}`}>
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${scanStep >= 3 ? 'bg-secondary text-on-secondary border-none' : 'bg-surface-variant animate-pulse text-on-surface-variant'}`}>
-                  {scanStep >= 3 ? <Check className="size-3.5" /> : '2'}
-                </div>
-                <span className={`text-xs font-semibold ${scanStep >= 2 ? 'text-primary' : 'text-on-surface-variant'}`}>Menganalisis pengiriman regional & riwayat wanprestasi GlobalTech</span>
-              </div>
-
-              {/* Check 3 */}
-              <div className={`flex items-center gap-3 transition-opacity duration-300 ${scanStep >= 3 ? 'opacity-100' : 'opacity-30'}`}>
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${scanStep >= 4 ? 'bg-secondary text-on-secondary border-none' : 'bg-surface-variant animate-pulse text-on-surface-variant'}`}>
-                  {scanStep >= 4 ? <Check className="size-3.5" /> : '3'}
-                </div>
-                <span className={`text-xs font-semibold ${scanStep >= 3 ? 'text-primary' : 'text-on-surface-variant'}`}>Memeriksa Incoterms, konversi HPP & harga terlalu rendah (under-pricing)</span>
-              </div>
-
-              {/* Check 4 */}
-              <div className={`flex items-center gap-3 transition-opacity duration-300 ${scanStep >= 4 ? 'opacity-100' : 'opacity-30'}`}>
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${scanStep >= 5 ? 'bg-secondary text-on-secondary border-none' : 'bg-surface-variant animate-pulse text-on-surface-variant'}`}>
-                  {scanStep >= 5 ? <Check className="size-3.5" /> : '4'}
-                </div>
-                <span className={`text-xs font-semibold ${scanStep >= 4 ? 'text-primary' : 'text-on-surface-variant'}`}>Menjalankan pemindaian bendera merah NLP pada kontrak pembayaran</span>
-              </div>
-            </div>
-
-            <div className="w-full bg-surface-variant rounded-full h-1.5 overflow-hidden">
-              <div
-                className="bg-secondary h-1.5 rounded-full transition-all duration-500 ease-out animate-pulse"
-                style={{ width: `${(scanStep / 4) * 100}%` }}
-              ></div>
-            </div>
-
-            {scanStep === 4 && (
-              <div className="mt-4 text-secondary text-xs font-bold flex items-center gap-1 animate-bounce">
-                <ShieldCheck className="size-4" />
-                100% Bersih! Membuat Purchase Order Aman...
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
     </div>
   );
 }

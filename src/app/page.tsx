@@ -24,7 +24,9 @@ import {
   X,
 } from "lucide-react";
 import { resetState, setStep as setJourneyStep } from "../lib/state";
+import { hasSession } from "../lib/auth";
 import { ensureUmkmAndProduct } from "../lib/entities";
+import { Product } from "../lib/models/product";
 import { Stepper } from "../components/ui/stepper";
 
 export default function OnboardingWizard() {
@@ -46,6 +48,11 @@ export default function OnboardingWizard() {
   const [logistics, setLogistics] = useState("fob");
 
   useEffect(() => {
+    // Auth guard — onboarding is only for authenticated users.
+    if (typeof window !== "undefined" && !hasSession()) {
+      router.replace("/login");
+      return;
+    }
     resetState();
     // Clear custom localStorage items on onboarding
     if (typeof window !== "undefined") {
@@ -59,6 +66,9 @@ export default function OnboardingWizard() {
       localStorage.removeItem("tradeconnect_capacity");
       localStorage.removeItem("tradeconnect_logistics");
       localStorage.removeItem("tradeconnect_product_type");
+      // Reset the consolidated Product model (incl. any cached HS classification)
+      // so a fresh onboarding re-classifies for the new product.
+      localStorage.removeItem("tradeconnect_product");
     }
   }, []);
 
@@ -66,12 +76,12 @@ export default function OnboardingWizard() {
 
   const handleCompleteSetup = async () => {
     if (typeof window !== "undefined") {
-      localStorage.setItem("tradeconnect_product_name", productName || "Biji Kopi Robusta Premium");
-      localStorage.setItem("tradeconnect_product_desc", productDesc || "Biji kopi robusta Grade 1 premium buatan petani lokal Indonesia dengan keasaman seimbang.");
-      localStorage.setItem("tradeconnect_nib", nib || "1234567890123");
-      localStorage.setItem("tradeconnect_company_name", companyName || "PT Nusantara Global Coffee");
-      localStorage.setItem("tradeconnect_moq", moq || "1000 Pcs");
-      localStorage.setItem("tradeconnect_capacity", capacity || "50,000 Units");
+      localStorage.setItem("tradeconnect_product_name", productName);
+      localStorage.setItem("tradeconnect_product_desc", productDesc);
+      localStorage.setItem("tradeconnect_nib", nib);
+      localStorage.setItem("tradeconnect_company_name", companyName);
+      localStorage.setItem("tradeconnect_moq", moq);
+      localStorage.setItem("tradeconnect_capacity", capacity);
       localStorage.setItem("tradeconnect_logistics", logistics || "fob");
       
       const isRattan = (productName || "").toLowerCase().includes("rotan") || (productName || "").toLowerCase().includes("rattan") || (productName || "").toLowerCase().includes("kursi");
@@ -97,22 +107,39 @@ export default function OnboardingWizard() {
       localStorage.setItem("tradeconnect_asking_price", finalAskingPriceUsd.toFixed(2));
       localStorage.setItem("tradeconnect_final_price", finalAskingPriceUsd.toFixed(2));
 
-      // Best-effort real persistence: create UMKM + Product in the backend and
-      // cache their UUIDs (used by generate-reply / matching). Never blocks the
-      // demo — falls back to the localStorage-only flow if the backend is down.
-      try {
-        await ensureUmkmAndProduct({
-          companyName: companyName || "PT Nusantara Global Coffee",
-          nib: nib || "1234567890123",
-          productName: productName || "Biji Kopi Robusta Premium",
-          productDesc: productDesc || "Biji kopi robusta Grade 1 premium buatan petani lokal Indonesia.",
-          moq: moq || "1000",
-          capacity: capacity || "50000",
+      // Build the product as a first-class object (single source of truth). It
+      // hydrates the name/description/type just written above, then we attach the
+      // remaining editable fields and persist (this also mirrors the legacy keys).
+      Product.current()
+        .update({
+          companyName: companyName,
+          nib: nib,
+          moq: moq,
+          capacity: capacity,
+          logistics: logistics || "fob",
+          productType: isRattan ? "rattan" : "coffee",
           floorPriceUsd: finalFloorPriceUsd,
           askingPriceUsd: finalAskingPriceUsd,
-        });
-      } catch {
-        /* ignore — demo continues with localStorage */
+        })
+        .save();
+
+      // Backend-first: the company + product MUST persist in the backend before
+      // onboarding may continue. Ownership is authoritative on the server.
+      const persisted = await ensureUmkmAndProduct({
+        companyName: companyName,
+        nib: nib,
+        productName: productName,
+        productDesc: productDesc,
+        moq: moq,
+        capacity: capacity,
+        floorPriceUsd: finalFloorPriceUsd,
+        askingPriceUsd: finalAskingPriceUsd,
+      }).catch(() => null);
+      if (!persisted) {
+        window.alert(
+          "Gagal menyimpan data perusahaan & produk ke server. Pastikan NIB 13 digit valid dan koneksi stabil, lalu coba lagi.",
+        );
+        return;
       }
     }
     setJourneyStep("verified");

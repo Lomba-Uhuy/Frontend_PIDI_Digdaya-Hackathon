@@ -1,6 +1,6 @@
-import { API_CONFIG } from "./config";
 import { apiGet, apiPost, isLive } from "./http";
 import { getStoredIds } from "./entities";
+import { API_CONFIG } from "./config";
 
 export interface DraftReply {
   id: string;
@@ -14,80 +14,26 @@ export interface IntentResponse {
   confidence: number;
 }
 
-export interface PricingResponse {
-  fob: number;
-  cfr: number;
-  cif: number;
-  marketAvg: number;
-  status: "competitive" | "high" | "low";
-}
 
 // 1. INTENT CLASSIFIER SERVICE
-export async function classifyIntent(text: string): Promise<IntentResponse> {
-  if (isLive()) {
-    try {
-      // Gateway: POST /api/v1/negotiations/classify-intent (JwtAuthGuard)
-      // Backend DTO field is `email_text`.
-      const raw = await apiPost<{ intent: string; confidence: number }>(
-        "/negotiations/classify-intent",
-        { email_text: text },
-      );
-      // Backend may return "spam" — map it into the frontend's 3-class union.
-      const intent =
-        raw.intent === "inquiry" || raw.intent === "complaint" ? raw.intent : "negotiation";
-      return { intent, confidence: raw.confidence ?? 0.85 };
-    } catch (e) {
-      console.warn("Live backend failed, falling back to mock classifier:", e);
-    }
+export async function classifyIntent(text: string): Promise<IntentResponse | null> {
+  // Real-only: no fabricated fallback. Returns null when offline / on failure.
+  if (!isLive()) return null;
+  try {
+    // Gateway: POST /api/v1/negotiations/classify-intent (JwtAuthGuard)
+    // Backend DTO field is `email_text`.
+    const raw = await apiPost<{ intent: string; confidence: number }>(
+      "/negotiations/classify-intent",
+      { email_text: text },
+    );
+    // Backend may return "spam" — map it into the frontend's 3-class union.
+    const intent =
+      raw.intent === "inquiry" || raw.intent === "complaint" ? raw.intent : "negotiation";
+    return { intent, confidence: raw.confidence ?? 0.85 };
+  } catch (e) {
+    console.warn("classify-intent failed:", e);
+    return null;
   }
-
-  // High-Fidelity Mock NLP Client-side Classifier
-  const lowerText = text.toLowerCase();
-  let intent: "inquiry" | "negotiation" | "complaint" = "negotiation"; // default
-  let confidence = 0.85;
-
-  if (
-    lowerText.includes("salah") ||
-    lowerText.includes("kecewa") ||
-    lowerText.includes("rusak") ||
-    lowerText.includes("lambat") ||
-    lowerText.includes("komplain") ||
-    lowerText.includes("cacat") ||
-    lowerText.includes("klaim") ||
-    lowerText.includes("terlambat")
-  ) {
-    intent = "complaint";
-    confidence = 0.92;
-  } else if (
-    lowerText.includes("tanya") ||
-    lowerText.includes("spesifikasi") ||
-    lowerText.includes("sertifikat") ||
-    lowerText.includes("katalog") ||
-    lowerText.includes("mohon info") ||
-    lowerText.includes("bagaimana") ||
-    lowerText.includes("apakah") ||
-    lowerText.includes("dokumen")
-  ) {
-    intent = "inquiry";
-    confidence = 0.88;
-  } else if (
-    lowerText.includes("harga") ||
-    lowerText.includes("tawar") ||
-    lowerText.includes("diskon") ||
-    lowerText.includes("margin") ||
-    lowerText.includes("bayar") ||
-    lowerText.includes("dp") ||
-    lowerText.includes("lc") ||
-    lowerText.includes("revisi") ||
-    lowerText.includes("kontainer") ||
-    lowerText.includes("cif") ||
-    lowerText.includes("fob")
-  ) {
-    intent = "negotiation";
-    confidence = 0.95;
-  }
-
-  return { intent, confidence };
 }
 
 // 2. RAG AI REPLY GENERATOR SERVICE
@@ -95,7 +41,7 @@ export async function generateReply(
   emailContent: string,
   productContext: string,
   floorPrice: number = 2.68
-): Promise<{ drafts: DraftReply[] }> {
+): Promise<{ drafts: DraftReply[]; unavailable?: boolean }> {
   if (isLive()) {
     try {
       // Gateway: POST /api/v1/negotiations/generate-reply (JwtAuthGuard)
@@ -107,10 +53,10 @@ export async function generateReply(
         warnings?: string[];
         confidence?: number;
       }>("/negotiations/generate-reply", {
-        // Backend DTO fields: importer_email + product_id (UUID for pricing context).
-        // Prefer the real product created during onboarding; fall back to the demo product.
+        // Backend DTO fields: importer_email + product_id (real product UUID for
+        // pricing context). No fabricated demo product — requires a real product.
         importer_email: emailContent,
-        product_id: getStoredIds().productId || API_CONFIG.demoProductId,
+        product_id: getStoredIds().productId,
       });
       if (raw?.draft_en) {
         const warn =
@@ -131,139 +77,71 @@ export async function generateReply(
         };
       }
     } catch (e) {
-      console.warn("Live backend failed, falling back to mock reply generator:", e);
+      // The AI service failed (e.g. LLM unavailable / out of credits → 503).
+      // Report it as unavailable so the UI can show an honest notice — never a
+      // fabricated draft.
+      console.warn("generate-reply failed:", e);
+      return { drafts: [], unavailable: true };
     }
   }
-
-  // Dynamic high-fidelity mock replies based on input text & keyword rules
-  const lowerText = emailContent.toLowerCase();
-  const isRattan = productContext.toLowerCase().includes("rotan") || productContext.toLowerCase().includes("rattan") || productContext.toLowerCase().includes("kursi");
-  
-  if (isRattan) {
-    if (lowerText.includes("45,00") || lowerText.includes("45.00") || lowerText.includes("45")) {
-      return {
-        drafts: [
-          {
-            id: "draft-1-comp-rattan",
-            title: "Tolak Halus (Kompromi $50.00)",
-            strategy: "Tawarkan harga jalan tengah di atas floor price ($45.00/pcs) dengan termin pembayaran aman (30% DP, 70% LC) untuk menjaga kualitas rotan kelas A alami asal Jepara.",
-            text: "Terima kasih atas ketertarikan Anda yang luar biasa pada kursi rotan kami. Sayangnya, karena kontrol kualitas yang ketat serta tingkat kerumitan anyaman tangan pengrajin Jepara kami, harga penawaran $45,00/unit berada di bawah batas margin keberlanjutan kami. Sebagai jalan tengah, kami bersedia menawarkan harga khusus $50,00/unit CIF Pelabuhan Hamburg dengan syarat pembayaran 30% Down Payment (DP) dan sisa 70% melalui Letter of Credit (L/C) at sight. Mohon saran jika Anda menyetujui usulan kompromi ini."
-          },
-          {
-            id: "draft-2-vol-rattan",
-            title: "Diskon Volume (Nego $48.00)",
-            strategy: "Berikan diskon ekstra mendekati floor price ($48.00/pcs) dengan syarat pembeli meningkatkan volume pembelian uji coba menjadi 2 kontainer penuh (300 pcs kursi).",
-            text: "Terima kasih atas tanggapan berharga Anda. Kami memahami dinamika pasar furnitur di Jerman saat ini. Kami bersedia menyesuaikan penawaran kami mendekati target Anda, yaitu sebesar $48,00/unit CIF Hamburg, dengan syarat volume pemesanan uji coba ditingkatkan menjadi minimum 2 kontainer penuh (sekitar 300 unit kursi). Hal ini sangat membantu kami mengoptimalkan pengapalan domestik dan pengemasan logistik. Silakan beri tahu kami jika opsi ini dapat disetujui."
-          },
-          {
-            id: "draft-3-fob-rattan",
-            title: "Opsi FOB Pelabuhan Semarang ($47.00)",
-            strategy: "Kurangi harga secara signifikan dengan mengubah klausul Incoterms dari CIF Hamburg menjadi FOB Tanjung Emas Semarang, memindahkan biaya pengapalan internasional ke pembeli.",
-            text: "Salam hangat dari Indonesia. Menanggapi proposal Anda, kami tidak dapat memenuhi CIF Hamburg di harga $45,00/unit. Namun, kami dapat menawarkan opsi alternatif yang sangat hemat: harga $47,00/unit FOB Pelabuhan Tanjung Emas (Semarang). Hal ini memungkinkan tim logistik Anda untuk mengelola pengapalan laut dan asuransi internasional secara mandiri dengan tarif korporat Anda sendiri. Mohon saran jika opsi ini lebih menguntungkan bagi Anda."
-          }
-        ]
-      };
-    }
-
-    return {
-      drafts: [
-        {
-          id: "draft-gen-1-rattan",
-          title: "Konfirmasi Persetujuan Kontrak",
-          strategy: "Kirim pesan terima kasih profesional atas kesepakatan harga dan instruksikan penyusunan kontrak pembelian.",
-          text: "Terima kasih atas konfirmasi dan kerjasamanya yang luar biasa. Kami sangat senang kita dapat mencapai kesepakatan bersama yang adil untuk kursi rotan Jepara ini. Kami akan segera menyusun dokumen Proforma Invoice dan Purchase Order resmi di platform TradeConnect agar kita dapat melangkah ke tahap pemeriksaan kepatuhan hukum ekspor serta penandatanganan kontrak."
-        },
-        {
-          id: "draft-gen-2-rattan",
-          title: "Tanya Jadwal Pengapalan",
-          strategy: "Tanyakan estimasi tanggal kesiapan kapal dan berkoordinasi mengenai detail agen logistik pembeli.",
-          text: "Kami menyambut baik kesepakatan ini. Untuk mempersiapkan logistik pergudangan kami di Jepara, Jawa Tengah, mohon informasikan jadwal kedatangan kapal (shipping window) yang Anda targetkan untuk Kuartal 3 ini. Kami juga siap berkoordinasi langsung dengan freight forwarder rujukan Anda."
-        }
-      ]
-    };
-  }
-
-  // Custom generated drafts based on buyer's counter-offer or generic replies (Coffee Default)
-  if (lowerText.includes("2,50") || lowerText.includes("2.50")) {
-    return {
-      drafts: [
-        {
-          id: "draft-1-comp",
-          title: "Tolak Halus (Kompromi $2.75)",
-          strategy: "Tawarkan harga jalan tengah di atas floor price ($2.68/kg) dengan termin pembayaran aman (30% DP, 70% LC) untuk menjaga kualitas robusta Grade 1 premium.",
-          text: "Terima kasih atas ketertarikan Anda. Sayangnya, karena kontrol kualitas yang ketat pada biji kopi robusta premium kami, harga $2,50/kg berada di bawah batas keberlanjutan minimum kami. Sebagai jalan tengah, kami dapat menawarkan harga spesial $2,75/kg CIF Pelabuhan Hamburg dengan struktur pembayaran 30% Down Payment (DP) dan sisa 70% melalui Letter of Credit (L/C). Mohon beri tahu kami jika usulan kompromi ini dapat diterima."
-        },
-        {
-          id: "draft-2-vol",
-          title: "Diskon Volume (Nego $2.65)",
-          strategy: "Berikan diskon ekstra mendekati floor price ($2.65/kg) dengan syarat pembeli meningkatkan volume pembelian uji coba menjadi 2 kontainer penuh (36 ton).",
-          text: "Terima kasih atas tanggapan Anda yang berharga. Kami memahami dinamika pasar di Jerman. Kami bersedia menyesuaikan penawaran harga kami mendekati target Anda, yaitu sebesar $2,65/kg CIF Hamburg, dengan syarat volume pemesanan uji coba ditingkatkan menjadi minimum 2 kontainer penuh (sekitar 36 metrik ton). Hal ini membantu kami menekan biaya pengapalan domestik dan kontainer secara kolektif. Silakan beri tahu kami jika Anda setuju."
-        },
-        {
-          id: "draft-3-fob",
-          title: "Opsi FOB Pelabuhan Lokal ($2.55)",
-          strategy: "Kurangi harga secara signifikan dengan mengubah klausul Incoterms dari CIF Hamburg menjadi FOB Tanjung Perak, memindahkan biaya freight & asuransi internasional ke pembeli.",
-          text: "Salam hangat dari Indonesia. Menanggapi proposal Anda, kami tidak dapat memenuhi CIF Hamburg di harga $2,50/kg. Namun, kami dapat menawarkan opsi alternatif yang sangat hemat: harga $2,55/kg FOB Pelabuhan Tanjung Perak (Surabaya). Hal ini memungkinkan tim logistik Anda untuk mengelola pengapalan laut dan asuransi internasional secara mandiri dengan tarif korporat Anda sendiri. Mohon saran jika opsi ini lebih menguntungkan bagi Anda."
-        }
-      ]
-    };
-  }
-
-  // Generik fallback drafts for subsequent messages
-  return {
-    drafts: [
-      {
-        id: "draft-gen-1",
-        title: "Konfirmasi Persetujuan Kontrak",
-        strategy: "Kirim pesan terima kasih profesional atas kesepakatan harga dan instruksikan penyusunan kontrak pembelian.",
-        text: "Terima kasih atas konfirmasi dan kerjasamanya yang luar biasa. Kami sangat senang kita dapat mencapai kesepakatan bersama yang adil. Kami akan segera menyusun dokumen Proforma Invoice dan Purchase Order resmi di platform TradeConnect agar kita dapat melangkah ke tahap pemeriksaan kepatuhan hukum ekspor serta penandatanganan kontrak."
-      },
-      {
-        id: "draft-gen-2",
-        title: "Tanya Jadwal Pengapalan",
-        strategy: "Tanyakan estimasi tanggal kesiapan kapal dan berkoordinasi mengenai detail agen logistik pembeli.",
-        text: "Kami menyambut baik kesepakatan ini. Untuk mempersiapkan logistik pergudangan kami di Jawa Timur, mohon informasikan jadwal kedatangan kapal (shipping window) yang Anda targetkan untuk Kuartal 3 ini. Kami juga siap berkoordinasi langsung dengan freight forwarder rujukan Anda."
-      }
-    ]
-  };
+  // No fabricated fallback — return empty when the backend is unavailable.
+  return { drafts: [] };
 }
 
-// 3. EXPORT PRICING CALCULATOR SERVICE
-export function calculatePrice(
-  hpp: number,             // Harga Pokok Produksi per kg
-  margin: number,          // Keuntungan yang diinginkan dalam %
-  localHandling: number,   // Biaya domestik (truk, handling, dokumen bea cukai)
-  freight: number,         // Ongkos kirim laut internasional per kg
-  insurance: number        // Biaya asuransi per kg
-): PricingResponse {
-  // Matematika Perdagangan Internasional
-  // FOB = HPP + Profit Margin + Local Handling
-  const profitAmt = hpp * (margin / 100);
-  const fob = hpp + profitAmt + localHandling;
-  
-  // CFR = FOB + Freight Internasional
-  const cfr = fob + freight;
-  
-  // CIF = CFR + Asuransi Internasional
-  const cif = cfr + insurance;
-  
-  // Benchmark Unit Value Ekspor BPS Hamburg (HS 0901.11 - Robusta): Rata-rata $2.80/kg
-  const marketAvg = 2.80;
-  
-  let status: "competitive" | "high" | "low" = "competitive";
-  if (cif > marketAvg * 1.05) {
-    status = "high"; // Lebih mahal > 5% dari rata-rata BPS
-  } else if (cif < marketAvg * 0.92) {
-    status = "low";  // Terlalu murah (dapat dicurigai dumping/kualitas rendah)
-  }
+// 3. REAL EXPORT PRICING (backend: POST /readiness/pricing).
+// Authoritative Decimal money math + REAL BPS export unit-value benchmark by HS
+// code (from trade_flows). The frontend does NO business math and fabricates NO
+// benchmark — every figure below originates from the backend.
+export interface PricingInput {
+  hpp: number;
+  originCharges: number; // domestic handling / port
+  oceanFreight: number;
+  insuranceAmount: number;
+  exportDuty?: number; // ABSOLUTE amount added to FOB (not a %)
+  profitMarginPct: number;
+  hsCode?: string;
+  exchangeRate: number; // IDR per 1 USD (user assumption)
+  qty?: number; // defaults to 1 → per-unit waterfall
+}
 
-  return {
-    fob: parseFloat(fob.toFixed(2)),
-    cfr: parseFloat(cfr.toFixed(2)),
-    cif: parseFloat(cif.toFixed(2)),
-    marketAvg,
-    status
+export interface PricingBreakdown {
+  fobUnit: string;
+  fobTotal: string;
+  cfrTotal: string;
+  insuranceAmount: string;
+  cifTotal: string;
+  perUnitCIF: string;
+  idr: {
+    fobUnit: string;
+    fobTotal: string;
+    cfrTotal: string;
+    cifTotal: string;
+    perUnitCIF: string;
   };
+  benchmarkUnitValue: string | null; // real BPS USD/kg, or null when no data
+  pricingWarning: string | null;
+  marginEstimate: string;
+  exchangeRate: number;
+}
+
+export async function getPricingBreakdown(input: PricingInput): Promise<PricingBreakdown | null> {
+  if (!isLive()) return null;
+  try {
+    return await apiPost<PricingBreakdown>("/readiness/pricing", {
+      hpp: input.hpp,
+      originCharges: input.originCharges,
+      qty: input.qty ?? 1,
+      oceanFreight: input.oceanFreight,
+      insuranceAmount: input.insuranceAmount,
+      exportDuty: input.exportDuty ?? 0,
+      profitMarginPct: input.profitMarginPct,
+      ...(input.hsCode ? { hsCode: input.hsCode } : {}),
+      exchangeRate: input.exchangeRate,
+    });
+  } catch (e) {
+    console.warn("getPricingBreakdown failed:", e);
+    return null;
+  }
 }
 
 // 4. B2B RISK & RED FLAG INTELLIGENCE SERVICE
@@ -272,25 +150,6 @@ export interface RedFlagReport {
   flags: { icon: string; title: string; description: string }[];
 }
 
-// Maps a known demo buyerId → the structured profile + history the gateway needs.
-const _BUYER_PROFILES: Record<
-  string,
-  { profile: Record<string, unknown>; history: { sender: string; message: string }[] }
-> = {
-  klaus: {
-    profile: { companyName: "GlobalTech Imports GmbH", country: "Germany", countryCode: "DE" },
-    history: [
-      { sender: "buyer", message: "We are interested in a full container of your robusta coffee. Please share FOB and CIF Hamburg pricing and your export certificates." },
-    ],
-  },
-  nippon: {
-    profile: { companyName: "Nippon Organic Trading", country: "Japan", countryCode: "JP", requestedSampleBeforeContract: true },
-    history: [
-      { sender: "buyer", message: "Please send a green tea sample within 3 days before we sign the contract." },
-    ],
-  },
-};
-
 const _CATEGORY_ICON: Record<string, string> = {
   SAMPLE: "schedule",
   JURISDICTION: "gavel",
@@ -298,99 +157,271 @@ const _CATEGORY_ICON: Record<string, string> = {
   PAYMENT: "payments",
 };
 
-export async function checkRedFlag(buyerId: string): Promise<RedFlagReport> {
-  if (isLive()) {
-    try {
-      const known = _BUYER_PROFILES[buyerId] ?? {
-        profile: { companyName: buyerId, country: "Unknown" },
-        history: [{ sender: "buyer", message: "Initial trade inquiry." }],
-      };
-      // Gateway: POST /api/v1/check-red-flag (JwtAuthGuard)
-      const raw = await apiPost<{
-        riskLevel: "LOW" | "MEDIUM" | "HIGH";
-        flags: { id: string; description: string; category: string; severity: string }[];
-        recommendation?: string;
-      }>("/check-red-flag", {
-        buyerProfile: known.profile,
-        communicationHistory: known.history,
-      });
-      return {
-        riskLevel: raw.riskLevel,
-        flags: (raw.flags ?? []).map((f) => ({
-          icon: _CATEGORY_ICON[f.category] ?? "flag",
-          title: `${f.category} • ${f.severity}`,
-          description: f.description,
-        })),
-      };
-    } catch (e) {
-      console.warn("Live backend failed, falling back to mock red flag checker:", e);
-    }
-  }
-
-  // High-Fidelity Mock Risk Intelligence
-  if (buyerId === "klaus") {
-    let isRattan = false;
-    if (typeof window !== "undefined") {
-      const productName = localStorage.getItem("tradeconnect_product_name") || "";
-      isRattan = productName.toLowerCase().includes("rotan") || productName.toLowerCase().includes("rattan") || productName.toLowerCase().includes("kursi");
-    }
+/**
+ * B2B risk analysis for a REAL buyer. Gateway: POST /api/v1/check-red-flag.
+ * Sends only the real buyer identity; communicationHistory stays empty until a real
+ * conversation store exists (never fabricated). Returns null offline / on failure.
+ */
+export async function checkRedFlag(buyer: { name: string; country: string }): Promise<RedFlagReport | null> {
+  if (!isLive()) return null;
+  try {
+    const raw = await apiPost<{
+      riskLevel: "LOW" | "MEDIUM" | "HIGH";
+      flags: { id: string; description: string; category: string; severity: string }[];
+      recommendation?: string;
+    }>("/check-red-flag", {
+      buyerProfile: { companyName: buyer.name, country: buyer.country },
+      communicationHistory: [],
+    });
     return {
-      riskLevel: "LOW",
-      flags: [
-        { icon: "verified_user", title: "Profil Bisnis Terverifikasi", description: "GlobalTech Imports GmbH terdaftar secara resmi di Frankfurt, Jerman (UID: DE123456789) tanpa riwayat sengketa dagang." },
-        { icon: "payments", title: "Rekam Jejak Pembayaran Bersih", description: "Tidak ada keluhan gagal bayar atau keterlambatan Letter of Credit (L/C) dalam 24 bulan terakhir." },
-        isRattan 
-        ? { icon: "eco", title: "Sertifikasi SVLK & FSC Valid", description: "Dokumen Sistem Verifikasi Legalitas Kayu (SVLK) dan sertifikasi FSC produk rotan Anda cocok 100% dengan persyaratan bea cukai Uni Eropa." }
-        : { icon: "eco", title: "Kepatuhan EUDR Sesuai Regulasi", description: "Buyer secara aktif mendukung pelacakan koordinat geo-lokasi kebun kopi sesuai aturan deforestasi Uni Eropa." }
-      ]
+      riskLevel: raw.riskLevel,
+      flags: (raw.flags ?? []).map((f) => ({
+        icon: _CATEGORY_ICON[f.category] ?? "flag",
+        title: `${f.category} • ${f.severity}`,
+        description: f.description,
+      })),
     };
-  } else if (buyerId === "nippon") {
-    return {
-      riskLevel: "MEDIUM",
-      flags: [
-        { icon: "schedule", title: "Pola Komunikasi Terburu-buru", description: "Buyer mendesak pengiriman sampel teh hijau dalam waktu 3 hari sebelum penandatanganan LOI/Kontrak." },
-        { icon: "gavel", title: "Risiko Regulasi Ekstra Yokohama", description: "Diperlukan sertifikasi karantina tanaman dan fitosanitasi ekstra ketat untuk pengiriman komoditas pertanian ke Jepang." }
-      ]
-    };
-  } else {
-    return {
-      riskLevel: "LOW",
-      flags: [
-        { icon: "verified", title: "Profil Importir Terdaftar", description: "Profil importir ini telah tervalidasi secara komersial oleh atase perdagangan Indonesia di negara setempat." }
-      ]
-    };
+  } catch (e) {
+    console.warn("check-red-flag failed:", e);
+    return null;
   }
 }
 
-// 5. B2B CREDIBILITY BREAKDOWN SERVICE
-export interface CredibilityDimension {
+// 5. BUYER DIRECTORY SERVICE (real, synchronized DB — GET /matching/buyers)
+export interface BuyerRecord {
+  buyer_id: string;
   name: string;
-  score: number;
-  description: string;
+  country: string;
+  hs_codes: string[];
+  credibility_score: number;
+  min_order_qty: number;
+  is_synthetic: boolean;
+  source?: string | null;
+  shipment_count?: number | null;
 }
 
-export function getCredibilityDimensions(buyerId: string): CredibilityDimension[] {
-  if (buyerId === "klaus") {
-    return [
-      { name: "Sejarah Impor (Import History)", score: 92, description: "Memiliki riwayat impor reguler kopi robusta dari Indonesia & Vietnam dalam 3 tahun terakhir." },
-      { name: "Konsistensi Volume (Volume Consistency)", score: 85, description: "Rata-rata pesanan bulanan stabil pada kisaran 15-20 metrik ton (1 kontainer penuh)." },
-      { name: "Risiko Negara (Country Safety)", score: 95, description: "Jerman memiliki rating risiko transaksi komersial terendah di Uni Eropa (Grade AA+)." },
-      { name: "Responsivitas (Responsiveness)", score: 90, description: "Rata-rata waktu tanggapan komunikasi email negosiasi di bawah 4 jam kerja." }
+export interface BuyerListResponse {
+  items: BuyerRecord[];
+  page: number;
+  per_page: number;
+  total: number;
+  total_pages: number;
+}
+
+export interface BuyerDetailRecord extends BuyerRecord {
+  description?: string | null;
+  is_active: boolean;
+  metadata: Record<string, unknown>;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
+export interface BuyerListParams {
+  q?: string;
+  country?: string[];
+  hs?: string;
+  source?: string;
+  is_synthetic?: boolean;
+  min_credibility?: number;
+  sort_by?: "credibility" | "name" | "created_at" | "min_order_qty";
+  sort_dir?: "asc" | "desc";
+  page?: number;
+  per_page?: number;
+}
+
+/** Search/list real buyers from the synchronized DB. Gateway: GET /matching/buyers. */
+export async function getBuyers(params: BuyerListParams = {}): Promise<BuyerListResponse | null> {
+  if (!isLive()) return null;
+  try {
+    const qs = new URLSearchParams();
+    if (params.q) qs.set("q", params.q);
+    (params.country ?? []).forEach((c) => qs.append("country", c));
+    if (params.hs) qs.set("hs", params.hs);
+    if (params.source) qs.set("source", params.source);
+    if (params.is_synthetic !== undefined) qs.set("is_synthetic", String(params.is_synthetic));
+    if (params.min_credibility !== undefined) qs.set("min_credibility", String(params.min_credibility));
+    if (params.sort_by) qs.set("sort_by", params.sort_by);
+    if (params.sort_dir) qs.set("sort_dir", params.sort_dir);
+    qs.set("page", String(params.page ?? 1));
+    qs.set("per_page", String(params.per_page ?? 12));
+    return await apiGet<BuyerListResponse>(`/matching/buyers?${qs.toString()}`);
+  } catch (e) {
+    console.warn("getBuyers failed:", e);
+    return null;
+  }
+}
+
+export interface BuyerCountryOption {
+  country: string; // ISO-2
+  count: number;
+}
+
+/** Distinct buyer countries (with counts) present in the DB, for the filter dropdown.
+ *  Sourced from GET /matching/buyers/stats (top_countries). No hardcoded list. */
+export async function getBuyerCountries(): Promise<BuyerCountryOption[]> {
+  if (!isLive()) return [];
+  try {
+    const raw = await apiGet<{ top_countries?: { country: string; count: number }[] }>(
+      "/matching/buyers/stats",
+    );
+    return (raw.top_countries ?? []).filter((c) => c.country && c.country !== "??");
+  } catch (e) {
+    console.warn("getBuyerCountries failed:", e);
+    return [];
+  }
+}
+
+// Buyer directory statistics (real vs simulated, by source & country).
+export interface BuyerStats {
+  total: number;
+  real: number;
+  synthetic: number;
+  by_source: { source: string; count: number }[];
+  top_countries: { country: string; count: number }[];
+}
+
+export async function getBuyerStats(): Promise<BuyerStats | null> {
+  if (!isLive()) return null;
+  try {
+    return await apiGet<BuyerStats>("/matching/buyers/stats");
+  } catch (e) {
+    console.warn("getBuyerStats failed:", e);
+    return null;
+  }
+}
+
+// System / service health from the gateway readiness probe (terminus format).
+// Lives at the gateway root (/health/ready), outside /api/v1 and unauthenticated.
+export interface ServiceHealth {
+  name: string;
+  up: boolean;
+}
+export interface SystemHealth {
+  overall: "ok" | "degraded" | "down";
+  services: ServiceHealth[];
+}
+
+export async function getSystemHealth(): Promise<SystemHealth> {
+  try {
+    // Terminus returns 503 (with the same body) when a dependency is down.
+    // Health lives under the gateway's /api/v1 prefix (only bare /health is excluded).
+    const resp = await fetch(`${API_CONFIG.baseUrl}/health/ready`);
+    const body = (await resp.json()) as {
+      details?: Record<string, { status?: string }>;
+    };
+    const details = body.details ?? {};
+    const services: ServiceHealth[] = [
+      { name: "gateway", up: true },
+      ...Object.entries(details).map(([name, v]) => ({ name, up: v?.status === "up" })),
     ];
-  } else if (buyerId === "nippon") {
-    return [
-      { name: "Sejarah Impor (Import History)", score: 60, description: "Baru memulai diversifikasi komoditas organik teh dan kopi dari Asia Tenggara." },
-      { name: "Konsistensi Volume (Volume Consistency)", score: 70, description: "Pesanan bervariasi tergantung musim panen lokal di Jepang." },
-      { name: "Risiko Negara (Country Safety)", score: 98, description: "Jepang memiliki tingkat jaminan hukum dagang internasional yang sangat tinggi." },
-      { name: "Responsivitas (Responsiveness)", score: 55, description: "Perbedaan zona waktu memicu waktu tunda komunikasi rata-rata 12 jam." }
-    ];
-  } else {
-    return [
-      { name: "Sejarah Impor", score: 80, description: "Riwayat perdagangan komersial yang cukup aktif." },
-      { name: "Konsistensi Volume", score: 75, description: "Volume impor rata-rata stabil." },
-      { name: "Risiko Negara", score: 85, description: "Rating risiko komersial stabil." },
-      { name: "Responsivitas", score: 80, description: "Komunikasi rata-rata di bawah 12 jam." }
-    ];
+    const allUp = services.every((s) => s.up);
+    const anyUp = services.some((s) => s.up);
+    return { overall: allUp ? "ok" : anyUp ? "degraded" : "down", services };
+  } catch {
+    return { overall: "down", services: [{ name: "gateway", up: false }] };
+  }
+}
+
+// Activity feed — real persisted events (deals, PO, buyer sync, product).
+export interface ActivityEvent {
+  id: string;
+  category: "negotiation" | "purchase_order" | "sync" | "product";
+  type: string;
+  severity: "info" | "success" | "warning" | "error";
+  title: string;
+  description: string;
+  entity: string;
+  entityId: string;
+  actor: string;
+  status: string;
+  timestamp: string;
+  link: string;
+}
+export interface ActivityStatistics {
+  total: number;
+  byCategory: { category: string; count: number }[];
+  lastSync: {
+    provider: string;
+    status: string;
+    buyersUpserted: number;
+    error: string | null;
+    finishedAt: string | null;
+    startedAt: string | null;
+  } | null;
+}
+
+export async function getActivity(limit = 15, category?: string): Promise<ActivityEvent[]> {
+  if (!isLive()) return [];
+  try {
+    const qs = new URLSearchParams({ limit: String(limit) });
+    if (category) qs.set("category", category);
+    const r = await apiGet<{ items: ActivityEvent[] }>(`/activity/recent?${qs.toString()}`);
+    return r.items ?? [];
+  } catch (e) {
+    console.warn("getActivity failed:", e);
+    return [];
+  }
+}
+
+export async function getActivityStatistics(): Promise<ActivityStatistics | null> {
+  if (!isLive()) return null;
+  try {
+    return await apiGet<ActivityStatistics>("/activity/statistics");
+  } catch (e) {
+    console.warn("getActivityStatistics failed:", e);
+    return null;
+  }
+}
+
+// Negotiation analytics (real aggregation from /deals/analytics).
+export interface DealAnalytics {
+  total: number;
+  open: number;
+  closed: number;
+  conversionRate: number;
+  avgCloseDays: number | null;
+  avgAgreedPrice: number | null;
+  byStatus: { status: string; count: number }[];
+  byCountry: { country: string; count: number }[];
+}
+export async function getDealAnalytics(): Promise<DealAnalytics | null> {
+  if (!isLive()) return null;
+  try {
+    return await apiGet<DealAnalytics>("/deals/analytics");
+  } catch (e) {
+    console.warn("getDealAnalytics failed:", e);
+    return null;
+  }
+}
+
+// Buyer directory analytics (real aggregation from /matching/buyers/analytics).
+export interface BuyerAnalytics {
+  total: number;
+  by_credibility: { band: string; count: number }[];
+  by_hs: { hs: string; count: number }[];
+  missing_embeddings: number;
+  recently_synced: number;
+  without_hs: number;
+  top_credibility: { name: string; country: string; credibility_score: number }[];
+}
+export async function getBuyerAnalytics(): Promise<BuyerAnalytics | null> {
+  if (!isLive()) return null;
+  try {
+    return await apiGet<BuyerAnalytics>("/matching/buyers/analytics");
+  } catch (e) {
+    console.warn("getBuyerAnalytics failed:", e);
+    return null;
+  }
+}
+
+/** Full buyer detail from the synchronized DB. Gateway: GET /matching/buyers/:id. */
+export async function getBuyerDetail(id: string): Promise<BuyerDetailRecord | null> {
+  if (!isLive()) return null;
+  try {
+    return await apiGet<BuyerDetailRecord>(`/matching/buyers/${encodeURIComponent(id)}`);
+  } catch (e) {
+    console.warn("getBuyerDetail failed:", e);
+    return null;
   }
 }
 
@@ -566,6 +597,38 @@ export async function matchBuyers(productId: string, limit: number = 10): Promis
     return await apiPost<BuyerMatch[]>("/matching/search", { product_id: productId, top_k: limit });
   } catch (e) {
     console.warn("Live buyer matching failed:", e);
+    return null;
+  }
+}
+
+// 8. REAL BUYER SYNC (TradeAtlas → buyer table, via ETL worker)
+export interface BuyerSyncResult {
+  status: string; // "queued" | "auth_required" | ...
+  task_id?: string;
+}
+
+/**
+ * Trigger a real-buyer sync for the product's HS codes + target markets.
+ * Gateway: POST /api/v1/matching/buyers/sync (enqueues the ETL task).
+ * Dynamic inputs only — HS from the product RAG, countries from user markets.
+ * Fire-and-forget: returns null when offline / on failure (never blocks the UI).
+ */
+export async function triggerBuyerSync(
+  hsCodes: string[],
+  importerCountries: string[] = [],
+  opts?: { startDate?: string; endDate?: string; maxPages?: number },
+): Promise<BuyerSyncResult | null> {
+  if (!isLive() || hsCodes.length === 0) return null;
+  try {
+    return await apiPost<BuyerSyncResult>("/matching/buyers/sync", {
+      hs_codes: hsCodes,
+      importer_countries: importerCountries,
+      ...(opts?.startDate ? { start_date: opts.startDate } : {}),
+      ...(opts?.endDate ? { end_date: opts.endDate } : {}),
+      ...(opts?.maxPages ? { max_pages: opts.maxPages } : {}),
+    });
+  } catch (e) {
+    console.warn("triggerBuyerSync failed:", e);
     return null;
   }
 }

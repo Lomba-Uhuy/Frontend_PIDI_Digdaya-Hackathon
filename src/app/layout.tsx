@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Lexend } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 
 const inter = Inter({
@@ -31,7 +32,11 @@ export default function RootLayout({
       className={`${inter.variable} ${lexend.variable} font-sans h-full antialiased`}
     >
       <head>
-        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        {/* Anti-FOUC theme init: Next injects beforeInteractive scripts into the
+            initial HTML (runs before paint) without the raw-<script> warning. */}
+        <Script id="theme-init" strategy="beforeInteractive">
+          {THEME_INIT_SCRIPT}
+        </Script>
       </head>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>

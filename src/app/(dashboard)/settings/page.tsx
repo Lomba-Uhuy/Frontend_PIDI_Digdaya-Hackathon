@@ -24,6 +24,7 @@ import {
 import { cn } from "@/lib/utils";
 import { getStoredTheme, setTheme, type Theme } from "@/lib/theme";
 import { getMyUmkm, updateUmkm, updateProduct, getStoredIds } from "@/lib/entities";
+import { Product } from "@/lib/models/product";
 
 const TABS = [
   { id: "umum", label: "Umum", icon: SlidersHorizontal },
@@ -36,16 +37,15 @@ type TabId = (typeof TABS)[number]["id"];
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<TabId>("umum");
-  const [companyName, setCompanyName] = useState("CV Kopi Mandiri");
-  const [productName, setProductName] = useState("Kopi Arabika");
+  const [companyName, setCompanyName] = useState("");
+  const [productName, setProductName] = useState("");
   const [saved, setSaved] = useState(false);
   const [theme, setThemeState] = useState<Theme>("system");
 
   useEffect(() => {
-    const savedCompany = localStorage.getItem("tradeconnect_company_name");
-    if (savedCompany) setCompanyName(savedCompany);
-    const savedProduct = localStorage.getItem("tradeconnect_product_name");
-    if (savedProduct) setProductName(savedProduct);
+    const product = Product.current();
+    if (product.companyName) setCompanyName(product.companyName);
+    if (product.name) setProductName(product.name);
     setThemeState(getStoredTheme());
 
     // Prefer the real persisted UMKM profile (E4) when the backend is reachable.
@@ -63,8 +63,9 @@ export default function SettingsPage() {
   };
 
   const handleSaveProfile = () => {
-    localStorage.setItem("tradeconnect_company_name", companyName);
-    localStorage.setItem("tradeconnect_product_name", productName);
+    // Edit through the Product model — persists the consolidated object and mirrors
+    // the legacy keys other screens read.
+    Product.current().update({ companyName, name: productName }).save();
     window.dispatchEvent(new Event("tradeconnect_state_change"));
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);

@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { ProgressRing } from "../../components/ui/progress-ring";
 import { verifyNib, classifyHs, getStoredIds, NibVerification, HsClassification } from "../../lib/entities";
+import { Product } from "../../lib/models/product";
 
 type Verdict = "verified" | "failed" | "incomplete";
 
@@ -24,6 +25,7 @@ export default function VerificationPage() {
   const router = useRouter();
   const [loadingStep, setLoadingStep] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
+  const [minElapsed, setMinElapsed] = useState(false);
   const [score, setScore] = useState(0);
 
   const [companyName, setCompanyName] = useState("");
@@ -40,24 +42,26 @@ export default function VerificationPage() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    setCompanyName(localStorage.getItem("tradeconnect_company_name") || "");
-    setProductName(localStorage.getItem("tradeconnect_product_name") || "");
-    const nib = localStorage.getItem("tradeconnect_nib") || "";
+    const product = Product.current();
+    setCompanyName(product.companyName || "");
+    setProductName(product.name || "");
+    const nib = product.nib || "";
     setNibInput(nib);
     setHasProduct(Boolean(getStoredIds().productId));
 
-    const desc =
-      localStorage.getItem("tradeconnect_product_desc") ||
-      localStorage.getItem("tradeconnect_product_name") ||
-      "Produk ekspor Indonesia";
+    const desc = product.description || product.name || "Produk ekspor Indonesia";
 
     // Real OSS/INSW NIB validation.
     verifyNib(nib)
       .then((r) => setNibResult(r))
       .finally(() => setNibChecked(true));
-    // Real AI HS classification.
-    classifyHs(desc)
-      .then((r) => setHsResult(r))
+    // Real AI HS classification (RAG). Cache the ranked candidates on the Product
+    // so later screens (e.g. Market Intelligence) read them instantly — no re-analysis.
+    classifyHs(desc, 6)
+      .then((r) => {
+        setHsResult(r);
+        if (r) Product.current().setHsClassification(r).save();
+      })
       .finally(() => setHsChecked(true));
   }, []);
 
@@ -73,18 +77,24 @@ export default function VerificationPage() {
     };
   }, []);
 
-  // Reveal results once the NIB check has resolved (min 2.5s UX delay), or after
-  // an 9s safety timeout so a slow upstream never hangs the screen.
+  // Timers: a minimum UX delay so the analysis screen doesn't flash, and a hard
+  // safety timeout so a slow/stuck upstream can never hang the screen forever.
   useEffect(() => {
-    const min = setTimeout(() => {
-      if (nibChecked) setIsComplete(true);
-    }, 2500);
-    const max = setTimeout(() => setIsComplete(true), 9000);
+    const min = setTimeout(() => setMinElapsed(true), 2500);
+    const max = setTimeout(() => setIsComplete(true), 15000);
     return () => {
       clearTimeout(min);
       clearTimeout(max);
     };
-  }, [nibChecked]);
+  }, []);
+
+  // Reveal results only after EVERY process has finished: the OSS/INSW NIB check
+  // AND the AI HS classification must both have resolved (plus the min UX delay).
+  // This prevents showing the result with HS Code stuck at 0% while the AI mapping
+  // is still running in the background.
+  useEffect(() => {
+    if (minElapsed && nibChecked && hsChecked) setIsComplete(true);
+  }, [minElapsed, nibChecked, hsChecked]);
 
   // ── Strict, real scoring derived from live signals ──────────────────────────
   const nibDigits = nibInput.replace(/\D/g, "");
@@ -106,6 +116,26 @@ export default function VerificationPage() {
   const cHs = hsResult?.hs_code ? Math.round(((hsResult.confidence as number) ?? 0.85) * 100) : 0;
   const cProduct = hasProduct ? 100 : 0;
   const totalScore = Math.round(cLegal * 0.45 + cIdentity * 0.2 + cHs * 0.15 + cProduct * 0.2);
+
+  // Readiness level derived from the SAME score, so the dashboard badge stays
+  // consistent with this page's verdict.
+  const profileLevel: "ready" | "partial" | "not_ready" =
+    verdict === "verified"
+      ? totalScore >= 80
+        ? "ready"
+        : "partial"
+      : totalScore >= 50
+        ? "partial"
+        : "not_ready";
+
+  // Single source of truth: persist the exact score + level shown here so the
+  // dashboard's "Skor Kesiapan" renders the same value instead of computing a
+  // second, divergent number (or falling back to a hard-coded default).
+  useEffect(() => {
+    if (!isComplete || typeof window === "undefined") return;
+    localStorage.setItem("tradeconnect_verified_score", String(totalScore));
+    localStorage.setItem("tradeconnect_verified_level", profileLevel);
+  }, [isComplete, totalScore, profileLevel]);
 
   // Count-up to the real score once results are revealed.
   useEffect(() => {

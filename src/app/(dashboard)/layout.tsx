@@ -1,7 +1,11 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { getOnboardingStatus } from "../../lib/onboarding";
+import { AppDataProvider } from "../../lib/app-data";
+import { hasSession, logout } from "../../lib/auth";
+import { Loader2 } from "lucide-react";
 import {
   Anchor,
   Bell,
@@ -22,10 +26,27 @@ import {
   Bot,
 } from "lucide-react";
 import { getStep, TradeConnectStep } from "../../lib/state";
+import { getActivity, ActivityEvent } from "../../lib/api";
+import { Product } from "../../lib/models/product";
 import { getIcon } from "../../lib/icon-map";
 import { getPlan, getPlanInfo, type Plan } from "../../lib/plan";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+
+// Module-level (pure w.r.t. render) so the React compiler doesn't flag Date.now().
+function notifRelTime(iso: string): string {
+  const then = new Date(iso).getTime();
+  if (!Number.isFinite(then)) return "";
+  const s = Math.max(0, Math.floor((Date.now() - then) / 1000));
+  if (s < 60) return "baru saja";
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m} mnt lalu`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h} jam lalu`;
+  const d = Math.floor(h / 24);
+  if (d < 30) return `${d} hr lalu`;
+  return new Date(iso).toLocaleDateString("id-ID");
+}
 
 export default function DashboardLayout({
   children,
@@ -33,8 +54,39 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  // Onboarding gate: no dashboard access until the authenticated user has BOTH a
+  // company (UMKM) and a product. Enforced from real backend ownership.
+  const [gate, setGate] = useState<"checking" | "ok">("checking");
+  useEffect(() => {
+    // Auth guard: no session → login. (401s during the app also bounce to /login.)
+    if (!hasSession()) {
+      router.replace("/login");
+      return;
+    }
+    let cancelled = false;
+    getOnboardingStatus()
+      .then((s) => {
+        if (cancelled) return;
+        if (!s.complete) {
+          const step = !s.hasCompany ? "company" : "product";
+          router.replace(`/?onboarding=${step}`);
+        } else {
+          setGate("ok");
+        }
+      })
+      .catch(() => {
+        // Fail-open on backend/network error so a transient outage never traps the user.
+        if (!cancelled) setGate("ok");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
+
   const navItems = [
     { name: "Dashboard", path: "/dashboard", icon: "dashboard" },
+    { name: "Konsultasi AI", path: "/ai-consultation", icon: "smart_toy" },
     { name: "Intelijen Pasar", path: "/market-intelligence", icon: "bar_chart" },
     { name: "Pencarian Pembeli", path: "/buyer-discovery", icon: "person_search" },
     { name: "Kalkulator Ekspor", path: "/calculator", icon: "calculate" },
@@ -44,12 +96,13 @@ export default function DashboardLayout({
   ];
   const [currentStep, setCurrentStep] = useState<TradeConnectStep>("onboarding");
   const [showNotifications, setShowNotifications] = useState(false);
-  const [hasNewNotifications, setHasNewNotifications] = useState(true);
+  const [hasNewNotifications, setHasNewNotifications] = useState(false);
+  const [notifications, setNotifications] = useState<ActivityEvent[]>([]);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [plan, setPlanState] = useState<Plan>("free");
-  const [companyName, setCompanyName] = useState("CV Kopi Mandiri");
-  const [productName, setProductName] = useState("Kopi Arabika");
+  const [companyName, setCompanyName] = useState("");
+  const [productName, setProductName] = useState("");
 
   const menuItemClass =
     "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-on-surface hover:bg-surface-container-high transition-colors cursor-pointer";
@@ -113,18 +166,16 @@ export default function DashboardLayout({
   useEffect(() => {
     setCurrentStep(getStep());
     setPlanState(getPlan());
-    const savedCompany = localStorage.getItem("tradeconnect_company_name");
-    if (savedCompany) setCompanyName(savedCompany);
-    const savedProduct = localStorage.getItem("tradeconnect_product_name");
-    if (savedProduct) setProductName(savedProduct);
+    const product = Product.current();
+    if (product.companyName) setCompanyName(product.companyName);
+    if (product.name) setProductName(product.name);
 
     const handleStateChange = () => {
       setCurrentStep(getStep());
       setHasNewNotifications(true);
-      const updatedCompany = localStorage.getItem("tradeconnect_company_name");
-      if (updatedCompany) setCompanyName(updatedCompany);
-      const updatedProduct = localStorage.getItem("tradeconnect_product_name");
-      if (updatedProduct) setProductName(updatedProduct);
+      const updated = Product.current();
+      if (updated.companyName) setCompanyName(updated.companyName);
+      if (updated.name) setProductName(updated.name);
     };
     const handlePlanChange = () => setPlanState(getPlan());
     window.addEventListener("tradeconnect_state_change", handleStateChange);
@@ -135,102 +186,43 @@ export default function DashboardLayout({
     };
   }, []);
 
-  const getNotifications = () => {
-    const list = [];
-    
-    // Always include a general notification
-    list.push({
-      id: "welcome",
-      title: "Selamat Datang di TradeConnect",
-      description: "Platform Anda siap untuk mencocokkan produk dengan pembeli global.",
-      type: "info",
-      time: "Baru saja",
+  // Real notifications from the persisted activity feed (notable = non-info
+  // events: PO signed, deal closed, sync completed/failed). No scripted content.
+  useEffect(() => {
+    let cancelled = false;
+    getActivity(15).then((all) => {
+      if (cancelled) return;
+      const notable = all.filter((e) => e.severity !== "info");
+      setNotifications(notable);
+      const seen =
+        typeof window !== "undefined"
+          ? parseInt(localStorage.getItem("tradeconnect_notif_last_seen") || "0", 10) || 0
+          : 0;
+      setHasNewNotifications(notable.some((e) => new Date(e.timestamp).getTime() > seen));
     });
+    return () => {
+      cancelled = true;
+    };
+  }, [currentStep]);
 
-    if (currentStep === "onboarding" || currentStep === "verified") {
-      list.unshift({
-        id: "credential-verify",
-        title: "Pemeriksaan Kredensial Berhasil",
-        description: "NIB & dokumen utama perusahaan Anda telah tervalidasi 100% (OSS & INATRADE).",
-        type: "success",
-        time: "5 menit yang lalu",
-      });
-      list.unshift({
-        id: "match-found",
-        title: "Rekomendasi Pembeli Baru",
-        description: `Klaus Weber (Hamburg, Jerman) sangat cocok dengan profil ${productName} Anda.`,
-        type: "match",
-        time: "2 menit yang lalu",
-      });
-    }
+  const notifType = (e: ActivityEvent): string =>
+    e.category === "negotiation"
+      ? "message"
+      : e.severity === "success"
+        ? "success"
+        : e.category === "sync"
+          ? "success"
+          : "info";
 
-    if (currentStep === "contacted_klaus" || currentStep === "negotiating") {
-      list.unshift({
-        id: "credential-verify",
-        title: "Pemeriksaan Kredensial Berhasil",
-        description: "NIB & dokumen utama perusahaan Anda telah tervalidasi 100% (OSS & INATRADE).",
-        type: "success",
-        time: "15 menit yang lalu",
-      });
-      list.unshift({
-        id: "klaus-reply",
-        title: "Pesan Masuk: Klaus Weber",
-        description: "Klaus Weber membalas tawaran Anda di Pusat Negosiasi: 'Halo! Kami berminat...'",
-        type: "message",
-        time: "Baru saja",
-      });
-    }
-
-    if (currentStep === "compliance" || currentStep === "po_sent") {
-      list.unshift({
-        id: "klaus-ready",
-        title: "Pesan Masuk: Klaus Weber",
-        description: "Klaus Weber setuju dengan finalisasi harga dan menunggu tanda tangan PO.",
-        type: "message",
-        time: "10 menit yang lalu",
-      });
-      list.unshift({
-        id: "compliance-clear",
-        title: "Analisis Kepatuhan Selesai",
-        description: "Transaksi #TRX-892-IDN dinyatakan 100% Bersih & Aman oleh Pemindai Risiko.",
-        type: "success",
-        time: "5 menit yang lalu",
-      });
-      list.unshift({
-        id: "po-sent-notif",
-        title: "Purchase Order Terkirim",
-        description: "Dokumen PO berhasil dibuat dan dikirim ke Klaus Weber untuk ditandatangani.",
-        type: "success",
-        time: "Baru saja",
-      });
-    }
-
-    if (currentStep === "po_signed") {
-      list.unshift({
-        id: "po-signed-notif",
-        title: "Tanda Tangan Digital Berhasil",
-        description: "Klaus Weber telah resmi menandatangani dokumen Purchase Order secara digital!",
-        type: "celebrate",
-        time: "Baru saja",
-      });
-      list.unshift({
-        id: "po-ready",
-        title: "Dokumen Siap Ekspor",
-        description: "Purchase Order final dan dokumen komersial siap diunduh di menu PO.",
-        type: "info",
-        time: "2 menit yang lalu",
-      });
-      list.unshift({
-        id: "klaus-celebrate",
-        title: "Pesan Masuk: Klaus Weber",
-        description: "Exciting partnership ahead! We have signed the PO.",
-        type: "message",
-        time: "3 menit yang lalu",
-      });
-    }
-
-    return list;
-  };
+  // Block dashboard render until the onboarding gate resolves.
+  if (gate === "checking") {
+    return (
+      <div className="h-screen w-full flex flex-col items-center justify-center gap-3 bg-surface text-on-surface-variant">
+        <Loader2 className="size-6 animate-spin text-primary" />
+        <span className="text-sm">Memeriksa status onboarding…</span>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-surface text-on-surface flex h-screen overflow-hidden">
@@ -247,10 +239,13 @@ export default function DashboardLayout({
         </div>
 
         <div className="px-4 mb-6">
-          <button className="w-full bg-primary text-on-primary font-semibold text-sm py-2 px-4 rounded-md flex items-center justify-center gap-2 hover:bg-primary-hover transition-colors cursor-pointer">
+          <Link
+            href="/ai-consultation"
+            className="w-full bg-primary text-on-primary font-semibold text-sm py-2 px-4 rounded-md flex items-center justify-center gap-2 hover:bg-primary-hover transition-colors cursor-pointer no-underline"
+          >
             <Bot className="size-4" />
             Konsultasi Mentor AI
-          </button>
+          </Link>
         </div>
 
         <div className="flex-1 px-2 flex flex-col gap-0.5">
@@ -373,6 +368,8 @@ export default function DashboardLayout({
                     onClick={() => {
                       setHasNewNotifications(false);
                       setShowNotifications(false);
+                      if (typeof window !== "undefined")
+                        localStorage.setItem("tradeconnect_notif_last_seen", String(Date.now()));
                     }}
                     className="text-xs text-primary hover:underline font-semibold cursor-pointer"
                   >
@@ -380,34 +377,41 @@ export default function DashboardLayout({
                   </button>
                 </div>
                 <div className="max-h-96 overflow-y-auto divide-y divide-outline-variant">
-                  {getNotifications().map((notif) => (
-                    <div key={notif.id} className="p-4 hover:bg-surface-container-low transition-colors flex gap-3">
-                      <div className="shrink-0 mt-0.5">
-                        {notif.type === "success" && (
-                          <BadgeCheck className="size-5 text-secondary" />
-                        )}
-                        {notif.type === "celebrate" && (
-                          <Trophy className="size-5 text-secondary animate-bounce" />
-                        )}
-                        {notif.type === "match" && (
-                          <Radar className="size-5 text-secondary" />
-                        )}
-                        {notif.type === "message" && (
-                          <MessageCircle className="size-5 text-primary" />
-                        )}
-                        {notif.type === "info" && (
-                          <Info className="size-5 text-primary-fixed-dim" />
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex justify-between items-start gap-2">
-                          <h4 className="text-xs font-bold text-on-surface truncate">{notif.title}</h4>
-                          <span className="text-[9px] text-on-surface-variant shrink-0">{notif.time}</span>
-                        </div>
-                        <p className="text-xs text-on-surface-variant mt-1 leading-relaxed font-medium">{notif.description}</p>
-                      </div>
+                  {notifications.length === 0 ? (
+                    <div className="p-6 text-center text-xs text-on-surface-variant">
+                      Belum ada notifikasi. Notifikasi muncul dari aktivitas nyata (negosiasi, PO, sinkronisasi).
                     </div>
-                  ))}
+                  ) : (
+                    notifications.map((notif) => {
+                      const t = notifType(notif);
+                      return (
+                        <Link
+                          key={notif.id}
+                          href={notif.link}
+                          onClick={() => {
+                            setHasNewNotifications(false);
+                            setShowNotifications(false);
+                            if (typeof window !== "undefined")
+                              localStorage.setItem("tradeconnect_notif_last_seen", String(Date.now()));
+                          }}
+                          className="p-4 hover:bg-surface-container-low transition-colors flex gap-3 no-underline"
+                        >
+                          <div className="shrink-0 mt-0.5">
+                            {t === "success" && <BadgeCheck className="size-5 text-secondary" />}
+                            {t === "message" && <MessageCircle className="size-5 text-primary" />}
+                            {t === "info" && <Info className="size-5 text-primary-fixed-dim" />}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex justify-between items-start gap-2">
+                              <h4 className="text-xs font-bold text-on-surface truncate">{notif.title}</h4>
+                              <span className="text-[9px] text-on-surface-variant shrink-0">{notifRelTime(notif.timestamp)}</span>
+                            </div>
+                            <p className="text-xs text-on-surface-variant mt-1 leading-relaxed font-medium">{notif.description}</p>
+                          </div>
+                        </Link>
+                      );
+                    })
+                  )}
                 </div>
               </div>
             )}
@@ -477,13 +481,15 @@ export default function DashboardLayout({
                       </button>
                     </div>
                     <div className="border-t border-outline-variant p-1.5">
-                      <Link
-                        href="/"
-                        onClick={() => setShowProfileMenu(false)}
-                        className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-error transition-colors hover:bg-error-container cursor-pointer"
+                      <button
+                        onClick={() => {
+                          setShowProfileMenu(false);
+                          logout();
+                        }}
+                        className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-error transition-colors hover:bg-error-container cursor-pointer"
                       >
                         <LogOut className="size-[18px]" /> Keluar
-                      </Link>
+                      </button>
                     </div>
                   </div>
                 </>
@@ -492,9 +498,10 @@ export default function DashboardLayout({
           </div>
         </header>
 
-        {/* Page Content */}
+        {/* Page Content — wrapped in the centralized server-driven state provider
+            (mounts only after the auth + onboarding gate passes above). */}
         <div className="flex-1 overflow-hidden relative">
-          {children}
+          <AppDataProvider>{children}</AppDataProvider>
         </div>
       </div>
 

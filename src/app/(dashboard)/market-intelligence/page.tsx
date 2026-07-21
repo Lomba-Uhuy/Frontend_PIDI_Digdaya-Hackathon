@@ -24,18 +24,23 @@ import {
   HsOption,
   RegionOption,
 } from "../../../lib/api";
+import { Product } from "../../../lib/models/product";
 
 const fmtUsd = (v: number | null | undefined) =>
   v == null ? "—" : "$" + Math.round(v).toLocaleString("en-US");
 
 export default function MarketIntelligencePage() {
   // HS code = real 2-digit chapter with ingested data (e.g. "09", "46", "15").
-  const [hsCode, setHsCode] = useState("09");
+  // Empty until we know the product's relevant chapter (avoids showing an
+  // irrelevant chapter's data on first paint).
+  const [hsCode, setHsCode] = useState("");
   const [region, setRegion] = useState("global");
 
   // Real reference data for the dropdowns (from ingested BPS data).
   const [hsOptions, setHsOptions] = useState<HsOption[]>([]);
   const [regionOptions, setRegionOptions] = useState<RegionOption[]>([]);
+  // True when the HS dropdown was narrowed to the product's relevant chapters.
+  const [hsTailored, setHsTailored] = useState(false);
 
   // Custom high-fidelity modal & interactive states
   const [showReportModal, setShowReportModal] = useState(false);
@@ -48,27 +53,49 @@ export default function MarketIntelligencePage() {
   // Real top markets aggregated from bps_trade_data (reliable for every chapter).
   const [topMarkets, setTopMarkets] = useState<MarketStat[]>([]);
 
-  // Load the real dropdown options + default HS from the user's product chapter.
+  // The HS dropdown is DYNAMIC and product-specific: it lists only the HS chapters
+  // that the semantic (RAG) classifier deems relevant to the user's product — not a
+  // hardcoded list. We classify the product description (the same one used at
+  // onboarding), take the ranked top-k HS candidates, reduce them to 2-digit
+  // chapters, and keep only those that actually have ingested market data. Falls
+  // back to all data-backed chapters if classification is unavailable so the page
+  // always works.
   useEffect(() => {
     let cancelled = false;
-    getHsCodes().then((opts) => {
+
+    // Read the ranked RAG HS candidates cached on the Product at verification time
+    // (ordered most → least relevant). `ensureHsClassification` only hits the
+    // classifier if nothing was cached yet, so normally this resolves instantly.
+    const product = Product.current();
+
+    Promise.all([getHsCodes(), product.ensureHsClassification(6)]).then(([opts]) => {
       if (cancelled || !opts || opts.length === 0) return;
-      setHsOptions(opts);
-      const savedType = typeof window !== "undefined" ? localStorage.getItem("tradeconnect_product_type") : null;
-      // coffee → chapter 09, rattan/plaiting → chapter 46; else first available.
-      const preferred = savedType === "rattan" ? "46" : "09";
-      const match = opts.find((o) => o.code === preferred) ?? opts[0];
-      setHsCode(match.code);
+
+      // Relevant 2-digit chapters that also have ingested market data, in the
+      // classifier's relevance order.
+      const relevant = product
+        .relevantChapters()
+        .map((ch) => opts.find((o) => o.code === ch))
+        .filter((o): o is HsOption => Boolean(o));
+
+      const tailored = relevant.length > 0;
+      const finalOpts = tailored ? relevant : opts;
+      setHsOptions(finalOpts);
+      setHsTailored(tailored);
+      setHsCode(finalOpts[0].code);
     });
+
     getRegions().then((opts) => {
       if (!cancelled && opts) setRegionOptions(opts);
     });
+
     return () => {
       cancelled = true;
     };
   }, []);
 
   useEffect(() => {
+    if (!hsCode) return;
     let cancelled = false;
     const hs = hsCode.replace(/[^0-9]/g, "");
     setLiveLoading(true);
@@ -86,6 +113,7 @@ export default function MarketIntelligencePage() {
 
   // Real top markets per chapter (BPS aggregation) — reliable for every HS.
   useEffect(() => {
+    if (!hsCode) return;
     let cancelled = false;
     getTopMarkets(hsCode.replace(/[^0-9]/g, "")).then((rows) => {
       if (!cancelled && rows) setTopMarkets(rows);
@@ -159,7 +187,7 @@ Skor Kesiapan Ekspor: 85/100 (Sangat Siap)
 4. TINDAKAN REKOMENDASI AI
    - Segera ajukan koordinat geolokasi terverifikasi ke sistem INATRADE.
    - Kunci harga CIF Hamburg Anda di kalkulator ekspor berdasarkan margin minimum 15%.
-   - Gunakan generator email pintar AI TradeConnect untuk menjangkau pembeli terdaftar (Klaus Weber) secara instan.
+   - Gunakan generator email pintar AI TradeConnect untuk menjangkau pembeli terdaftar dari Penemuan Pembeli secara instan.
 
 ==================================================
 Dibuat secara otomatis oleh TradeConnect AI.
@@ -198,7 +226,12 @@ Keamanan data pabean terjamin 100%.
             <div className="flex-1 lg:flex-none border border-outline-variant rounded-md bg-surface-container-lowest flex text-sm overflow-hidden shadow-sm">
               {/* HS Code Selection dropdown */}
               <div className="px-4 py-2 hover:bg-surface-container-low transition-colors relative flex flex-col justify-center min-w-[200px]">
-                <div className="text-[10px] font-bold text-on-surface-variant uppercase mb-0.5 tracking-wider">KODE HS / KOMODITAS</div>
+                <div className="text-[10px] font-bold text-on-surface-variant uppercase mb-0.5 tracking-wider flex items-center gap-1">
+                  KODE HS / KOMODITAS
+                  {hsTailored && (
+                    <span className="text-secondary normal-case tracking-normal font-semibold">· sesuai produk Anda</span>
+                  )}
+                </div>
                 <div className="relative flex items-center">
                   <Barcode className="text-primary mr-1 size-4" />
                   <select
@@ -207,7 +240,7 @@ Keamanan data pabean terjamin 100%.
                     className="bg-transparent font-semibold text-on-surface outline-none appearance-none pr-6 cursor-pointer text-xs w-full"
                   >
                     {hsOptions.length === 0 ? (
-                      <option value={hsCode}>Memuat kode HS…</option>
+                      <option value={hsCode}>Menganalisis produk Anda…</option>
                     ) : (
                       hsOptions.map((o) => (
                         <option key={o.code} value={o.code}>

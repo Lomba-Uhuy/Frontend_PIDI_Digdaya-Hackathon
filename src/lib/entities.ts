@@ -201,19 +201,36 @@ export async function verifyNib(nib: string): Promise<NibVerification | null> {
   }
 }
 
+export interface HsCandidate {
+  hs_code: string;
+  description?: string;
+  confidence?: number;
+  category?: string;
+}
+
 export interface HsClassification {
   hs_code: string;
   confidence?: number;
   description?: string;
+  category?: string;
+  /** Ranked semantic candidates (RAG top-k) — the HS codes relevant to the product. */
+  top_k?: HsCandidate[];
   [key: string]: unknown;
 }
 
-export async function classifyHs(description: string): Promise<HsClassification | null> {
+export async function classifyHs(
+  description: string,
+  topK = 3,
+): Promise<HsClassification | null> {
   if (!isLive()) return null;
   try {
     // MatchingProxy: POST /matching/classify-hs (forwards to hs-classifier).
     // Cold model load can be slow — cap it so the UI never hangs; fall back on timeout.
-    return await apiPost<HsClassification>("/matching/classify-hs", { description }, { timeoutMs: 12000 });
+    return await apiPost<HsClassification>(
+      "/matching/classify-hs",
+      { description, top_k: topK },
+      { timeoutMs: 12000 },
+    );
   } catch (e) {
     console.warn("classifyHs failed:", e);
     return null;
