@@ -1,8 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Anchor, Loader2, Lock, Mail } from "lucide-react";
+import { Loader2, Lock, Mail } from "lucide-react";
+import { Logo } from "../../components/ui/logo";
 import { loginUser, registerUser, hasSession } from "../../lib/auth";
+import { postAuthRedirect } from "../../lib/entitlements";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -13,10 +15,18 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  // Already authenticated → straight to the app (the onboarding gate takes over).
+  // Already authenticated → route by role (admin → admin platform, umkm → app).
   useEffect(() => {
-    if (hasSession()) router.replace("/dashboard");
+    if (hasSession()) router.replace(postAuthRedirect());
   }, [router]);
+
+  // Open the register tab when arrived via "Start Free" (?mode=register).
+  // Read from window (client-only) to avoid a useSearchParams Suspense boundary.
+  useEffect(() => {
+    if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("mode") === "register") {
+      setMode("register");
+    }
+  }, []);
 
   const submit = async () => {
     setError(null);
@@ -41,8 +51,8 @@ export default function LoginPage() {
         : await registerUser(email.trim(), password);
     setBusy(false);
     if (res.ok) {
-      // New/returning user → dashboard; the layout gate routes to onboarding if needed.
-      router.replace("/dashboard");
+      // Route by role: admin → admin platform; umkm → app (gate handles onboarding).
+      router.replace(postAuthRedirect());
     } else {
       setError(res.error ?? "Terjadi kesalahan.");
     }
@@ -52,9 +62,7 @@ export default function LoginPage() {
     <div className="min-h-screen w-full flex items-center justify-center bg-surface-bright p-4">
       <div className="w-full max-w-md">
         <div className="flex items-center justify-center gap-3 mb-8">
-          <div className="w-11 h-11 rounded-lg bg-primary flex items-center justify-center text-on-primary">
-            <Anchor className="size-6" strokeWidth={2.25} />
-          </div>
+          <Logo size={44} priority />
           <div>
             <h1 className="text-2xl font-black text-primary font-heading">TradeConnect</h1>
             <p className="text-[10px] text-on-surface-variant uppercase tracking-wider font-bold">Infrastruktur Ekspor AI</p>

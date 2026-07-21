@@ -16,8 +16,8 @@ import {
   XCircle,
 } from "lucide-react";
 import { ProgressRing } from "../../components/ui/progress-ring";
-import { verifyNib, classifyHs, getStoredIds, NibVerification, HsClassification } from "../../lib/entities";
-import { Product } from "../../lib/models/product";
+import { verifyNib, getProductClassification, getStoredIds, NibVerification, HsClassification } from "../../lib/entities";
+import { fetchProductView } from "../../lib/product-view";
 
 type Verdict = "verified" | "failed" | "incomplete";
 
@@ -42,27 +42,61 @@ export default function VerificationPage() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const product = Product.current();
-    setCompanyName(product.companyName || "");
-    setProductName(product.name || "");
-    const nib = product.nib || "";
-    setNibInput(nib);
-    setHasProduct(Boolean(getStoredIds().productId));
+    let cancelled = false;
+    let hsAttempts = 0;
 
-    const desc = product.description || product.name || "Produk ekspor Indonesia";
+    (async () => {
+      // Company / product / NIB all come from the backend (no local product store).
+      const view = await fetchProductView();
+      if (cancelled) return;
+      setCompanyName(view.companyName || "");
+      setProductName(view.name || "");
+      const nib = view.nib || "";
+      setNibInput(nib);
+      setHasProduct(Boolean(view.id || getStoredIds().productId));
 
-    // Real OSS/INSW NIB validation.
-    verifyNib(nib)
-      .then((r) => setNibResult(r))
-      .finally(() => setNibChecked(true));
-    // Real AI HS classification (RAG). Cache the ranked candidates on the Product
-    // so later screens (e.g. Market Intelligence) read them instantly — no re-analysis.
-    classifyHs(desc, 6)
-      .then((r) => {
-        setHsResult(r);
-        if (r) Product.current().setHsClassification(r).save();
-      })
-      .finally(() => setHsChecked(true));
+      // Real OSS/INSW NIB validation.
+      verifyNib(nib)
+        .then((r) => { if (!cancelled) setNibResult(r); })
+        .finally(() => { if (!cancelled) setNibChecked(true); });
+
+      // HS classification is produced + persisted by the backend Product
+      // Initialization Workflow (hs_classification stage). Use the persisted result;
+      // poll briefly if the workflow is still running. Never classify client-side.
+      if (view.hsCode) {
+        setHsResult({
+          hs_code: view.hsCode,
+          confidence: view.hsConfidence ?? undefined,
+          description: view.hsCandidates[0]?.description,
+          category: view.hsCategory,
+          top_k: view.hsCandidates,
+        });
+        setHsChecked(true);
+        return;
+      }
+      const pollHs = () => {
+        getProductClassification()
+          .then((r) => {
+            if (cancelled) return;
+            if (r?.hs_code) {
+              setHsResult(r);
+              setHsChecked(true);
+            } else if (++hsAttempts < 5) {
+              setTimeout(pollHs, 1500);
+            } else {
+              setHsChecked(true); // full HS view is shown on the Initialization screen
+            }
+          })
+          .catch(() => {
+            if (!cancelled) setHsChecked(true);
+          });
+      };
+      pollHs();
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Staged progress animation for the analysis screen.
@@ -349,7 +383,7 @@ export default function VerificationPage() {
         <div className="bg-surface-container-low p-4 md:p-6 border-t border-outline-variant flex justify-end gap-3">
           {verdict !== "verified" ? (
             <button
-              onClick={() => router.push("/")}
+              onClick={() => router.push("/onboarding")}
               className="px-6 py-2.5 text-xs font-medium bg-primary text-on-primary hover:bg-surface-tint rounded-md transition-colors flex items-center gap-2 shadow-sm"
             >
               <RotateCcw className="size-4" />
@@ -358,16 +392,16 @@ export default function VerificationPage() {
           ) : (
             <>
               <button
-                onClick={() => router.push("/")}
+                onClick={() => router.push("/onboarding")}
                 className="px-4 py-2.5 text-xs font-medium text-primary hover:bg-surface rounded-md transition-colors"
               >
                 Tinjau Data
               </button>
               <button
-                onClick={() => router.push("/dashboard")}
+                onClick={() => router.push("/initialization")}
                 className="px-6 py-2.5 text-xs font-medium bg-primary text-on-primary hover:bg-surface-tint rounded-md transition-colors flex items-center gap-2 shadow-sm"
               >
-                Masuk ke Dasbor Eksportir
+                Mulai Inisialisasi Produk
                 <ArrowRight className="size-4" />
               </button>
             </>

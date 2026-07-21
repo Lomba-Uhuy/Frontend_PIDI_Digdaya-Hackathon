@@ -14,8 +14,9 @@ const lexend = Lexend({
 });
 
 export const metadata: Metadata = {
-  title: "TradeConnect - Onboarding Wizard",
-  description: "Institutional Export Terminal Initialization",
+  title: "TradeConnect — Platform Ekspor untuk UMKM Indonesia",
+  description: "Bantu UMKM Indonesia menyiapkan produk, menemukan peluang internasional, dan mengelola kesiapan ekspor dalam satu platform terpadu.",
+  icons: { icon: "/logo-tradeconnect.webp", shortcut: "/logo-tradeconnect.webp", apple: "/logo-tradeconnect.webp" },
 };
 
 const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem('tradeconnect_theme');var isDark=t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);if(isDark)document.documentElement.classList.add('dark');}catch(e){}})();`;

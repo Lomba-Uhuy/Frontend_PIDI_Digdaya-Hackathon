@@ -21,7 +21,7 @@ import {
 import { Avatar } from "../../../components/ui/avatar";
 import { Badge } from "../../../components/ui/badge";
 import { setStep as setJourneyStep } from "../../../lib/state";
-import { Product } from "../../../lib/models/product";
+import { useProductView } from "../../../lib/app-data";
 import { createDeal } from "../../../lib/deals";
 import { createReminder } from "../../../lib/reminders";
 import {
@@ -108,11 +108,11 @@ export default function BuyerDiscoveryPage() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  const product = useMemo(() => (typeof window !== "undefined" ? Product.current() : null), []);
+  const product = useProductView();
   // 4-digit HS heading of the user's product — used to show only buyers that
   // source products matching the user's product (not the whole directory).
   const productHs = useMemo(() => {
-    const raw = product?.hsCode || product?.hsCandidates?.[0]?.hs_code || "";
+    const raw = product.hsCode || product.hsCandidates?.[0]?.hs_code || "";
     return raw.replace(/\D/g, "").slice(0, 4);
   }, [product]);
   const [matchProduct, setMatchProduct] = useState(true);
@@ -141,19 +141,8 @@ export default function BuyerDiscoveryPage() {
     getBuyerCountries().then(setCountryOptions);
   }, []);
 
-  // Kick off a background sync of REAL importers for this product's HS codes.
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const hs = (Product.current().hsCandidates || []).map((c) => c.hs_code).filter(Boolean).slice(0, 3);
-    if (hs.length === 0) return;
-    const key = `tradeconnect_buyer_sync:${hs.join(",")}`;
-    if (localStorage.getItem(key)) return;
-    localStorage.setItem(key, "pending");
-    triggerBuyerSync(hs).then((res) => {
-      if (res) localStorage.setItem(key, res.task_id || res.status || "done");
-      else localStorage.removeItem(key);
-    });
-  }, []);
+  // Buyer synchronization for this product's HS codes is owned by the backend
+  // Product Initialization Workflow (buyer_sync stage) — no client-triggered sync.
 
   // ── Fetch buyers from the backend whenever query/filter/sort/page changes ─────
   const load = useCallback(async () => {

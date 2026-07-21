@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { setStep as setJourneyStep } from "../../../lib/state";
-import { Product } from "../../../lib/models/product";
+import { useProductView } from "../../../lib/app-data";
 import {
   getActiveDealId,
   getPurchaseOrder,
@@ -61,8 +61,8 @@ export default function PurchaseOrderPage() {
     setStatus("ready");
   }, []);
 
+  const product = useProductView();
   useEffect(() => {
-    const product = Product.current();
     setCompanyName(product.companyName);
     setNib(product.nib);
     setHsCode(product.hsCode || product.hsCandidates?.[0]?.hs_code || "");
@@ -70,7 +70,7 @@ export default function PurchaseOrderPage() {
     setDealId(id);
     if (id) void load(id);
     else setStatus("empty");
-  }, [load]);
+  }, [load, product]);
 
   const handleSend = async () => {
     if (!dealId) return;

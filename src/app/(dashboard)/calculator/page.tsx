@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { setFinalPrice } from "../../../lib/state";
 import { getPricingBreakdown, PricingBreakdown } from "../../../lib/api";
-import { Product } from "../../../lib/models/product";
+import { useProductView } from "../../../lib/app-data";
 import { getSelectedBuyer, SelectedBuyer } from "../../../lib/selected-buyer";
 import {
   AlertTriangle,
@@ -53,11 +53,10 @@ export default function ExportCalculatorPage() {
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [savedPrice, setSavedPrice] = useState<number | null>(null);
 
-  // Seed defaults from the real product once, on mount.
+  // Seed defaults from the real backend product (re-seeds once it loads).
+  const p = useProductView();
   useEffect(() => {
     setSelectedBuyer(getSelectedBuyer());
-    if (typeof window === "undefined") return;
-    const p = Product.current();
     setProductName(p.name);
     setHsCode(p.hsCode || p.hsCandidates?.[0]?.hs_code || "");
     const s = p.floorPriceUsd && p.floorPriceUsd > 0 ? p.floorPriceUsd : 2;
@@ -66,7 +65,7 @@ export default function ExportCalculatorPage() {
     setLocalHandling(Number((s * 0.06).toFixed(2)));
     setFreight(Number((s * 0.08).toFixed(2)));
     setInsurance(Number((s * 0.04).toFixed(2)));
-  }, []);
+  }, [p]);
 
   // Slider ranges scale to the product's price magnitude — no per-product hardcoding.
   const R = useMemo(() => {

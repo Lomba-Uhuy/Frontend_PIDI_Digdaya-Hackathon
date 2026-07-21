@@ -21,9 +21,9 @@ import {
   ActivityStatistics,
 } from "../../../lib/api";
 import { getStoredIds, getReadiness } from "../../../lib/entities";
-import { Product } from "../../../lib/models/product";
 import { computeCompleteness, Completeness } from "../../../lib/product-completeness";
-import { useAppData } from "../../../lib/app-data";
+import { useAppData, useProductView } from "../../../lib/app-data";
+import { getWorkflowActivity } from "../../../lib/workflow";
 import {
   Activity,
   ArrowRight,
@@ -33,7 +33,6 @@ import {
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
-  Cpu,
   ExternalLink,
   FileText,
   Globe,
@@ -44,7 +43,6 @@ import {
   Radar,
   RefreshCw,
   Send,
-  ServerCog,
   Sparkles,
   TrendingUp,
   Truck,
@@ -110,9 +108,10 @@ const DEAL_STATUS_LABEL: Record<DealStatus, string> = {
 export default function DashboardPage() {
   const router = useRouter();
   // Centralized server-driven company + product (backend is the source of truth).
-  const { company: backendCompany, product: backendProduct } = useAppData();
+  const { company: backendCompany, product: backendProduct, productId: appProductId } = useAppData();
 
-  const [product, setProduct] = useState<Product | null>(null);
+  // Backend-sourced product (single source of truth; replaces localStorage model).
+  const product = useProductView();
   const [deals, setDeals] = useState<Deal[]>([]);
   const [dealsTotal, setDealsTotal] = useState(0);
   const [matches, setMatches] = useState<BuyerMatch[]>([]);
@@ -132,22 +131,28 @@ export default function DashboardPage() {
 
   const loadActivity = () => {
     setActivityLoading(true);
-    getActivity(30).then((a) => {
-      setActivity(a);
+    const pid = appProductId ?? getStoredIds().productId;
+    Promise.all([
+      getActivity(30),
+      pid ? getWorkflowActivity(pid) : Promise.resolve([] as ActivityEvent[]),
+    ]).then(([a, wf]) => {
+      // Merge persisted deal/PO/sync activity with persisted workflow events,
+      // newest first. Both sources are backend-owned — nothing is fabricated.
+      const merged = [...a, ...wf].sort(
+        (x, y) => new Date(y.timestamp).getTime() - new Date(x.timestamp).getTime(),
+      );
+      setActivity(merged);
       setActivityPage(1);
       setActivityLoading(false);
     });
   };
 
-  // ── Product (real: user input + cached AI HS classification) ─────────────────
+  // ── Product completeness + market lookup, from the backend-sourced view ──────
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const p = Product.current();
-    setProduct(p);
-    setCompleteness(computeCompleteness(p));
-    const hs = p.hsCode || p.hsCandidates?.[0]?.hs_code || "";
+    setCompleteness(computeCompleteness(product));
+    const hs = product.hsCode || product.hsCandidates?.[0]?.hs_code || "";
     if (hs) getTopMarkets(hs).then((m) => m && setMarkets(m));
-  }, []);
+  }, [product]);
 
   // ── Real backend aggregates ──────────────────────────────────────────────────
   useEffect(() => {
@@ -163,9 +168,14 @@ export default function DashboardPage() {
     getBuyerAnalytics().then((a) => a && setBuyerAnalytics(a));
     getActivityStatistics().then((s) => s && setActivityStats(s));
     loadActivity();
-    const pid = getStoredIds().productId;
-    if (pid) matchBuyers(pid, 3).then((m) => m && setMatches(m));
   }, []);
+
+  // Top-3 AI buyer matches — keyed to the backend product id (authoritative), so
+  // it fires once the product loads rather than depending on a localStorage cache.
+  useEffect(() => {
+    const pid = appProductId ?? getStoredIds().productId;
+    if (pid) matchBuyers(pid, 3).then((m) => m && setMatches(m));
+  }, [appProductId]);
 
   // ── Readiness: verified score (single source of truth) else backend ──────────
   useEffect(() => {
@@ -554,72 +564,8 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* Observability — AI processing + external provider health (real signals) */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 shadow-sm">
-            <div className="flex items-center gap-2 mb-4">
-              <Cpu className="size-5 text-primary" />
-              <h2 className="text-base font-semibold text-on-surface">Pemrosesan AI & Sinkronisasi</h2>
-            </div>
-            <div className="grid grid-cols-3 gap-3 mb-4">
-              <MiniStat
-                label="Terindeks"
-                value={buyerAnalytics ? `${buyerAnalytics.total - buyerAnalytics.missing_embeddings}/${buyerAnalytics.total}` : "—"}
-              />
-              <MiniStat label="Sync 7 hr" value={buyerAnalytics ? String(buyerAnalytics.recently_synced) : "—"} />
-              <MiniStat label="Total Event" value={activityStats ? String(activityStats.total) : "—"} />
-            </div>
-            {activityStats?.lastSync ? (
-              <div className="flex items-center justify-between text-xs bg-surface p-3 rounded-lg border border-outline-variant">
-                <span className="text-on-surface-variant">Sinkronisasi terakhir ({activityStats.lastSync.provider})</span>
-                <span className="flex items-center gap-1.5 font-medium text-on-surface">
-                  <span className={`w-2 h-2 rounded-full ${activityStats.lastSync.status === "completed" ? "bg-secondary" : activityStats.lastSync.status === "error" ? "bg-error" : "bg-warning"}`} />
-                  {activityStats.lastSync.buyersUpserted} pembeli •{" "}
-                  {activityStats.lastSync.finishedAt ? relativeTime(activityStats.lastSync.finishedAt) : "berjalan"}
-                </span>
-              </div>
-            ) : (
-              <p className="text-xs text-on-surface-variant">Belum ada sinkronisasi tercatat.</p>
-            )}
-          </div>
-
-          <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 shadow-sm">
-            <div className="flex items-center gap-2 mb-4">
-              <ServerCog className="size-5 text-primary" />
-              <h2 className="text-base font-semibold text-on-surface">Kesehatan Provider Eksternal</h2>
-            </div>
-            <div className="space-y-2.5">
-              <ProviderRow
-                name="TradeAtlas (sinkronisasi)"
-                state={
-                  !activityStats?.lastSync
-                    ? "unknown"
-                    : activityStats.lastSync.status === "completed"
-                      ? "up"
-                      : activityStats.lastSync.status === "error"
-                        ? "down"
-                        : "degraded"
-                }
-                note={activityStats?.lastSync ? `status: ${activityStats.lastSync.status}` : "belum ada data sync"}
-              />
-              <ProviderRow
-                name="Layanan Embedding"
-                state={buyerAnalytics ? (buyerAnalytics.missing_embeddings === 0 ? "up" : "degraded") : "unknown"}
-                note={buyerAnalytics ? `${buyerAnalytics.missing_embeddings} tanpa embedding` : "—"}
-              />
-              <ProviderRow
-                name="Basis Pengetahuan RAG"
-                state={health?.services.find((s) => s.name === "comms-service")?.up ? "up" : "unknown"}
-                note="melayani Konsultasi AI"
-              />
-              <ProviderRow name="Model LLM (Gemini)" state="unknown" note="tidak dipantau langsung" />
-              <ProviderRow name="BPS / UN Comtrade" state="unknown" note="tanpa probe kesehatan" />
-            </div>
-            <p className="text-[10px] text-on-surface-variant mt-3">
-              Status diturunkan dari sinyal nyata (sinkronisasi, embedding, kesehatan layanan). &ldquo;Tidak diketahui&rdquo; ditampilkan jujur bila tidak ada probe.
-            </p>
-          </div>
-        </div>
+        {/* AI processing + external provider health are admin-only concerns —
+            not shown on the UMKM dashboard. See the Admin Platform. */}
 
         {/* Active negotiations (real /deals) */}
         <div className="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm overflow-hidden">
@@ -794,35 +740,6 @@ function Pager({
       >
         <ChevronRight className="size-4" />
       </button>
-    </div>
-  );
-}
-
-function ProviderRow({
-  name,
-  state,
-  note,
-}: {
-  name: string;
-  state: "up" | "degraded" | "down" | "unknown";
-  note?: string;
-}) {
-  const meta = {
-    up: { dot: "bg-secondary", label: "Operasional", color: "text-secondary" },
-    degraded: { dot: "bg-warning", label: "Sebagian", color: "text-warning" },
-    down: { dot: "bg-error", label: "Gangguan", color: "text-error" },
-    unknown: { dot: "bg-outline", label: "Tidak diketahui", color: "text-on-surface-variant" },
-  }[state];
-  return (
-    <div className="flex items-center justify-between gap-2">
-      <div className="flex items-center gap-2 min-w-0">
-        <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${meta.dot} ${state === "up" ? "" : state === "unknown" ? "" : "animate-pulse"}`} />
-        <span className="text-sm text-on-surface truncate">{name}</span>
-      </div>
-      <div className="text-right shrink-0">
-        <span className={`text-xs font-semibold ${meta.color}`}>{meta.label}</span>
-        {note && <p className="text-[10px] text-on-surface-variant">{note}</p>}
-      </div>
     </div>
   );
 }
