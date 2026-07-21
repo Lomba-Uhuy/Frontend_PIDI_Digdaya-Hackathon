@@ -24,6 +24,9 @@ import {
   X,
 } from "lucide-react";
 import { resetState, setStep as setJourneyStep } from "../lib/state";
+import { hasSession } from "../lib/auth";
+import { ensureUmkmAndProduct } from "../lib/entities";
+import { Product } from "../lib/models/product";
 import { Stepper } from "../components/ui/stepper";
 
 export default function OnboardingWizard() {
@@ -38,12 +41,18 @@ export default function OnboardingWizard() {
   const [floorPrice, setFloorPrice] = useState("");
   const [askingPrice, setAskingPrice] = useState("");
   const [nib, setNib] = useState("");
+  const [nibError, setNibError] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [moq, setMoq] = useState("");
   const [capacity, setCapacity] = useState("");
   const [logistics, setLogistics] = useState("fob");
 
   useEffect(() => {
+    // Auth guard — onboarding is only for authenticated users.
+    if (typeof window !== "undefined" && !hasSession()) {
+      router.replace("/login");
+      return;
+    }
     resetState();
     // Clear custom localStorage items on onboarding
     if (typeof window !== "undefined") {
@@ -57,19 +66,22 @@ export default function OnboardingWizard() {
       localStorage.removeItem("tradeconnect_capacity");
       localStorage.removeItem("tradeconnect_logistics");
       localStorage.removeItem("tradeconnect_product_type");
+      // Reset the consolidated Product model (incl. any cached HS classification)
+      // so a fresh onboarding re-classifies for the new product.
+      localStorage.removeItem("tradeconnect_product");
     }
   }, []);
 
 
 
-  const handleCompleteSetup = () => {
+  const handleCompleteSetup = async () => {
     if (typeof window !== "undefined") {
-      localStorage.setItem("tradeconnect_product_name", productName || "Biji Kopi Robusta Premium");
-      localStorage.setItem("tradeconnect_product_desc", productDesc || "Biji kopi robusta Grade 1 premium buatan petani lokal Indonesia dengan keasaman seimbang.");
-      localStorage.setItem("tradeconnect_nib", nib || "1234567890123");
-      localStorage.setItem("tradeconnect_company_name", companyName || "PT Nusantara Global Coffee");
-      localStorage.setItem("tradeconnect_moq", moq || "1000 Pcs");
-      localStorage.setItem("tradeconnect_capacity", capacity || "50,000 Units");
+      localStorage.setItem("tradeconnect_product_name", productName);
+      localStorage.setItem("tradeconnect_product_desc", productDesc);
+      localStorage.setItem("tradeconnect_nib", nib);
+      localStorage.setItem("tradeconnect_company_name", companyName);
+      localStorage.setItem("tradeconnect_moq", moq);
+      localStorage.setItem("tradeconnect_capacity", capacity);
       localStorage.setItem("tradeconnect_logistics", logistics || "fob");
       
       const isRattan = (productName || "").toLowerCase().includes("rotan") || (productName || "").toLowerCase().includes("rattan") || (productName || "").toLowerCase().includes("kursi");
@@ -94,6 +106,41 @@ export default function OnboardingWizard() {
       localStorage.setItem("tradeconnect_floor_price", finalFloorPriceUsd.toFixed(2));
       localStorage.setItem("tradeconnect_asking_price", finalAskingPriceUsd.toFixed(2));
       localStorage.setItem("tradeconnect_final_price", finalAskingPriceUsd.toFixed(2));
+
+      // Build the product as a first-class object (single source of truth). It
+      // hydrates the name/description/type just written above, then we attach the
+      // remaining editable fields and persist (this also mirrors the legacy keys).
+      Product.current()
+        .update({
+          companyName: companyName,
+          nib: nib,
+          moq: moq,
+          capacity: capacity,
+          logistics: logistics || "fob",
+          productType: isRattan ? "rattan" : "coffee",
+          floorPriceUsd: finalFloorPriceUsd,
+          askingPriceUsd: finalAskingPriceUsd,
+        })
+        .save();
+
+      // Backend-first: the company + product MUST persist in the backend before
+      // onboarding may continue. Ownership is authoritative on the server.
+      const persisted = await ensureUmkmAndProduct({
+        companyName: companyName,
+        nib: nib,
+        productName: productName,
+        productDesc: productDesc,
+        moq: moq,
+        capacity: capacity,
+        floorPriceUsd: finalFloorPriceUsd,
+        askingPriceUsd: finalAskingPriceUsd,
+      }).catch(() => null);
+      if (!persisted) {
+        window.alert(
+          "Gagal menyimpan data perusahaan & produk ke server. Pastikan NIB 13 digit valid dan koneksi stabil, lalu coba lagi.",
+        );
+        return;
+      }
     }
     setJourneyStep("verified");
     router.push('/verification');
@@ -110,6 +157,20 @@ export default function OnboardingWizard() {
   };
 
   const nextStep = () => {
+    // Step 2 (Legalitas): NIB is mandatory and must be exactly 13 digits — the
+    // verification step validates it live against OSS RBA.
+    if (step === 2) {
+      const digits = nib.replace(/\D/g, "");
+      if (digits.length !== 13) {
+        setNibError("NIB wajib diisi dan harus terdiri dari tepat 13 digit angka.");
+        return;
+      }
+      if (!companyName.trim()) {
+        setNibError("Nama perusahaan terdaftar wajib diisi.");
+        return;
+      }
+      setNibError("");
+    }
     if (step < 3) setStep(step + 1);
   };
 
@@ -298,16 +359,23 @@ export default function OnboardingWizard() {
                   </label>
                   <div className="relative">
                     <IdCard className="absolute left-3 top-1/2 -translate-y-1/2 text-outline size-6" />
-                    <input 
-                      className="w-full pl-10 pr-4 py-3 bg-surface border border-outline-variant rounded-md text-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors" 
-                      id="nib" 
-                      placeholder="13 digit nomor identifikasi resmi" 
-                      required 
+                    <input
+                      className={`w-full pl-10 pr-4 py-3 bg-surface border rounded-md text-sm text-on-surface focus:ring-1 focus:outline-none transition-colors ${nibError ? "border-error focus:border-error focus:ring-error" : "border-outline-variant focus:border-primary focus:ring-primary"}`}
+                      id="nib"
+                      placeholder="13 digit nomor identifikasi resmi"
+                      required
+                      inputMode="numeric"
+                      maxLength={13}
                       type="text"
                       value={nib}
-                      onChange={(e) => setNib(e.target.value)}
+                      onChange={(e) => { setNib(e.target.value.replace(/\D/g, "").slice(0, 13)); if (nibError) setNibError(""); }}
                     />
                   </div>
+                  {nibError && (
+                    <p className="text-[11px] text-error font-medium flex items-center gap-1.5">
+                      {nibError}
+                    </p>
+                  )}
                 </div>
 
                 <div className="flex flex-col gap-2">

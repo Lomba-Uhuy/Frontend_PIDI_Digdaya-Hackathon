@@ -3,9 +3,12 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getStep, setStep as setJourneyStep, setFinalPrice } from "../../../lib/state";
 import { ChatMessage } from "../../../types";
-import { classifyIntent, generateReply, calculatePrice, DraftReply, checkRedFlag, getCredibilityDimensions, RedFlagReport } from "../../../lib/api";
+import { classifyIntent, generateReply, getPricingBreakdown, PricingBreakdown, DraftReply, checkRedFlag, RedFlagReport } from "../../../lib/api";
+import { getSelectedBuyer, SelectedBuyer } from "../../../lib/selected-buyer";
+import { getMessages, sendMessage, requestBuyerReply, getActiveDealId, type DealMessage } from "../../../lib/deals";
 import { getIcon } from "../../../lib/icon-map";
 import { cn } from "../../../lib/utils";
+import { Product } from "../../../lib/models/product";
 import {
   AlertTriangle,
   ArrowRight,
@@ -45,25 +48,34 @@ export default function NegotiationHubPage() {
   const [inputValue, setInputValue] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
-  const [klausRepliedCount, setKlausRepliedCount] = useState(0);
+  // The active deal whose persisted thread we render (from Buyer Discovery).
+  const [dealId, setDealId] = useState<string | null>(null);
 
   // States for Resizable/Collapsible Mentor Sidebar
   const [mentorWidth, setMentorWidth] = useState(380);
   const [isResizing, setIsResizing] = useState(false);
 
-  // States for Decoupled Mock Services
-  const [activeBuyerId, setActiveBuyerId] = useState("klaus");
+  // The real buyer selected in Buyer Discovery (backend record).
+  const [selectedBuyer, setSelectedBuyer] = useState<SelectedBuyer | null>(null);
   const [activeIntent, setActiveIntent] = useState<"inquiry" | "negotiation" | "complaint">("negotiation");
   const [intentConfidence, setIntentConfidence] = useState(0.95);
   const [drafts, setDrafts] = useState<DraftReply[]>([]);
   const [isDraftGenerating, setIsDraftGenerating] = useState(false);
+  // true when the backend AI drafting service is unavailable (e.g. LLM out of credits)
+  const [draftUnavailable, setDraftUnavailable] = useState(false);
 
-  // States for Mini Export Price Calculator
+  // States for Mini Export Price Calculator (cost assumptions = user inputs)
   const [hpp, setHpp] = useState(2.00);
   const [margin, setMargin] = useState(15);
   const [localHandling, setLocalHandling] = useState(0.15);
   const [freight, setFreight] = useState(0.20);
   const [insurance, setInsurance] = useState(0.10);
+  const [fxRate] = useState(16000); // IDR per USD (labeled assumption)
+  // Backend pricing result (real FOB/CFR/CIF + real BPS benchmark).
+  const [pricing, setPricing] = useState<PricingBreakdown | null>(null);
+  const [seed, setSeed] = useState(2); // HPP seed = product floor price
+  const [hsCode, setHsCode] = useState("");
+  const [floorPrice, setFloorPrice] = useState<number | null>(null);
 
   // States for B2B Risk & Credibility Intelligence
   const [redFlagReport, setRedFlagReport] = useState<RedFlagReport | null>(null);
@@ -73,72 +85,62 @@ export default function NegotiationHubPage() {
   const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(true);
 
   // Dynamic Company & Product states
-  const [productName, setProductName] = useState("Biji Kopi Robusta Premium");
-  const [productType, setProductType] = useState("coffee");
-  const [companyName, setCompanyName] = useState("PT Nusantara Global Coffee");
+  const [productName, setProductName] = useState("");
+  const [productType, setProductType] = useState("");
+  const [companyName, setCompanyName] = useState("");
 
-  const unitLabel = productType === "rattan" ? "pcs" : "kg";
+  // The BPS export unit-value benchmark is per kilogram, so the waterfall is per kg.
+  const unitLabel = "kg";
 
   // Mock list of buyers for left panel
-  const buyers = [
-    {
-      id: "klaus",
-      name: "Klaus Weber",
-      company: "GlobalTech Imports GmbH",
-      country: "Jerman",
-      product: productName,
-      lastMessage: klausRepliedCount === 1 
-        ? "Silakan buat Purchase Order resmi di sistem..." 
-        : "Kami sangat tertarik untuk memesan satu kontainer...",
-      time: "09:42",
-      unread: false,
-      status: "Aktif"
-    },
-    {
-      id: "indoeuro",
-      name: "Jan de Jong",
-      company: "IndoEuro Trading Ltd",
-      country: "Belanda",
-      product: "Kerajinan Bambu Artistik",
-      lastMessage: "Kontrak ditandatangani, terima kasih banyak!",
-      time: "25 Mei",
-      unread: false,
-      status: "Selesai"
-    },
-    {
-      id: "aseanfood",
-      name: "Lim Shen",
-      company: "Asean Food Products",
-      country: "Singapura",
-      product: "Keripik Tempe Aneka Rasa",
-      lastMessage: "Pembayaran tahap pertama berhasil diproses.",
-      time: "24 Mei",
-      unread: false,
-      status: "Selesai"
-    },
-    {
-      id: "nippon",
-      name: "Kenji Sato",
-      company: "Nippon Organic Foods",
-      country: "Jepang",
-      product: "Teh Hijau Matcha Organik",
-      lastMessage: "Mohon kirimkan sertifikasi bebas pestisida Anda.",
-      time: "23 Mei",
-      unread: true,
-      status: "Menunggu"
-    }
-  ];
+  // The negotiation inbox reflects the real buyer selected in Buyer Discovery.
+  const buyers = selectedBuyer
+    ? [
+        {
+          id: selectedBuyer.buyer_id,
+          name: selectedBuyer.name,
+          company: selectedBuyer.name,
+          country: selectedBuyer.country,
+          product: productName,
+          lastMessage: "Percakapan penawaran dengan pembeli ini.",
+          time: "",
+          unread: false,
+          status: "Aktif",
+        },
+      ]
+    : [];
+  const credPct = Math.round((selectedBuyer?.credibility_score ?? 0) * 100);
 
-  // Derived Export pricing calculations
-  const pricingRaw = calculatePrice(hpp, margin, localHandling, freight, insurance);
-  const isRattanProduct = productType === "rattan";
-  const pricing = {
-    ...pricingRaw,
-    marketAvg: isRattanProduct ? 55.00 : 2.80,
-    status: isRattanProduct 
-      ? (pricingRaw.cif > 55.00 * 1.05 ? "high" : pricingRaw.cif < 55.00 * 0.92 ? "low" : "competitive") as "high" | "low" | "competitive"
-      : pricingRaw.status
+  // ── Backend pricing (authoritative FOB/CFR/CIF + REAL BPS benchmark) ──────────
+  const nOf = (s: string | null | undefined) => {
+    const x = parseFloat(s ?? "");
+    return Number.isFinite(x) ? x : 0;
   };
+  const rate = pricing?.exchangeRate ?? fxRate;
+  const fobUnit = nOf(pricing?.fobUnit);
+  const cfrUnit = nOf(pricing?.cfrTotal);
+  const cifUnit = nOf(pricing?.perUnitCIF);
+  const bench = pricing?.benchmarkUnitValue != null ? parseFloat(pricing.benchmarkUnitValue) : null;
+  const priceStatus: "competitive" | "high" | "low" | "unknown" =
+    bench == null ? "unknown" : cifUnit > bench * 1.05 ? "high" : cifUnit < bench * 0.92 ? "low" : "competitive";
+
+  // Fetch the authoritative breakdown from the backend whenever an input changes.
+  useEffect(() => {
+    const t = setTimeout(async () => {
+      const res = await getPricingBreakdown({
+        hpp,
+        originCharges: localHandling,
+        oceanFreight: freight,
+        insuranceAmount: insurance,
+        profitMarginPct: margin,
+        hsCode: hsCode || undefined,
+        exchangeRate: fxRate,
+        qty: 1,
+      });
+      setPricing(res);
+    }, 350);
+    return () => clearTimeout(t);
+  }, [hpp, margin, localHandling, freight, insurance, fxRate, hsCode]);
 
   const startResizing = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -182,12 +184,15 @@ export default function NegotiationHubPage() {
     setIsDraftGenerating(true);
     try {
       const intentRes = await classifyIntent(text);
-      setActiveIntent(intentRes.intent);
-      setIntentConfidence(intentRes.confidence);
+      if (intentRes) {
+        setActiveIntent(intentRes.intent);
+        setIntentConfidence(intentRes.confidence);
+      }
 
       // Floor price checks based on calculated CIF
-      const replyRes = await generateReply(text, productName, pricing.cif);
+      const replyRes = await generateReply(text, productName, cifUnit);
       setDrafts(replyRes.drafts);
+      setDraftUnavailable(Boolean(replyRes.unavailable));
     } catch (err) {
       console.error("Failed to generate drafts & intents:", err);
     } finally {
@@ -195,206 +200,110 @@ export default function NegotiationHubPage() {
     }
   };
 
-  // Sync state on mount
+  // ── Persisted negotiation thread ─────────────────────────────────────────────
+  const nowTime = () => new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const toChat = (m: DealMessage): ChatMessage => ({
+    sender: m.sender === "umkm" ? "me" : "buyer",
+    text: m.text,
+    time: m.createdAt ? new Date(m.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : nowTime(),
+  });
+
+  const loadThread = async (id: string) => {
+    const msgs = await getMessages(id);
+    setMessages(msgs.map(toChat));
+    const lastBuyer = [...msgs].reverse().find((m) => m.sender === "buyer");
+    if (lastBuyer) void fetchDraftsAndIntent(lastBuyer.text);
+  };
+
+  // Send the UMKM message, persist it, then fetch the AI-simulated buyer reply.
+  // The buyer's numeric position converges to a REAL settlement derived from the
+  // seller's live CIF and the real BPS benchmark (no hardcoded prices).
+  const postAndReply = async (text: string) => {
+    const trimmed = text.trim();
+    if (!trimmed || !dealId) return;
+    setInputValue("");
+    setMessages((prev) => [...prev, { sender: "me", text: trimmed, time: nowTime() }]);
+    await sendMessage(dealId, trimmed, activeIntent);
+    setIsTyping(true);
+    const reply = await requestBuyerReply(dealId, {
+      sellerPrice: cifUnit || undefined,
+      floorPrice: floorPrice ?? undefined,
+      benchmarkUnitValue: bench ?? undefined,
+      productName: productName || undefined,
+      hsCode: hsCode || undefined,
+    });
+    setIsTyping(false);
+    if (reply?.message) {
+      setMessages((prev) => [...prev, toChat(reply.message)]);
+      if (reply.accept && reply.agreedPrice != null) {
+        setFinalPrice(reply.agreedPrice);
+        setJourneyStep("compliance");
+        setCurrentStep("compliance");
+      }
+      void fetchDraftsAndIntent(reply.message.text);
+    }
+  };
+
+  // Load product/pricing context + the persisted thread on mount.
   useEffect(() => {
-    const step = getStep();
-    setCurrentStep(step);
+    setCurrentStep(getStep());
+    const product = Product.current();
+    setProductName(product.name);
+    setProductType(product.productType);
+    setCompanyName(product.companyName);
 
-    const savedProduct = localStorage.getItem("tradeconnect_product_name") || "Biji Kopi Robusta Premium";
-    setProductName(savedProduct);
-    const savedType = localStorage.getItem("tradeconnect_product_type") || "coffee";
-    setProductType(savedType);
-    const savedCompany = localStorage.getItem("tradeconnect_company_name") || "PT Nusantara Global Coffee";
-    setCompanyName(savedCompany);
+    // Seed the mini-calculator from the real product (floor price + HS code).
+    const savedFloor = product.floorPriceUsd;
+    setFloorPrice(savedFloor);
+    setHsCode(product.hsCode || product.hsCandidates?.[0]?.hs_code || "");
+    const s = savedFloor && savedFloor > 0 ? savedFloor : 2;
+    setSeed(s);
+    setHpp(s);
+    setLocalHandling(Number((s * 0.06).toFixed(2)));
+    setFreight(Number((s * 0.08).toFixed(2)));
+    setInsurance(Number((s * 0.04).toFixed(2)));
 
-    const savedFloor = localStorage.getItem("tradeconnect_floor_price");
-    const isRattan = savedProduct.toLowerCase().includes("rotan") || savedProduct.toLowerCase().includes("rattan") || savedProduct.toLowerCase().includes("kursi");
-    
-    if (isRattan) {
-      setHpp(savedFloor ? parseFloat(savedFloor) : 40.00);
-      setLocalHandling(3.00);
-      setFreight(10.00);
-      setInsurance(2.00);
-    } else {
-      setHpp(savedFloor ? parseFloat(savedFloor) : 2.00);
-      setLocalHandling(0.15);
-      setFreight(0.20);
-      setInsurance(0.10);
-    }
-
-    const buyerIntroText = isRattan 
-      ? `Kepada Rekan Pemasok TradeConnect,\n\nKami telah meninjau katalog awal Anda untuk kursi rotan anyaman. Kami sangat tertarik untuk memesan satu kontainer uji coba (sekitar 150 unit kursi) untuk pengiriman Kuartal 3 (Q3) ke pelabuhan Hamburg.\n\nNamun, harga CIF yang Anda tawarkan saat ini adalah $55,00/unit. Mengingat fluktuasi pasar saat ini dan demi membangun kemitraan jangka panjang, kami mengajukan revisi penawaran harga sebesar $45,00/unit. Mohon beri saran mengenai kelayakan harga tersebut dan berikan proforma invoice terbaru jika Anda setuju.`
-      : `Kepada Rekan Pemasok TradeConnect,\n\nKami telah meninjau katalog awal Anda untuk biji kopi robusta. Kami sangat tertarik untuk memesan satu kontainer uji coba (sekitar 18 metrik ton) untuk pengiriman Kuartal 3 (Q3) ke pelabuhan Hamburg.\n\nNamun, harga CIF yang Anda tawarkan saat ini adalah $2,85/kg. Mengingat fluktuasi pasar saat ini dan demi membangun kemitraan jangka panjang, kami mengajukan revisi penawaran harga sebesar $2,50/kg. Mohon beri saran mengenai kelayakan harga tersebut dan berikan proforma invoice terbaru jika Anda setuju.`;
-
-    if (step === "contacted_klaus") {
-      setIsTyping(true);
-      const timer = setTimeout(() => {
-        setIsTyping(false);
-        setMessages([
-          {
-            sender: "buyer",
-            text: buyerIntroText,
-            time: "09:42",
-          }
-        ]);
-        setJourneyStep("negotiating");
-        setCurrentStep("negotiating");
-        
-        // Dynamic fetch of drafts and intents for this new incoming message
-        setIsDraftGenerating(true);
-        classifyIntent(buyerIntroText).then((intentRes) => {
-          setActiveIntent(intentRes.intent);
-          setIntentConfidence(intentRes.confidence);
-          const currentCif = isRattan ? 55.00 : 2.85;
-          generateReply(buyerIntroText, savedProduct, currentCif).then((replyRes) => {
-            setDrafts(replyRes.drafts);
-            setIsDraftGenerating(false);
-          });
-        });
-      }, 2000);
-      return () => clearTimeout(timer);
-    } else if (step !== "onboarding" && step !== "verified") {
-      setMessages([
-        {
-          sender: "buyer",
-          text: buyerIntroText,
-          time: "09:42",
-        }
-      ]);
-      
-      setIsDraftGenerating(true);
-      classifyIntent(buyerIntroText).then((intentRes) => {
-        setActiveIntent(intentRes.intent);
-        setIntentConfidence(intentRes.confidence);
-        const currentCif = isRattan ? 55.00 : 2.85;
-        generateReply(buyerIntroText, savedProduct, currentCif).then((replyRes) => {
-          setDrafts(replyRes.drafts);
-          setIsDraftGenerating(false);
-        });
-      });
-    }
+    const id = getActiveDealId();
+    setDealId(id);
+    if (id) void loadThread(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Fetch B2B risk analysis when active buyer changes
+  // Load the buyer the user selected in Buyer Discovery (real backend record).
   useEffect(() => {
+    setSelectedBuyer(getSelectedBuyer());
+  }, []);
+
+  // Fetch B2B risk analysis for the selected real buyer (real profile input).
+  useEffect(() => {
+    if (!selectedBuyer) {
+      setRedFlagReport(null);
+      setIsLoadingRisk(false);
+      return;
+    }
     setIsLoadingRisk(true);
-    checkRedFlag(activeBuyerId).then((report) => {
+    checkRedFlag({ name: selectedBuyer.name, country: selectedBuyer.country }).then((report) => {
       setRedFlagReport(report);
       setIsLoadingRisk(false);
     });
-  }, [activeBuyerId]);
+  }, [selectedBuyer]);
 
   const handleDraftSelect = (draftText: string) => {
     setInputValue(draftText);
   };
 
   const handleApproveDraft = (draftText: string) => {
-    const newMsgs: ChatMessage[] = [
-      ...messages,
-      { 
-        sender: 'me', 
-        text: draftText, 
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
-      }
-    ];
-    setMessages(newMsgs);
-    setInputValue("");
-
-    // Simulate Klaus's final reply
-    if (klausRepliedCount === 0) {
-      setIsTyping(true);
-      setTimeout(async () => {
-        setIsTyping(false);
-        const savedCompany = localStorage.getItem("tradeconnect_company_name") || "PT Nusantara Global Coffee";
-        const savedProduct = localStorage.getItem("tradeconnect_product_name") || "Biji Kopi Robusta Premium";
-        const isRattan = savedProduct.toLowerCase().includes("rotan") || savedProduct.toLowerCase().includes("rattan") || savedProduct.toLowerCase().includes("kursi");
-        
-        const buyerMsg = isRattan
-          ? `Terima kasih atas tanggapan Anda dan proposal jalan tengah yang sangat wajar. Kami menghargai reputasi kualitas ${savedCompany} dan setuju untuk menutup kesepakatan di harga $50,00/unit CIF Pelabuhan Hamburg dengan struktur pembayaran 30% DP dan 70% LC sesuai usulan Anda.\n\nSilakan buat Purchase Order resmi di sistem agar kita dapat segera melakukan penandatanganan dokumen dan pemeriksaan kepatuhan hukum ekspor.`
-          : `Terima kasih atas tanggapan Anda dan proposal jalan tengah yang sangat wajar. Kami menghargai reputasi kualitas ${savedCompany} dan setuju untuk menutup kesepakatan di harga $2,75/kg CIF Pelabuhan Hamburg dengan struktur pembayaran 30% DP dan 70% LC sesuai usulan Anda.\n\nSilakan buat Purchase Order resmi di sistem agar kita dapat segera melakukan penandatanganan dokumen dan pemeriksaan kepatuhan hukum ekspor.`;
-        setMessages([
-          ...newMsgs,
-          {
-            sender: "buyer",
-            text: buyerMsg,
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          }
-        ]);
-        setFinalPrice(isRattan ? 50.00 : 2.75);
-        setJourneyStep("compliance");
-        setCurrentStep("compliance");
-        setKlausRepliedCount(1);
-        
-        // Dynamic fetch of drafts and intents for this new incoming message
-        fetchDraftsAndIntent(buyerMsg);
-      }, 2500);
-    }
+    void postAndReply(draftText);
   };
 
   const handleSend = () => {
-    if (!inputValue.trim()) return;
-    const userMsg = inputValue;
-    const newMsgs: ChatMessage[] = [
-      ...messages,
-      { 
-        sender: 'me', 
-        text: userMsg, 
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
-      }
-    ];
-    setMessages(newMsgs);
-    setInputValue("");
-
-    // Classify intent for high-fidelity responses
-    classifyIntent(userMsg).then((res) => {
-      if (klausRepliedCount === 0) {
-        setIsTyping(true);
-        setTimeout(async () => {
-          setIsTyping(false);
-          const savedCompany = localStorage.getItem("tradeconnect_company_name") || "PT Nusantara Global Coffee";
-          const savedProduct = localStorage.getItem("tradeconnect_product_name") || "Biji Kopi Robusta Premium";
-          const isRattan = savedProduct.toLowerCase().includes("rotan") || savedProduct.toLowerCase().includes("rattan") || savedProduct.toLowerCase().includes("kursi");
-          
-          const buyerMsg = isRattan
-            ? `Terima kasih atas tanggapan Anda dan proposal jalan tengah yang sangat wajar. Kami menghargai reputasi kualitas ${savedCompany} dan setuju untuk menutup kesepakatan di harga $50,00/unit CIF Pelabuhan Hamburg dengan struktur pembayaran 30% DP dan 70% LC sesuai usulan Anda.\n\nSilakan buat Purchase Order resmi di sistem agar kita dapat segera melakukan penandatanganan dokumen dan pemeriksaan kepatuhan hukum ekspor.`
-            : `Terima kasih atas tanggapan Anda dan proposal jalan tengah yang sangat wajar. Kami menghargai reputasi kualitas ${savedCompany} dan setuju untuk menutup kesepakatan di harga $2,75/kg CIF Pelabuhan Hamburg dengan struktur pembayaran 30% DP dan 70% LC sesuai usulan Anda.\n\nSilakan buat Purchase Order resmi di sistem agar kita dapat segera melakukan penandatanganan dokumen dan pemeriksaan kepatuhan hukum ekspor.`;
-          setMessages([
-            ...newMsgs,
-            {
-              sender: "buyer",
-              text: buyerMsg,
-              time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            }
-          ]);
-          setFinalPrice(isRattan ? 50.00 : 2.75);
-          setJourneyStep("compliance");
-          setCurrentStep("compliance");
-          setKlausRepliedCount(1);
-          
-          fetchDraftsAndIntent(buyerMsg);
-        }, 2500);
-      }
-    });
+    void postAndReply(inputValue);
   };
 
-  const handleRejectDraft = (draftId: string) => {
-    setIsDraftGenerating(true);
-    setTimeout(() => {
-      setDrafts((prev) => 
-        prev.map((d) => {
-          if (d.id === draftId) {
-            return {
-              ...d,
-              title: `${d.title} (Alternatif AI)`,
-              strategy: "Draf RAG diregenerasi dengan fokus Incoterms EXW (Ex-Works) untuk memotong ongkos logistik internasional.",
-              text: "Kami sangat menghargai feedback Anda. Terkait harga target $2.50/kg, kami bersedia memprosesnya khusus untuk pesanan trial ini, asalkan klausul Incoterms dialihkan menjadi EXW (Ex-Works) Gudang Surabaya kami. Dengan demikian, biaya pengapalan dan asuransi Hamburg sepenuhnya dikelola oleh pihak Anda. Silakan beri tahu kami jika opsi ini dapat diterima."
-            };
-          }
-          return d;
-        })
-      );
-      setIsDraftGenerating(false);
-    }, 1000);
+  const handleRejectDraft = (_draftId: string) => {
+    // Regenerate drafts from the latest buyer message via the real RAG endpoint.
+    const lastBuyer = [...messages].reverse().find((m) => m.sender === "buyer");
+    void fetchDraftsAndIntent(lastBuyer?.text ?? productName);
   };
 
   if (currentStep === "onboarding" || currentStep === "verified") {
@@ -455,14 +364,9 @@ export default function NegotiationHubPage() {
           {buyers.map((buyer) => (
             <div 
               key={buyer.id}
-              onClick={() => {
-                if (buyer.id !== "klaus") {
-                  alert(`Hubungan dengan ${buyer.company} diarsipkan. Percakapan demo saat ini berfokus pada Klaus Weber.`);
-                }
-              }}
-              className={`p-3.5 flex flex-col gap-1 cursor-pointer transition-all ${
-                buyer.id === activeBuyerId 
-                  ? "bg-primary/5 border-l-4 border-primary" 
+              className={`p-3.5 flex flex-col gap-1 transition-all ${
+                buyer.id === selectedBuyer?.buyer_id
+                  ? "bg-primary/5 border-l-4 border-primary"
                   : "hover:bg-surface-container-lowest"
               }`}
             >
@@ -519,7 +423,7 @@ export default function NegotiationHubPage() {
             </button>
 
             <div className="flex flex-col gap-0.5 min-w-0">
-              <h2 className="text-sm md:text-base font-bold text-on-surface truncate">GlobalTech Imports GmbH</h2>
+              <h2 className="text-sm md:text-base font-bold text-on-surface truncate">{selectedBuyer?.name ?? "Pilih pembeli"}</h2>
               <div className="flex items-center gap-2 flex-wrap text-[10px] text-on-surface-variant font-medium">
                 {/* Status Terhubung */}
                 <Badge variant="info" size="md">
@@ -571,9 +475,12 @@ export default function NegotiationHubPage() {
           <div className="bg-primary-container/50 border border-primary/20 p-4 rounded-xl max-w-2xl text-left shadow-sm self-start flex gap-3 animate-in fade-in duration-500">
             <MailPlus className="text-on-primary-container shrink-0 mt-0.5 size-6" />
             <div>
-              <div className="text-[10px] font-bold uppercase tracking-widest text-on-primary-container mb-1">Email Penawaran AI Terkirim</div>
+              <div className="text-[10px] font-bold uppercase tracking-widest text-on-primary-container mb-1">Penawaran AI Disiapkan</div>
               <p className="text-xs text-on-surface-variant font-medium leading-relaxed">
-                Email penawaran resmi untuk <strong className="text-on-primary-container">{productName} {productType === "rattan" ? "(HS 9401.52)" : "Grade 1 (HS 0901.11)"}</strong> telah dikirim secara otomatis ke alamat importir <strong className="text-on-primary-container">klaus.weber@globaltech.de</strong> pada pukul 09:42.
+                Penawaran untuk <strong className="text-on-primary-container">{productName || "produk Anda"}{hsCode ? ` (HS ${hsCode})` : ""}</strong> disiapkan untuk pembeli{" "}
+                <strong className="text-on-primary-container">
+                  {selectedBuyer?.name ?? "terpilih"}{selectedBuyer?.country ? ` (${selectedBuyer.country})` : ""}
+                </strong>. Gunakan draf balasan AI di bawah untuk berkomunikasi.
               </p>
             </div>
           </div>
@@ -582,7 +489,7 @@ export default function NegotiationHubPage() {
           {messages.map((msg, idx) => (
             <div key={idx} className={`flex flex-col gap-1 max-w-2xl ${msg.sender === 'me' ? 'self-end' : 'self-start animate-in fade-in slide-in-from-bottom-2 duration-300'}`}>
               <span className={`text-[10px] font-bold uppercase text-on-surface-variant ${msg.sender === 'me' ? 'mr-1 text-right' : 'ml-1'}`}>
-                {msg.sender === 'me' ? 'Anda • Eksportir' : 'Klaus Weber • GlobalTech'}
+                {msg.sender === 'me' ? 'Anda • Eksportir' : `${selectedBuyer?.name ?? 'Pembeli'}${selectedBuyer?.country ? ' • ' + selectedBuyer.country : ''}`}
               </span>
               <div className={`p-4 rounded-xl shadow-sm ${msg.sender === 'me' ? 'bg-primary text-on-primary rounded-tr-sm' : 'bg-surface-container-lowest border border-outline-variant rounded-tl-sm'}`}>
                 <p className="text-sm leading-relaxed whitespace-pre-line">{msg.text}</p>
@@ -609,7 +516,7 @@ export default function NegotiationHubPage() {
                 <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce"></span>
                 <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce [animation-delay:0.2s]"></span>
                 <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce [animation-delay:0.4s]"></span>
-                <span className="text-xs text-on-surface-variant ml-2 font-semibold">AI sedang mengunduh & menerjemahkan email baru dari Klaus Weber...</span>
+                <span className="text-xs text-on-surface-variant ml-2 font-semibold">AI sedang mengunduh &amp; menerjemahkan email baru dari {selectedBuyer?.name ?? 'pembeli'}...</span>
               </div>
             </div>
           )}
@@ -718,36 +625,40 @@ export default function NegotiationHubPage() {
               <h4 className="text-[11px] font-extrabold text-primary uppercase tracking-wider flex items-center gap-1.5">
                 <Award className="text-primary size-[18px]" /> Kredibilitas Pembeli
               </h4>
-              <Badge variant="success" className="normal-case font-mono">
-                Skor: {activeBuyerId === "klaus" ? "92/100" : activeBuyerId === "nippon" ? "71/100" : "80/100"}
-              </Badge>
+              {selectedBuyer && (
+                <Badge
+                  variant={credPct >= 60 ? "success" : credPct >= 40 ? "warning" : "danger"}
+                  className="normal-case font-mono"
+                >
+                  Skor: {credPct}/100
+                </Badge>
+              )}
             </div>
 
-            <div className="flex flex-col gap-3 mt-1">
-              {getCredibilityDimensions(activeBuyerId).map((dim, idx) => (
-                <div key={idx} className="flex flex-col gap-1 bg-surface-bright/40 p-2.5 border border-outline-variant/40 rounded-lg">
-                  <div className="flex justify-between text-[11px] font-bold text-on-surface">
-                    <span className="truncate">{dim.name}</span>
-                    <span className="font-mono text-primary">{dim.score}%</span>
-                  </div>
-                  <div className="w-full h-1.5 bg-surface-container-high rounded-full overflow-hidden mt-0.5">
-                    <div
-                      className={`h-full rounded-full transition-all duration-1000 ${
-                        dim.score >= 80
-                          ? "bg-secondary"
-                          : dim.score >= 50
-                          ? "bg-warning"
-                          : "bg-error"
-                      }`}
-                      style={{ width: `${dim.score}%` }}
-                    ></div>
-                  </div>
-                  <p className="text-[10px] text-on-surface-variant leading-relaxed font-medium mt-1">
-                    {dim.description}
-                  </p>
+            {selectedBuyer ? (
+              <div className="flex flex-col gap-2 mt-1">
+                <div className="w-full h-2 bg-surface-container-high rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all duration-1000 ${
+                      credPct >= 60 ? "bg-secondary" : credPct >= 40 ? "bg-warning" : "bg-error"
+                    }`}
+                    style={{ width: `${credPct}%` }}
+                  ></div>
                 </div>
-              ))}
-            </div>
+                <p className="text-[10px] text-on-surface-variant leading-relaxed font-medium">
+                  Skor dihitung backend dari sinyal dagang nyata (jumlah pengiriman, nilai FOB, keragaman
+                  pemasok &amp; HS).{" "}
+                  {selectedBuyer.is_synthetic ? "(Data Simulasi)" : "(Data Terverifikasi TradeAtlas)"}
+                </p>
+                <p className="text-[10px] text-on-surface-variant italic">
+                  Rincian dimensi kredibilitas belum tersedia dari sumber data produksi.
+                </p>
+              </div>
+            ) : (
+              <p className="text-[11px] text-on-surface-variant mt-1">
+                Pilih pembeli nyata dari Penemuan Pembeli untuk melihat kredibilitasnya.
+              </p>
+            )}
           </div>
 
           {/* ========================================================================= */}
@@ -807,8 +718,8 @@ export default function NegotiationHubPage() {
               <h4 className="text-[11px] font-extrabold text-primary uppercase tracking-wider flex items-center gap-1.5">
                 <Calculator className="text-primary size-[18px]" /> Kalkulator Harga Ekspor
               </h4>
-              <Badge variant={pricing.status === "competitive" ? "success" : pricing.status === "high" ? "danger" : "info"}>
-                {pricing.status === "competitive" ? "Kompetitif BPS" : pricing.status === "high" ? "Terlalu Tinggi" : "Terlalu Murah"}
+              <Badge variant={priceStatus === "competitive" ? "success" : priceStatus === "high" ? "danger" : priceStatus === "low" ? "info" : "neutral"}>
+                {priceStatus === "competitive" ? "Kompetitif BPS" : priceStatus === "high" ? "Terlalu Tinggi" : priceStatus === "low" ? "Terlalu Murah" : "Tanpa Benchmark"}
               </Badge>
             </div>
 
@@ -817,14 +728,14 @@ export default function NegotiationHubPage() {
               {/* Ex-Works / HPP */}
               <div className="flex flex-col gap-1">
                 <div className="flex justify-between text-xs">
-                  <span className="font-semibold text-on-surface-variant">HPP {productType === "rattan" ? "Rotan" : "Kopi"} (Ex-Works)</span>
+                  <span className="font-semibold text-on-surface-variant">HPP {productName || "Produk"} (Ex-Works)</span>
                   <span className="font-mono text-primary font-bold">${hpp.toFixed(2)}/{unitLabel}</span>
                 </div>
-                <input 
-                  type="range" 
-                  min={productType === "rattan" ? "20.00" : "1.00"} 
-                  max={productType === "rattan" ? "80.00" : "3.00"} 
-                  step={productType === "rattan" ? "1.00" : "0.05"}
+                <input
+                  type="range"
+                  min={Math.max(0.01, Number((seed * 0.4).toFixed(2)))}
+                  max={Number((seed * 2).toFixed(2))}
+                  step={seed >= 10 ? 0.5 : 0.05}
                   value={hpp}
                   onChange={(e) => setHpp(parseFloat(e.target.value))}
                   className="w-full h-1 bg-surface-container-high rounded-lg appearance-none cursor-pointer accent-primary"
@@ -851,14 +762,14 @@ export default function NegotiationHubPage() {
               {/* Ocean Freight */}
               <div className="flex flex-col gap-1">
                 <div className="flex justify-between text-xs">
-                  <span className="font-semibold text-on-surface-variant">Ocean Freight (Hamburg)</span>
+                  <span className="font-semibold text-on-surface-variant">Ocean Freight Internasional</span>
                   <span className="font-mono text-primary font-bold">${freight.toFixed(2)}/{unitLabel}</span>
                 </div>
-                <input 
-                  type="range" 
-                  min={productType === "rattan" ? "2.00" : "0.05"} 
-                  max={productType === "rattan" ? "30.00" : "0.50"} 
-                  step={productType === "rattan" ? "0.50" : "0.01"}
+                <input
+                  type="range"
+                  min={0}
+                  max={Number((seed * 0.6).toFixed(2))}
+                  step={seed >= 10 ? 0.5 : 0.01}
                   value={freight}
                   onChange={(e) => setFreight(parseFloat(e.target.value))}
                   className="w-full h-1 bg-surface-container-high rounded-lg appearance-none cursor-pointer accent-primary"
@@ -871,8 +782,12 @@ export default function NegotiationHubPage() {
                   <span className="font-semibold text-[10px] text-on-surface-variant uppercase">Port Handling</span>
                   <div className="flex items-center justify-between mt-1">
                     <span className="font-mono text-primary font-bold">${localHandling.toFixed(2)}</span>
-                    <button 
-                      onClick={() => setLocalHandling((prev) => parseFloat((prev === (productType === "rattan" ? 3.00 : 0.15) ? (productType === "rattan" ? 2.00 : 0.10) : (productType === "rattan" ? 3.00 : 0.15)).toFixed(2)))}
+                    <button
+                      onClick={() => setLocalHandling((prev) => {
+                        const hi = Number((seed * 0.06).toFixed(2));
+                        const lo = Number((seed * 0.04).toFixed(2));
+                        return prev === hi ? lo : hi;
+                      })}
                       className="text-[9px] font-bold text-on-surface-variant hover:text-primary transition-all border border-outline-variant px-1.5 py-0.5 rounded bg-surface"
                     >
                       Ubah
@@ -883,8 +798,12 @@ export default function NegotiationHubPage() {
                   <span className="font-semibold text-[10px] text-on-surface-variant uppercase">Asuransi Laut</span>
                   <div className="flex items-center justify-between mt-1">
                     <span className="font-mono text-primary font-bold">${insurance.toFixed(2)}</span>
-                    <button 
-                      onClick={() => setInsurance((prev) => parseFloat((prev === (productType === "rattan" ? 2.00 : 0.10) ? (productType === "rattan" ? 1.00 : 0.05) : (productType === "rattan" ? 2.00 : 0.10)).toFixed(2)))}
+                    <button
+                      onClick={() => setInsurance((prev) => {
+                        const hi = Number((seed * 0.04).toFixed(2));
+                        const lo = Number((seed * 0.02).toFixed(2));
+                        return prev === hi ? lo : hi;
+                      })}
                       className="text-[9px] font-bold text-on-surface-variant hover:text-primary transition-all border border-outline-variant px-1.5 py-0.5 rounded bg-surface"
                     >
                       Ubah
@@ -898,19 +817,19 @@ export default function NegotiationHubPage() {
             <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 flex flex-col gap-2">
               <div className="flex justify-between text-xs font-semibold text-on-surface">
                 <span>1. FOB Value (Free on Board)</span>
-                <span className="font-mono text-primary">${pricing.fob.toFixed(2)}/{unitLabel}</span>
+                <span className="font-mono text-primary">${fobUnit.toFixed(2)}/{unitLabel}</span>
               </div>
               <div className="flex justify-between text-xs font-semibold text-on-surface">
                 <span>2. CFR Value (Cost & Freight)</span>
-                <span className="font-mono text-primary">${pricing.cfr.toFixed(2)}/{unitLabel}</span>
+                <span className="font-mono text-primary">${cfrUnit.toFixed(2)}/{unitLabel}</span>
               </div>
               <div className="flex justify-between text-xs font-bold text-primary border-t border-outline-variant/60 pt-1.5">
-                <span>3. CIF Hamburg (Total Cost)</span>
-                <span className="font-mono text-primary">${pricing.cif.toFixed(2)}/{unitLabel}</span>
+                <span>3. CIF (Total Cost)</span>
+                <span className="font-mono text-primary">${cifUnit.toFixed(2)}/{unitLabel}</span>
               </div>
               <div className="flex justify-between text-[10px] text-on-surface-variant font-medium font-mono pt-1">
-                <span>Est. IDR (kurs 16.000)</span>
-                <span>Rp {(pricing.cif * 16000).toLocaleString("id-ID")}/{unitLabel}</span>
+                <span>Est. IDR (asumsi kurs {rate.toLocaleString("id-ID")})</span>
+                <span>Rp {Math.round(nOf(pricing?.idr.perUnitCIF) || cifUnit * rate).toLocaleString("id-ID")}/{unitLabel}</span>
               </div>
             </div>
 
@@ -918,14 +837,18 @@ export default function NegotiationHubPage() {
             <div className="text-[10px] text-on-surface-variant leading-normal flex gap-1.5 border-t border-outline-variant/40 pt-2">
               <BarChart3 className="text-primary size-4" />
               <p>
-                Rata-rata ekspor BPS: <strong>${pricing.marketAvg.toFixed(2)}/{unitLabel}</strong>. 
-                {pricing.cif === (productType === "rattan" ? 50.00 : 2.75) 
-                  ? " Harga Anda sama persis dengan kesepakatan final!"
-                  : pricing.status === "competitive" 
-                  ? " Harga penawaran Anda sangat kompetitif untuk pasar Eropa."
-                  : pricing.status === "high"
-                  ? " Harga CIF melebihi rata-rata pasar. Siapkan opsi konsesi."
-                  : " Harga terlalu murah, verifikasi profitabilitas Anda."}
+                {bench != null ? (
+                  <>
+                    Nilai satuan ekspor BPS (HS {hsCode || "—"}): <strong>${bench.toFixed(2)}/{unitLabel}</strong>.
+                    {priceStatus === "competitive"
+                      ? " Harga penawaran Anda selaras dengan benchmark pasar."
+                      : priceStatus === "high"
+                        ? " Harga CIF melebihi benchmark pasar. Siapkan opsi konsesi."
+                        : " Harga di bawah benchmark; verifikasi profitabilitas Anda."}
+                  </>
+                ) : (
+                  <>Benchmark nilai satuan ekspor BPS belum tersedia untuk HS {hsCode || "produk ini"}.</>
+                )}
               </p>
             </div>
           </div>
@@ -933,17 +856,23 @@ export default function NegotiationHubPage() {
           {/* ========================================================================= */}
           {/* B. FLOOR PRICE GUARDRAIL WARNING */}
           {/* ========================================================================= */}
-          {pricing.cif > (productType === "rattan" ? 45.00 : 2.50) ? (
+          {(floorPrice != null && cifUnit < floorPrice) || priceStatus === "high" ? (
             <div className="bg-error-container border border-error rounded-xl p-4 shadow-sm relative overflow-hidden animate-in fade-in duration-300">
               <div className="absolute top-0 left-0 w-1.5 h-full bg-error"></div>
               <div className="flex items-start gap-3">
                 <AlertTriangle className="text-on-error-container size-6" />
                 <div>
-                  <h4 className="text-xs font-bold text-on-error-container mb-1 uppercase tracking-wider">PERINGATAN HARGA DASAR</h4>
+                  <h4 className="text-xs font-bold text-on-error-container mb-1 uppercase tracking-wider">PERINGATAN HARGA</h4>
                   <p className="text-xs text-on-error-container leading-relaxed">
-                    Pembeli meminta harga <strong>{productType === "rattan" ? "$45.00/unit" : "$2.50/kg"}</strong>. Estimasi harga CIF minimal Anda saat ini adalah <strong>${pricing.cif.toFixed(2)}/{unitLabel}</strong>.
-                    <br/><br/>
-                    Menerima tawaran {productType === "rattan" ? "$45.00/unit" : "$2.50/kg"} akan menekan margin operasional di bawah target keuntungan Anda.
+                    {floorPrice != null && cifUnit < floorPrice ? (
+                      <>
+                        Estimasi CIF Anda <strong>${cifUnit.toFixed(2)}/{unitLabel}</strong> berada di bawah harga dasar Anda (<strong>${floorPrice.toFixed(2)}/{unitLabel}</strong>). Menerima harga ini menekan margin di bawah target Anda.
+                      </>
+                    ) : (
+                      <>
+                        Estimasi CIF Anda <strong>${cifUnit.toFixed(2)}/{unitLabel}</strong> berada di atas benchmark pasar BPS{bench != null ? <> (<strong>${bench.toFixed(2)}/{unitLabel}</strong>)</> : null}. Siapkan opsi konsesi agar penawaran tetap kompetitif.
+                      </>
+                    )}
                   </p>
                 </div>
               </div>
@@ -956,9 +885,9 @@ export default function NegotiationHubPage() {
                 <div>
                   <h4 className="text-xs font-bold text-on-secondary-container mb-1 uppercase tracking-wider">HARGA DASAR AMAN</h4>
                   <p className="text-xs text-on-secondary-container leading-relaxed">
-                    Estimasi CIF Anda saat ini adalah <strong>${pricing.cif.toFixed(2)}/{unitLabel}</strong>, berada di bawah atau sama dengan tawaran pembeli ({productType === "rattan" ? "$45.00/unit" : "$2.50/kg"}).
-                    <br/><br/>
-                    Tingkat profitabilitas Anda sangat terjamin untuk negosiasi ini!
+                    Estimasi CIF Anda <strong>${cifUnit.toFixed(2)}/{unitLabel}</strong>
+                    {floorPrice != null ? <> berada di atas harga dasar Anda (<strong>${floorPrice.toFixed(2)}/{unitLabel}</strong>)</> : null}
+                    {bench != null ? <> dan selaras dengan benchmark pasar BPS (<strong>${bench.toFixed(2)}/{unitLabel}</strong>)</> : null}. Profitabilitas Anda terjaga untuk negosiasi ini.
                   </p>
                 </div>
               </div>
@@ -976,7 +905,10 @@ export default function NegotiationHubPage() {
               <div className="flex gap-3">
                 <Info className="text-primary size-5" />
                 <p className="text-xs text-on-surface leading-relaxed">
-                  <strong>Konteks Pembeli:</strong> GlobalTech biasanya memulai negosiasi dengan diskon 15-20% dari harga penawaran awal (data historis 6 bulan terakhir).
+                  <strong>Konteks Pembeli:</strong>{" "}
+                  {selectedBuyer
+                    ? `${selectedBuyer.name} (${selectedBuyer.country}) — skor kredibilitas ${credPct}/100 dihitung dari data pengiriman nyata.`
+                    : "Pilih pembeli nyata dari Penemuan Pembeli untuk melihat konteksnya."}
                 </p>
               </div>
               <div className="w-full h-px bg-outline-variant"></div>
@@ -1002,6 +934,11 @@ export default function NegotiationHubPage() {
                 <span className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></span>
                 <span className="text-xs text-on-surface-variant font-medium">Menganalisis RAG & membuat draf...</span>
               </div>
+            ) : draftUnavailable ? (
+              <div className="text-center p-6 bg-warning-container/40 border border-warning/40 rounded-xl text-xs text-on-surface font-medium flex flex-col items-center gap-1.5">
+                <AlertTriangle className="size-5 text-warning" />
+                Layanan draf AI sedang tidak tersedia (kuota/kredit LLM habis). Negosiasi tetap berjalan — Anda bisa menulis balasan secara manual.
+              </div>
             ) : drafts.length === 0 ? (
               <div className="text-center p-6 bg-surface-container-lowest border border-outline-variant rounded-xl text-xs text-on-surface-variant font-medium">
                 Belum ada draf balasan. Kirim atau terima pesan untuk men-generate draf balasan RAG otomatis.
@@ -1015,7 +952,7 @@ export default function NegotiationHubPage() {
                       <span className="bg-surface-container-low text-on-surface-variant text-[9px] px-2 py-0.5 rounded font-mono font-bold border border-outline-variant/60">DRAFT {idx + 1}</span>
                     </div>
                     <p className="text-xs text-on-surface-variant leading-relaxed font-medium">
-                      "{draft.text}"
+                      &ldquo;{draft.text}&rdquo;
                     </p>
                     <div className="bg-primary/5 p-2.5 rounded-lg text-[10px] text-on-surface-variant leading-normal border border-primary/10">
                       <strong>Strategi AI:</strong> {draft.strategy}

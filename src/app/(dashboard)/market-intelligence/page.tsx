@@ -13,27 +13,131 @@ import {
   X,
 } from "lucide-react";
 import { Badge } from "../../../components/ui/badge";
+import { MarketMap } from "../../../components/ui/market-map";
+import {
+  getMarketIntelligence,
+  getHsCodes,
+  getRegions,
+  getTopMarkets,
+  MarketIntelligenceResponse,
+  MarketStat,
+  HsOption,
+  RegionOption,
+} from "../../../lib/api";
+import { Product } from "../../../lib/models/product";
+
+const fmtUsd = (v: number | null | undefined) =>
+  v == null ? "—" : "$" + Math.round(v).toLocaleString("en-US");
 
 export default function MarketIntelligencePage() {
-  const [hsCode, setHsCode] = useState("0901.11"); // 0901.11 (Kopi) or 9401.52 (Rotan)
-  const [region, setRegion] = useState("global"); // global, eu, na
-  
+  // HS code = real 2-digit chapter with ingested data (e.g. "09", "46", "15").
+  // Empty until we know the product's relevant chapter (avoids showing an
+  // irrelevant chapter's data on first paint).
+  const [hsCode, setHsCode] = useState("");
+  const [region, setRegion] = useState("global");
+
+  // Real reference data for the dropdowns (from ingested BPS data).
+  const [hsOptions, setHsOptions] = useState<HsOption[]>([]);
+  const [regionOptions, setRegionOptions] = useState<RegionOption[]>([]);
+  // True when the HS dropdown was narrowed to the product's relevant chapters.
+  const [hsTailored, setHsTailored] = useState(false);
+
   // Custom high-fidelity modal & interactive states
   const [showReportModal, setShowReportModal] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [toast, setToast] = useState<{ message: string } | null>(null);
 
+  // Live BPS + UN Comtrade market intelligence.
+  const [live, setLive] = useState<MarketIntelligenceResponse | null>(null);
+  const [liveLoading, setLiveLoading] = useState(false);
+  // Real top markets aggregated from bps_trade_data (reliable for every chapter).
+  const [topMarkets, setTopMarkets] = useState<MarketStat[]>([]);
+
+  // The HS dropdown is DYNAMIC and product-specific: it lists only the HS chapters
+  // that the semantic (RAG) classifier deems relevant to the user's product — not a
+  // hardcoded list. We classify the product description (the same one used at
+  // onboarding), take the ranked top-k HS candidates, reduce them to 2-digit
+  // chapters, and keep only those that actually have ingested market data. Falls
+  // back to all data-backed chapters if classification is unavailable so the page
+  // always works.
   useEffect(() => {
-    // Sync with main productType if present in localStorage
-    if (typeof window !== "undefined") {
-      const savedType = localStorage.getItem("tradeconnect_product_type");
-      if (savedType === "rattan") {
-        setHsCode("9401.52");
-      } else {
-        setHsCode("0901.11");
-      }
-    }
+    let cancelled = false;
+
+    // Read the ranked RAG HS candidates cached on the Product at verification time
+    // (ordered most → least relevant). `ensureHsClassification` only hits the
+    // classifier if nothing was cached yet, so normally this resolves instantly.
+    const product = Product.current();
+
+    Promise.all([getHsCodes(), product.ensureHsClassification(6)]).then(([opts]) => {
+      if (cancelled || !opts || opts.length === 0) return;
+
+      // Relevant 2-digit chapters that also have ingested market data, in the
+      // classifier's relevance order.
+      const relevant = product
+        .relevantChapters()
+        .map((ch) => opts.find((o) => o.code === ch))
+        .filter((o): o is HsOption => Boolean(o));
+
+      const tailored = relevant.length > 0;
+      const finalOpts = tailored ? relevant : opts;
+      setHsOptions(finalOpts);
+      setHsTailored(tailored);
+      setHsCode(finalOpts[0].code);
+    });
+
+    getRegions().then((opts) => {
+      if (!cancelled && opts) setRegionOptions(opts);
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
+
+  useEffect(() => {
+    if (!hsCode) return;
+    let cancelled = false;
+    const hs = hsCode.replace(/[^0-9]/g, "");
+    setLiveLoading(true);
+    getMarketIntelligence(hs, region)
+      .then((res) => {
+        if (!cancelled) setLive(res);
+      })
+      .finally(() => {
+        if (!cancelled) setLiveLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [hsCode, region]);
+
+  // Real top markets per chapter (BPS aggregation) — reliable for every HS.
+  useEffect(() => {
+    if (!hsCode) return;
+    let cancelled = false;
+    getTopMarkets(hsCode.replace(/[^0-9]/g, "")).then((rows) => {
+      if (!cancelled && rows) setTopMarkets(rows);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [hsCode]);
+
+  const hsLabel = hsOptions.find((o) => o.code === hsCode)?.label ?? `HS ${hsCode}`;
+
+  // Prefer the reliable BPS aggregation; fall back to the market-intel response.
+  const baseMarkets: MarketStat[] = topMarkets.length > 0 ? topMarkets : live?.topMarkets ?? [];
+  const displayMarkets =
+    region === "global"
+      ? baseMarkets
+      : baseMarkets.filter((m) => m.partner.toUpperCase() === region.toUpperCase());
+
+  // Data-derived insight (used when the AI market-intel analysis is unavailable).
+  const derivedTotal = baseMarkets.reduce((a, m) => a + (m.tradeValueUsd ?? 0), 0);
+  const derivedTop = baseMarkets[0];
+  const derivedAnalysis = derivedTop
+    ? `Total ekspor ${hsLabel.replace(/^\[\d+\]\s*/, "")} tercatat ${fmtUsd(derivedTotal)} dari ${baseMarkets.length} negara tujuan. Pasar terbesar: ${derivedTop.partner} (${fmtUsd(derivedTop.tradeValueUsd)}).`
+    : "";
 
   const showToast = (message: string) => {
     setToast({ message });
@@ -51,7 +155,7 @@ export default function MarketIntelligencePage() {
   };
 
   const handleDownloadReport = () => {
-    const isCoffee = hsCode === "0901.11";
+    const isCoffee = hsCode === "09";
     const reportTitle = isCoffee 
       ? "Laporan Strategi Ekspor AI - Kopi Robusta Premium"
       : "Laporan Strategi Ekspor AI - Kursi Rotan Handcrafted Jepara";
@@ -83,7 +187,7 @@ Skor Kesiapan Ekspor: 85/100 (Sangat Siap)
 4. TINDAKAN REKOMENDASI AI
    - Segera ajukan koordinat geolokasi terverifikasi ke sistem INATRADE.
    - Kunci harga CIF Hamburg Anda di kalkulator ekspor berdasarkan margin minimum 15%.
-   - Gunakan generator email pintar AI TradeConnect untuk menjangkau pembeli terdaftar (Klaus Weber) secara instan.
+   - Gunakan generator email pintar AI TradeConnect untuk menjangkau pembeli terdaftar dari Penemuan Pembeli secara instan.
 
 ==================================================
 Dibuat secara otomatis oleh TradeConnect AI.
@@ -102,7 +206,7 @@ Keamanan data pabean terjamin 100%.
     showToast("Laporan Strategi Ekspor AI berhasil diunduh!");
   };
 
-  const isCoffee = hsCode === "0901.11";
+  const isCoffee = hsCode === "09";
 
   return (
     <div className="h-full w-full overflow-y-auto p-4 md:p-8 bg-surface-bright font-sans text-on-surface">
@@ -122,16 +226,28 @@ Keamanan data pabean terjamin 100%.
             <div className="flex-1 lg:flex-none border border-outline-variant rounded-md bg-surface-container-lowest flex text-sm overflow-hidden shadow-sm">
               {/* HS Code Selection dropdown */}
               <div className="px-4 py-2 hover:bg-surface-container-low transition-colors relative flex flex-col justify-center min-w-[200px]">
-                <div className="text-[10px] font-bold text-on-surface-variant uppercase mb-0.5 tracking-wider">KODE HS / KOMODITAS</div>
+                <div className="text-[10px] font-bold text-on-surface-variant uppercase mb-0.5 tracking-wider flex items-center gap-1">
+                  KODE HS / KOMODITAS
+                  {hsTailored && (
+                    <span className="text-secondary normal-case tracking-normal font-semibold">· sesuai produk Anda</span>
+                  )}
+                </div>
                 <div className="relative flex items-center">
                   <Barcode className="text-primary mr-1 size-4" />
-                  <select 
+                  <select
                     value={hsCode}
                     onChange={(e) => setHsCode(e.target.value)}
                     className="bg-transparent font-semibold text-on-surface outline-none appearance-none pr-6 cursor-pointer text-xs w-full"
                   >
-                    <option value="0901.11">0901.11 - Kopi Robusta Premium</option>
-                    <option value="9401.52">9401.52 - Kursi Rotan Handcrafted</option>
+                    {hsOptions.length === 0 ? (
+                      <option value={hsCode}>Menganalisis produk Anda…</option>
+                    ) : (
+                      hsOptions.map((o) => (
+                        <option key={o.code} value={o.code}>
+                          {o.code} - {o.label.replace(/^\[\d+\]\s*/, "")}
+                        </option>
+                      ))
+                    )}
                   </select>
                   <ChevronDown className="absolute right-0 pointer-events-none text-on-surface-variant size-4" />
                 </div>
@@ -140,14 +256,17 @@ Keamanan data pabean terjamin 100%.
               <div className="px-4 py-2 hover:bg-surface-container-low transition-colors relative flex flex-col justify-center min-w-[160px] border-l border-outline-variant">
                 <div className="text-[10px] font-bold text-on-surface-variant uppercase mb-0.5 tracking-wider">WILAYAH SASARAN</div>
                 <div className="relative flex items-center">
-                  <select 
+                  <select
                     value={region}
                     onChange={(e) => setRegion(e.target.value)}
                     className="bg-transparent font-semibold text-on-surface outline-none appearance-none pr-6 cursor-pointer text-xs w-full"
                   >
                     <option value="global">Ringkasan Global</option>
-                    <option value="eu">Uni Eropa (EU27)</option>
-                    <option value="na">Amerika Utara</option>
+                    {regionOptions.map((o) => (
+                      <option key={o.name} value={o.name}>
+                        {o.name.charAt(0) + o.name.slice(1).toLowerCase()}
+                      </option>
+                    ))}
                   </select>
                   <ChevronDown className="absolute right-0 pointer-events-none text-on-surface-variant size-4" />
                 </div>
@@ -172,53 +291,56 @@ Keamanan data pabean terjamin 100%.
               </div>
             </div>
             
-            <div className="relative flex-1 bg-secondary-container min-h-[400px] flex items-center justify-center overflow-hidden transition-all duration-500">
-              {/* Map Illustration Placeholder */}
-              <div className="absolute inset-0 opacity-80" style={{
-                backgroundImage: 'radial-gradient(circle at center, #34d399 0%, transparent 70%)',
-                backgroundSize: '100% 100%'
-              }}></div>
-              
-              {/* Decorative nodes - dynamic based on HS Code */}
-              {isCoffee ? (
-                <>
-                  {/* Germany */}
-                  <div className="absolute top-[28%] left-[48%] w-5 h-5 bg-primary rounded-full shadow-[0_0_0_8px_rgba(15,23,42,0.25)] animate-pulse z-10" title="Jerman (Volume Impor Tinggi)"></div>
-                  {/* Netherlands */}
-                  <div className="absolute top-[26%] left-[45%] w-4.5 h-4.5 bg-primary rounded-full shadow-[0_0_0_6px_rgba(15,23,42,0.2)] animate-pulse z-10" style={{ animationDelay: '0.4s' }} title="Belanda"></div>
-                  {/* USA */}
-                  <div className="absolute top-[35%] left-[22%] w-4 h-4 bg-primary rounded-full shadow-[0_0_0_6px_rgba(15,23,42,0.2)] animate-pulse z-10" style={{ animationDelay: '0.8s' }} title="Amerika Serikat"></div>
-                </>
-              ) : (
-                <>
-                  {/* Germany */}
-                  <div className="absolute top-[28%] left-[48%] w-5 h-5 bg-primary rounded-full shadow-[0_0_0_8px_rgba(15,23,42,0.25)] animate-pulse z-10" title="Jerman (Volume Impor Furnitur Tinggi)"></div>
-                  {/* France */}
-                  <div className="absolute top-[32%] left-[44%] w-4 h-4 bg-primary rounded-full shadow-[0_0_0_6px_rgba(15,23,42,0.2)] animate-pulse z-10" style={{ animationDelay: '0.6s' }} title="Prancis"></div>
-                  {/* Japan */}
-                  <div className="absolute top-[38%] right-[15%] w-4.5 h-4.5 bg-primary rounded-full shadow-[0_0_0_6px_rgba(15,23,42,0.2)] animate-pulse z-10" style={{ animationDelay: '1.2s' }} title="Jepang"></div>
-                </>
-              )}
- 
-              {/* Map legend */}
-              <div className="absolute bottom-6 right-6 bg-surface-container-lowest/95 backdrop-blur border border-outline-variant rounded-lg p-3 shadow-md z-10">
-                <div className="text-[10px] font-bold text-on-surface-variant uppercase mb-2">VOLUME IMPOR ({isCoffee ? "Kopi" : "Rotan"})</div>
+            <div className="relative flex-1 min-h-[400px] overflow-hidden">
+              {/* Real Google Maps heat layer fed by live BPS/UN Comtrade values */}
+              <MarketMap markets={displayMarkets.map((m) => ({ partner: m.partner, tradeValueUsd: m.tradeValueUsd }))} commodity={hsLabel.replace(/^\[\d+\]\s*/, "")} />
+
+              {/* Legend */}
+              <div className="absolute bottom-6 right-6 bg-surface-container-lowest/95 backdrop-blur border border-outline-variant rounded-lg p-3 shadow-md z-10 pointer-events-none">
+                <div className="text-[10px] font-bold text-on-surface-variant uppercase mb-2">VOLUME IMPOR (USD)</div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-on-surface-variant">Rendah</span>
-                  <div className="w-32 h-2 bg-gradient-to-r from-surface-variant to-secondary rounded-full"></div>
-                  <span className="text-xs font-bold text-secondary">Tinggi</span>
+                  <div className="w-32 h-2 bg-gradient-to-r from-info/40 via-secondary to-error rounded-full"></div>
+                  <span className="text-xs font-bold text-error">Tinggi</span>
                 </div>
               </div>
- 
-              {/* Central stylized continent shapes to look like the design */}
-              <div className="w-full h-full relative opacity-40 text-secondary-fixed mix-blend-multiply select-none">
-                 <svg viewBox="0 0 1000 500" className="w-full h-full" preserveAspectRatio="xMidYMid slice">
-                    <path d="M200,150 Q250,120 300,180 T250,250 T150,300 T180,200 Z" fill="currentColor" />
-                    <path d="M450,100 Q550,80 600,150 T500,300 T400,250 T420,150 Z" fill="currentColor" />
-                    <path d="M700,150 Q800,120 850,200 T750,350 T650,250 Z" fill="currentColor" />
-                 </svg>
-              </div>
             </div>
+
+            {/* Live top-markets table (real BPS + UN Comtrade data) */}
+            {displayMarkets.length > 0 && (
+              <div className="border-t border-outline-variant">
+                <div className="px-6 py-3 flex items-center justify-between">
+                  <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider">
+                    Pasar Tujuan Teratas (Data Langsung)
+                  </h3>
+                  <Badge variant="success" size="md">BPS / UN Comtrade</Badge>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="text-on-surface-variant border-y border-outline-variant bg-surface">
+                        <th className="text-left font-bold px-6 py-2">Negara</th>
+                        <th className="text-right font-bold px-6 py-2">Nilai (USD)</th>
+                        <th className="text-right font-bold px-6 py-2">Berat (KG)</th>
+                        <th className="text-right font-bold px-6 py-2">Periode</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {displayMarkets.slice(0, 8).map((m, i) => (
+                        <tr key={i} className="border-b border-outline-variant/50">
+                          <td className="px-6 py-2 font-semibold text-on-surface">{m.partner}</td>
+                          <td className="px-6 py-2 text-right font-mono text-on-surface">{fmtUsd(m.tradeValueUsd)}</td>
+                          <td className="px-6 py-2 text-right font-mono text-on-surface-variant">
+                            {m.netWeightKg != null ? Math.round(m.netWeightKg).toLocaleString("en-US") : "—"}
+                          </td>
+                          <td className="px-6 py-2 text-right text-on-surface-variant">{m.period ?? "—"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </div>
  
           {/* Right Panel: AI Mentor Insights */}
@@ -230,43 +352,74 @@ Keamanan data pabean terjamin 100%.
               </h2>
               
               <p className="text-sm text-on-surface leading-relaxed mb-6 font-medium">
-                {isCoffee ? (
+                {liveLoading ? (
+                  <span className="text-on-surface-variant italic">Memuat data langsung BPS &amp; UN Comtrade…</span>
+                ) : live?.analysis ? (
                   <>
-                    Analisis Kopi <strong>HS 0901.11</strong> menunjukkan lonjakan permintaan sebesar 14% dari <strong>Uni Eropa</strong> selama kuartal terakhir.
+                    {live.analysis}
+                    {live.totalValueUsd != null && (
+                      <span className="block mt-2 text-xs text-secondary font-bold">
+                        Total nilai ekspor tercatat: {fmtUsd(live.totalValueUsd)}
+                        {live.topRegion ? ` • Pasar utama: ${live.topRegion}` : ""}
+                      </span>
+                    )}
                   </>
+                ) : derivedAnalysis ? (
+                  <>{derivedAnalysis}</>
                 ) : (
-                  <>
-                    Analisis Furnitur Rotan <strong>HS 9401.52</strong> menunjukkan kenaikan permintaan ekspor sebesar 28% ke pasar <strong>Eropa Barat</strong>.
-                  </>
+                  <span className="text-on-surface-variant italic">Belum ada data pasar tercatat untuk komoditas ini.</span>
                 )}
               </p>
   
               <div className="space-y-4">
-                {/* Opportunity Alert */}
-                <div className="border border-outline-variant rounded-lg p-4 bg-surface flex gap-3 hover:border-secondary transition-colors cursor-default">
-                  <BadgeCheck className="text-secondary size-5" />
-                  <div>
-                    <h3 className="text-sm font-bold text-primary mb-1">Peluang Teridentifikasi</h3>
-                    <p className="text-xs text-on-surface-variant leading-relaxed font-medium">
-                      {isCoffee 
-                        ? "Jerman menunjukkan toleransi harga premium tertinggi untuk biji kopi organik yang bersertifikat."
-                        : "Prancis dan Denmark menunjukkan peningkatan signifikan untuk furnitur ramah lingkungan bersertifikat SVLK."}
-                    </p>
+                {live?.alerts && live.alerts.length > 0 ? (
+                  live.alerts.map((a, i) => {
+                    const isOpp = a.type === "opportunity";
+                    return (
+                      <div
+                        key={i}
+                        className={`border rounded-lg p-4 flex gap-3 ${
+                          isOpp
+                            ? "border-outline-variant bg-surface hover:border-secondary transition-colors"
+                            : "border-error/30 bg-error-container/20"
+                        }`}
+                      >
+                        {isOpp ? (
+                          <BadgeCheck className="text-secondary size-5 shrink-0" />
+                        ) : (
+                          <AlertTriangle className="text-error size-5 shrink-0" />
+                        )}
+                        <div>
+                          <h3 className={`text-sm font-bold mb-1 ${isOpp ? "text-primary" : "text-error"}`}>
+                            {a.title}
+                          </h3>
+                          <p className="text-xs text-on-surface-variant leading-relaxed font-medium">
+                            {a.description}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : baseMarkets.length > 0 ? (
+                  // Data-derived opportunities from the real BPS top markets.
+                  baseMarkets.slice(0, 3).map((m, i) => (
+                    <div key={i} className="border border-outline-variant rounded-lg p-4 bg-surface flex gap-3 hover:border-secondary transition-colors cursor-default">
+                      <BadgeCheck className="text-secondary size-5 shrink-0" />
+                      <div>
+                        <h3 className="text-sm font-bold text-primary mb-1">Pasar Potensial: {m.partner}</h3>
+                        <p className="text-xs text-on-surface-variant leading-relaxed font-medium">
+                          Nilai ekspor tercatat {fmtUsd(m.tradeValueUsd)}
+                          {m.netWeightKg ? ` (${Math.round(m.netWeightKg).toLocaleString("en-US")} kg)` : ""}
+                          {m.period ? ` pada ${m.period}` : ""}. Prioritaskan penjajakan pembeli di negara ini.
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="border border-outline-variant rounded-lg p-4 bg-surface text-xs text-on-surface-variant italic">
+                    Belum ada sinyal peluang untuk komoditas ini.
                   </div>
-                </div>
-  
-                {/* Regulatory Alert */}
-                <div className="border border-error/30 rounded-lg p-4 bg-error-container/20 flex gap-3">
-                  <AlertTriangle className="text-error size-5" />
-                  <div>
-                    <h3 className="text-sm font-bold text-error mb-1">Peringatan Regulasi</h3>
-                    <p className="text-xs text-on-surface-variant leading-relaxed font-medium">
-                      {isCoffee
-                        ? "Bukti pemenuhan Regulasi Deforestasi Uni Eropa (EUDR) wajib disiapkan pada Kuartal 3 (Q3)."
-                        : "Persyaratan sertifikat legalitas kayu (SVLK) dan kepatuhan FSC Timber wajib disertakan untuk bea cukai Hamburg."}
-                    </p>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
  
