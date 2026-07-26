@@ -261,7 +261,7 @@ export default function DashboardLayout({
       {/* SideNavBar */}
       <nav className="left-0 h-screen w-64 border-r border-outline-variant bg-surface-container-low flex-col py-6 overflow-y-auto hidden md:flex flex-shrink-0 z-50">
         <div className="px-4 mb-8 flex items-center gap-3">
-          <Logo size={52} priority />
+          <Logo size={44} priority />
           <div>
             <h1 className="text-xl font-black text-primary font-heading">TradeConnect</h1>
             <p className="text-[10px] text-on-surface-variant uppercase tracking-wider font-bold">Siap Ekspor</p>

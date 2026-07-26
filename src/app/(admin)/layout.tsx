@@ -73,7 +73,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* Admin sidebar — visually distinct from the UMKM app */}
       <aside className="w-60 shrink-0 border-r border-outline-variant bg-surface-container-lowest flex flex-col">
         <div className="px-4 py-4 border-b border-outline-variant flex items-center gap-2">
-          <Logo size={36} />
+          <Logo size={30} />
           <span className="font-bold tracking-tight">TradeConnect <span className="text-primary">Admin</span></span>
         </div>
         <nav className="flex-1 overflow-y-auto py-2">
