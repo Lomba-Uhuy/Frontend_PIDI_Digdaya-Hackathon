@@ -27,7 +27,9 @@ export interface ProductView {
 
 function deriveProductType(name: string): string {
   const n = (name || "").toLowerCase();
-  return n.includes("rotan") || n.includes("rattan") || n.includes("kursi") ? "rattan" : "coffee";
+  if (n.includes("rotan") || n.includes("rattan") || n.includes("kursi")) return "rattan";
+  if (n.includes("kopi") || n.includes("coffee")) return "coffee";
+  return ""; // unknown — never silently assume coffee
 }
 
 function chaptersOf(cands: HsCandidate[]): string[] {

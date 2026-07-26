@@ -33,7 +33,7 @@ import {
   BuyerDetailRecord,
   BuyerCountryOption,
 } from "../../../lib/api";
-import { setSelectedBuyer } from "../../../lib/selected-buyer";
+import { setSelectedBuyer, markProposeOffer } from "../../../lib/selected-buyer";
 
 const PER_PAGE = 12;
 
@@ -141,6 +141,17 @@ export default function BuyerDiscoveryPage() {
     getBuyerCountries().then(setCountryOptions);
   }, []);
 
+  // Pre-fill the country filter when arriving from Market Intelligence
+  // ("Cari Buyer di <negara>" → /buyer-discovery?country=DE). Read once on mount.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const c = new URLSearchParams(window.location.search).get("country");
+    if (c) {
+      setCountry(c.toUpperCase());
+      setPage(1);
+    }
+  }, []);
+
   // Buyer synchronization for this product's HS codes is owned by the backend
   // Product Initialization Workflow (buyer_sync stage) — no client-triggered sync.
 
@@ -191,6 +202,8 @@ export default function BuyerDiscoveryPage() {
       is_synthetic: b.is_synthetic,
       source: b.source ?? null,
     });
+    // Ask the Negotiation screen to auto-draft an initial English offer for this buyer.
+    markProposeOffer(b.buyer_id);
     await createDeal({
       buyerName: b.name,
       buyerCountry: b.country,
@@ -274,6 +287,12 @@ export default function BuyerDiscoveryPage() {
               className="w-full mt-1 px-2 py-2 text-sm bg-surface border border-outline-variant rounded-md outline-none focus:border-primary"
             >
               <option value="">Semua negara</option>
+              {/* If the pre-selected country (e.g. from Market Intelligence) has no
+                  buyers in the DB it won't be in the options — surface it anyway so
+                  the dropdown reflects the active filter. */}
+              {country && !countryOptions.some((c) => c.country === country) && (
+                <option value={country}>{regionName(country)} (0)</option>
+              )}
               {countryOptions.map((c) => (
                 <option key={c.country} value={c.country}>
                   {regionName(c.country)} ({c.count})
@@ -296,20 +315,22 @@ export default function BuyerDiscoveryPage() {
             />
           </div>
           <div className="flex flex-col gap-2 pb-2">
-            {productHs && (
-              <label className="flex items-center gap-2 text-xs font-medium text-on-surface">
-                <input
-                  type="checkbox"
-                  checked={matchProduct}
-                  onChange={(e) => {
-                    setMatchProduct(e.target.checked);
-                    setPage(1);
-                  }}
-                  className="accent-primary"
-                />
-                Sesuai produk (HS {productHs})
-              </label>
-            )}
+            <label
+              className={`flex items-center gap-2 text-xs font-medium ${productHs ? "text-on-surface" : "text-on-surface-variant cursor-not-allowed"}`}
+              title={productHs ? undefined : "HS produk belum tersedia — selesaikan klasifikasi produk untuk mengaktifkan filter ini"}
+            >
+              <input
+                type="checkbox"
+                checked={Boolean(productHs) && matchProduct}
+                disabled={!productHs}
+                onChange={(e) => {
+                  setMatchProduct(e.target.checked);
+                  setPage(1);
+                }}
+                className="accent-primary disabled:opacity-50"
+              />
+              {productHs ? `Sesuai produk (HS ${productHs})` : "Sesuai produk (HS belum tersedia)"}
+            </label>
             <label className="flex items-center gap-2 text-xs font-medium text-on-surface">
               <input
                 type="checkbox"

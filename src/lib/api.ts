@@ -36,13 +36,34 @@ export async function classifyIntent(text: string): Promise<IntentResponse | nul
   }
 }
 
+// Strip any stray Markdown so drafts read as clean, formal business letters
+// (defensive — the backend prompt already asks for plain text).
+function sanitizeDraft(s: string): string {
+  return s
+    .replace(/\*\*(.+?)\*\*/g, "$1")      // **bold** → bold
+    .replace(/__(.+?)__/g, "$1")          // __bold__ → bold
+    .replace(/^\s{0,3}#{1,6}\s+/gm, "")   // # headings → plain
+    .replace(/^\s*[*+\-]\s+/gm, "")        // "* item" / "- item" bullets → clean line
+    .replace(/\*(\S[^*\n]*?\S|\S)\*/g, "$1") // *italic* → italic
+    .replace(/\*\*/g, "")                   // any leftover bold markers
+    .replace(/[ \t]+\n/g, "\n")            // trailing spaces
+    .replace(/\n{3,}/g, "\n\n")            // collapse excess blank lines
+    .trim();
+}
+
 // 2. RAG AI REPLY GENERATOR SERVICE
 export async function generateReply(
   emailContent: string,
   productContext: string,
-  floorPrice: number = 2.68
-): Promise<{ drafts: DraftReply[]; unavailable?: boolean }> {
+  floorPrice: number = 2.68,
+  productId?: string | null,
+): Promise<{ drafts: DraftReply[]; unavailable?: boolean; reason?: "no_product" | "llm" }> {
   if (isLive()) {
+    // The draft needs a real product (pricing/RAG context). Prefer the caller's
+    // backend product id; fall back to the localStorage cache. If neither exists,
+    // this is a MISSING-PRODUCT condition — not an LLM/quota failure.
+    const pid = productId ?? getStoredIds().productId;
+    if (!pid) return { drafts: [], unavailable: true, reason: "no_product" };
     try {
       // Gateway: POST /api/v1/negotiations/generate-reply (JwtAuthGuard)
       // Returns a SINGLE draft { draft_en, intent, warnings, confidence } — adapt
@@ -53,10 +74,8 @@ export async function generateReply(
         warnings?: string[];
         confidence?: number;
       }>("/negotiations/generate-reply", {
-        // Backend DTO fields: importer_email + product_id (real product UUID for
-        // pricing context). No fabricated demo product — requires a real product.
         importer_email: emailContent,
-        product_id: getStoredIds().productId,
+        product_id: pid,
       });
       if (raw?.draft_en) {
         const warn =
@@ -71,7 +90,7 @@ export async function generateReply(
               strategy: `Dibuat oleh pipeline RAG + LLM backend dengan tingkat keyakinan ${Math.round(
                 (raw.confidence ?? 0.85) * 100,
               )}%.${warn}`,
-              text: raw.draft_en,
+              text: sanitizeDraft(raw.draft_en),
             },
           ],
         };
@@ -81,8 +100,10 @@ export async function generateReply(
       // Report it as unavailable so the UI can show an honest notice — never a
       // fabricated draft.
       console.warn("generate-reply failed:", e);
-      return { drafts: [], unavailable: true };
+      return { drafts: [], unavailable: true, reason: "llm" };
     }
+    // Backend responded without a draft — treat as an LLM/service issue.
+    return { drafts: [], unavailable: true, reason: "llm" };
   }
   // No fabricated fallback — return empty when the backend is unavailable.
   return { drafts: [] };
@@ -471,10 +492,10 @@ function normalizeStat(s: Record<string, unknown>): MarketStat {
  * can render their own fallback.
  */
 export async function getMarketIntelligence(
-  hsCode: string = "0901",
+  hsCode: string,
   region: string = "global",
 ): Promise<MarketIntelligenceResponse | null> {
-  if (!isLive()) return null;
+  if (!isLive() || !hsCode) return null;
   try {
     const raw = await apiPost<Record<string, unknown>>("/readiness/market-intelligence", {
       hsCode,

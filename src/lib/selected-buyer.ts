@@ -26,3 +26,24 @@ export function getSelectedBuyer(): SelectedBuyer | null {
     return null;
   }
 }
+
+// One-shot flag set by "Ajukan Penawaran" in Buyer Discovery, consumed by the
+// Negotiation screen to auto-draft an initial English offer for this buyer.
+const PROPOSE_KEY = "tradeconnect_propose_offer";
+
+export function markProposeOffer(buyerId: string): void {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(PROPOSE_KEY, buyerId);
+}
+
+/** Read the buyer_id awaiting an initial offer WITHOUT clearing it (safe to call twice). */
+export function peekProposeOffer(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem(PROPOSE_KEY);
+}
+
+/** Clear the pending-offer flag once the draft has been generated. */
+export function clearProposeOffer(): void {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(PROPOSE_KEY);
+}

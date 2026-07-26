@@ -60,3 +60,67 @@ export function coordsForCountry(name: string): { lat: number; lng: number } | n
   if (!name) return null;
   return COUNTRY_COORDS[name.trim().toUpperCase()] ?? null;
 }
+
+// ISO-2 code per (normalized, uppercased) trade-data country name. Lets us hand a
+// map marker's country name to the buyer directory, whose filter is keyed by
+// ISO-2. Keep in sync with COUNTRY_COORDS.
+export const COUNTRY_ISO2: Record<string, string> = {
+  CHINA: "CN",
+  "HONG KONG": "HK",
+  TAIWAN: "TW",
+  INDIA: "IN",
+  "UNITED STATES": "US",
+  "UNITED STATES OF AMERICA": "US",
+  USA: "US",
+  PAKISTAN: "PK",
+  "VIET NAM": "VN",
+  VIETNAM: "VN",
+  MALAYSIA: "MY",
+  BANGLADESH: "BD",
+  EGYPT: "EG",
+  GERMANY: "DE",
+  NETHERLANDS: "NL",
+  JAPAN: "JP",
+  SINGAPORE: "SG",
+  "UNITED ARAB EMIRATES": "AE",
+  SPAIN: "ES",
+  ITALY: "IT",
+  "UNITED KINGDOM": "GB",
+  FRANCE: "FR",
+  "KOREA, REPUBLIC OF": "KR",
+  "SOUTH KOREA": "KR",
+  "REPUBLIC OF KOREA": "KR",
+  PHILIPPINES: "PH",
+  THAILAND: "TH",
+  AUSTRALIA: "AU",
+  "SAUDI ARABIA": "SA",
+  TURKEY: "TR",
+  "TÜRKIYE": "TR",
+  RUSSIA: "RU",
+  "RUSSIAN FEDERATION": "RU",
+  BRAZIL: "BR",
+  CANADA: "CA",
+  MEXICO: "MX",
+  INDONESIA: "ID",
+  MYANMAR: "MM",
+  "SRI LANKA": "LK",
+  IRAN: "IR",
+  "IRAN, ISLAMIC REPUBLIC OF": "IR",
+  IRAQ: "IQ",
+  "SOUTH AFRICA": "ZA",
+  NIGERIA: "NG",
+  BELGIUM: "BE",
+  POLAND: "PL",
+  "NEW ZEALAND": "NZ",
+  YEMEN: "YE",
+  ALGERIA: "DZ",
+  MOROCCO: "MA",
+  KENYA: "KE",
+  CAMBODIA: "KH",
+};
+
+/** ISO-2 code for a trade-data country name, or null if unknown. */
+export function iso2ForCountry(name: string): string | null {
+  if (!name) return null;
+  return COUNTRY_ISO2[name.trim().toUpperCase()] ?? null;
+}

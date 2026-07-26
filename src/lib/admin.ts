@@ -83,3 +83,6 @@ export const getAdminAudit = (q: { action?: string; limit?: number; offset?: num
 
 export const setAdminUserRole = (id: string, role: string) => apiPatch(`/admin/users/${id}/role`, { role });
 export const setAdminUserPlan = (id: string, plan: string) => apiPatch(`/admin/users/${id}/plan`, { plan });
+
+export const createAdminUser = (input: { email: string; password: string; role?: string; plan?: string }) =>
+  apiPost<{ id: string; email: string; role: string; plan: string }>("/admin/users", input);

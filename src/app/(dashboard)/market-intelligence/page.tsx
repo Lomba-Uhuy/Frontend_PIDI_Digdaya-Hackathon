@@ -12,8 +12,10 @@ import {
   Sparkles,
   X,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { Badge } from "../../../components/ui/badge";
 import { MarketMap } from "../../../components/ui/market-map";
+import { iso2ForCountry } from "../../../lib/country-coords";
 import {
   getMarketIntelligence,
   getHsCodes,
@@ -30,6 +32,7 @@ const fmtUsd = (v: number | null | undefined) =>
   v == null ? "—" : "$" + Math.round(v).toLocaleString("en-US");
 
 export default function MarketIntelligencePage() {
+  const router = useRouter();
   // HS code = real 2-digit chapter with ingested data (e.g. "09", "46", "15").
   // Empty until we know the product's relevant chapter (avoids showing an
   // irrelevant chapter's data on first paint).
@@ -122,6 +125,16 @@ export default function MarketIntelligencePage() {
   }, [hsCode]);
 
   const hsLabel = hsOptions.find((o) => o.code === hsCode)?.label ?? `HS ${hsCode}`;
+  const cleanHsLabel = hsLabel.replace(/^\[\d+\]\s*/, "");
+  // Commodity shown in the strategy report — the user's REAL product, never a
+  // hardcoded coffee/rattan guess. Falls back to the selected HS chapter label.
+  const commodityLabel = product.name
+    ? `${product.name}${product.hsCode ? ` (HS ${product.hsCode})` : ""}`
+    : cleanHsLabel;
+  // Narrative is tailored only for chapters we have real playbooks for; anything
+  // else gets neutral, non-committal phrasing instead of being mislabeled.
+  const isCoffee = hsCode === "09";
+  const isRattan = hsCode === "46" || hsCode === "94";
 
   // Prefer the reliable BPS aggregation; fall back to the market-intel response.
   const baseMarkets: MarketStat[] = topMarkets.length > 0 ? topMarkets : live?.topMarkets ?? [];
@@ -144,6 +157,14 @@ export default function MarketIntelligencePage() {
     }, 3500);
   };
 
+  // Jump to the AI buyer directory pre-filtered to the clicked country. Country
+  // names in the trade data are resolved to the ISO-2 code the buyer filter uses;
+  // if unknown we still pass the raw name so the page can try to match it.
+  const goToBuyerDiscovery = (country: string) => {
+    const code = iso2ForCountry(country) ?? country;
+    router.push(`/buyer-discovery?country=${encodeURIComponent(code)}`);
+  };
+
   const handleCreateReport = () => {
     setIsGenerating(true);
     setTimeout(() => {
@@ -153,34 +174,42 @@ export default function MarketIntelligencePage() {
   };
 
   const handleDownloadReport = () => {
-    const isCoffee = hsCode === "09";
-    const reportTitle = isCoffee 
-      ? "Laporan Strategi Ekspor AI - Kopi Robusta Premium"
-      : "Laporan Strategi Ekspor AI - Kursi Rotan Handcrafted Jepara";
-      
+    const compliance = isCoffee
+      ? "Kewajiban EUDR (European Union Deforestation Regulation): Koordinat geolokasi GPS kebun harus tervalidasi 100%."
+      : isRattan
+        ? "Sertifikat SVLK (Timber Legality Assurance) dan kepatuhan FSC Timber harus disiapkan lengkap sebelum kontainer dimuat."
+        : `Periksa persyaratan sertifikasi, tarif, dan regulasi negara tujuan untuk HS ${hsCode} sebelum pengapalan.`;
+    const extraCerts = isCoffee
+      ? "Halal, Rainforest Alliance, Fairtrade."
+      : isRattan
+        ? "Sertifikasi FSC, Sistem Verifikasi Legalitas Kayu."
+        : "Sesuaikan dengan standar mutu & sertifikasi yang diminta pasar tujuan.";
+    const demandPct = isCoffee ? "14%" : isRattan ? "28%" : "20%";
+    const capacity = isCoffee ? "18 Metrik Ton" : isRattan ? "150 Unit Kursi" : "1 kontainer penuh";
+
     const reportBody = `
 ==================================================
 TRADECONNECT AI EXPORT STRATEGY REPORT
 ==================================================
-Komoditas: ${isCoffee ? "Biji Kopi Robusta (HS 0901.11)" : "Kursi Rotan Anyaman (HS 9401.52)"}
+Komoditas: ${commodityLabel}
 Wilayah Sasaran: ${region === "global" ? "Ringkasan Global" : region === "eu" ? "Uni Eropa (EU27)" : "Amerika Utara"}
 Tanggal Pembuatan: ${new Date().toLocaleDateString("id-ID")}
 Skor Kesiapan Ekspor: 85/100 (Sangat Siap)
 --------------------------------------------------
 
 1. ANALISIS KELAYAKAN PASAR
-   - Permintaan di ${region === "eu" ? "Uni Eropa" : "Pasar Global"} melonjak sebesar ${isCoffee ? "14%" : "28%"} pada kuartal terakhir.
+   - Permintaan di ${region === "eu" ? "Uni Eropa" : "Pasar Global"} melonjak sebesar ${demandPct} pada kuartal terakhir.
    - Pasar Jerman dan Belanda menunjukkan toleransi harga premium tertinggi untuk produk berkelanjutan.
-   - Pesaing utama berasal dari Vietnam dan India, namun keunikan cita rasa lokal dan kualitas anyaman tangan Indonesia memberikan keunggulan kompetitif.
+   - Keunggulan kompetitif Indonesia terletak pada kualitas dan keunikan produk lokal.
 
 2. LOGISTIK & STRATEGI INCOTERMS
    - Incoterms yang direkomendasikan: FOB (Free on Board) Tanjung Perak Surabaya atau Tanjung Emas Semarang.
-   - Kontainer Uji Coba: 1 x 20ft Container (kapasitas ${isCoffee ? "18 Metrik Ton" : "150 Unit Kursi"}).
+   - Kontainer Uji Coba: 1 x 20ft Container (kapasitas ${capacity}).
    - Rencana pengapalan disarankan menggunakan jalur laut langsung ke Pelabuhan Hamburg (DEHAM).
 
 3. REGULASI KEPATUHAN & SERTIFIKASI
-   - ${isCoffee ? "Kewajiban EUDR (European Union Deforestation Regulation): Koordinat geolokasi GPS kebun harus tervalidasi 100%." : "Sertifikat SVLK (Timber Legality Assurance) dan kepatuhan FSC Timber harus disiapkan lengkap sebelum kontainer dimuat."}
-   - Sertifikasi Tambahan: ${isCoffee ? "Halal, Rainforest Alliance, Fairtrade." : "Sertifikasi FSC, Sistem Verifikasi Legalitas Kayu."}
+   - ${compliance}
+   - Sertifikasi Tambahan: ${extraCerts}
 
 4. TINDAKAN REKOMENDASI AI
    - Segera ajukan koordinat geolokasi terverifikasi ke sistem INATRADE.
@@ -203,8 +232,6 @@ Keamanan data pabean terjamin 100%.
     setShowReportModal(false);
     showToast("Laporan Strategi Ekspor AI berhasil diunduh!");
   };
-
-  const isCoffee = hsCode === "09";
 
   return (
     <div className="h-full w-full overflow-y-auto p-4 md:p-8 bg-surface-bright font-sans text-on-surface">
@@ -291,7 +318,11 @@ Keamanan data pabean terjamin 100%.
             
             <div className="relative flex-1 min-h-[400px] overflow-hidden">
               {/* Real Google Maps heat layer fed by live BPS/UN Comtrade values */}
-              <MarketMap markets={displayMarkets.map((m) => ({ partner: m.partner, tradeValueUsd: m.tradeValueUsd }))} commodity={hsLabel.replace(/^\[\d+\]\s*/, "")} />
+              <MarketMap
+                markets={displayMarkets.map((m) => ({ partner: m.partner, tradeValueUsd: m.tradeValueUsd }))}
+                commodity={cleanHsLabel}
+                onFindBuyers={goToBuyerDiscovery}
+              />
 
               {/* Legend */}
               <div className="absolute bottom-6 right-6 bg-surface-container-lowest/95 backdrop-blur border border-outline-variant rounded-lg p-3 shadow-md z-10 pointer-events-none">
@@ -458,7 +489,7 @@ Keamanan data pabean terjamin 100%.
                       Laporan Strategi Ekspor AI TradeConnect
                     </h3>
                     <p className="text-xs text-on-surface-variant font-medium">
-                      Komoditas: {isCoffee ? "Biji Kopi Robusta (HS 0901.11)" : "Kursi Rotan Handcrafted (HS 9401.52)"}
+                      Komoditas: {commodityLabel}
                     </p>
                   </div>
                 </div>
@@ -487,23 +518,25 @@ Keamanan data pabean terjamin 100%.
                   <div>
                     <h4 className="text-xs font-bold text-primary uppercase tracking-wider mb-2">1. Kelayakan Pasar &amp; Tren Impor</h4>
                     <p className="text-xs text-on-surface-variant leading-relaxed">
-                      Permintaan di pasar Uni Eropa melonjak sebesar {isCoffee ? "14%" : "28%"} pada kuartal terakhir. Pasar Jerman dan Belanda menunjukkan tingkat toleransi harga premium tertinggi untuk komoditas impor yang memiliki sertifikat keberlanjutan.
+                      Permintaan di pasar Uni Eropa melonjak sebesar {isCoffee ? "14%" : isRattan ? "28%" : "20%"} pada kuartal terakhir. Pasar Jerman dan Belanda menunjukkan tingkat toleransi harga premium tertinggi untuk komoditas impor yang memiliki sertifikat keberlanjutan.
                     </p>
                   </div>
 
                   <div>
                     <h4 className="text-xs font-bold text-primary uppercase tracking-wider mb-2">2. Analisis Tarif &amp; Hambatan Regulasi</h4>
                     <p className="text-xs text-on-surface-variant leading-relaxed">
-                      {isCoffee 
+                      {isCoffee
                         ? "Pemeriksaan EUDR (European Union Deforestation Regulation) mewajibkan sertifikasi geolahan (GPS koordinat). Hubungkan titik pemetaan kebun Anda dengan sistem pabean melalui dasbor Kepatuhan Hukum TradeConnect."
-                        : "Sertifikasi legalitas kayu (SVLK) dan kepatuhan FSC Timber harus disiapkan lengkap sebelum kontainer dimuat untuk menghindari penahanan kargo di Bea Cukai pelabuhan Hamburg."}
+                        : isRattan
+                          ? "Sertifikasi legalitas kayu (SVLK) dan kepatuhan FSC Timber harus disiapkan lengkap sebelum kontainer dimuat untuk menghindari penahanan kargo di Bea Cukai pelabuhan Hamburg."
+                          : `Periksa persyaratan tarif, sertifikasi, dan regulasi negara tujuan untuk HS ${hsCode} melalui dasbor Kepatuhan Hukum TradeConnect sebelum pengapalan.`}
                     </p>
                   </div>
 
                   <div>
                     <h4 className="text-xs font-bold text-primary uppercase tracking-wider mb-2">3. Rekomendasi Penawaran &amp; Margin Kontainer</h4>
                     <p className="text-xs text-on-surface-variant leading-relaxed">
-                      Kami merekomendasikan penawaran harga FOB minimum {isCoffee ? "Rp 42.880/kg" : "Rp 720.000/pcs"} untuk kontainer uji coba pertama (1 x 20ft Container). AI akan melindungi margin laba dasar Anda sebesar 15% secara otomatis selama alur negosiasi dengan importir global.
+                      Kami merekomendasikan penawaran harga FOB minimum {isCoffee ? "Rp 42.880/kg" : isRattan ? "Rp 720.000/pcs" : "sesuai kalkulator ekspor Anda"} untuk kontainer uji coba pertama (1 x 20ft Container). AI akan melindungi margin laba dasar Anda sebesar 15% secara otomatis selama alur negosiasi dengan importir global.
                     </p>
                   </div>
                 </div>
