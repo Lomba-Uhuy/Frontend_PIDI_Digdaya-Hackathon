@@ -6,9 +6,10 @@ export function Logo({ size = 28, className = "", priority = false }: { size?: n
     <Image
       src="/logo-tradeconnect.webp"
       alt="TradeConnect"
-      width={size}
-      height={size}
+      width={256}
+      height={256}
       priority={priority}
+      unoptimized
       className={`rounded-lg object-contain ${className}`}
       style={{ width: size, height: size }}
     />
