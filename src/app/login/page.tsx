@@ -62,7 +62,7 @@ export default function LoginPage() {
     <div className="min-h-screen w-full flex items-center justify-center bg-surface-bright p-4">
       <div className="w-full max-w-md">
         <div className="flex items-center justify-center gap-3 mb-8">
-          <Logo size={44} priority />
+          <Logo size={60} priority />
           <div>
             <h1 className="text-2xl font-black text-primary font-heading">TradeConnect</h1>
             <p className="text-[10px] text-on-surface-variant uppercase tracking-wider font-bold">Infrastruktur Ekspor AI</p>
