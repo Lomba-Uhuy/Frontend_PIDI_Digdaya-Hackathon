@@ -168,7 +168,7 @@ export default function OnboardingWizard() {
       {/* Header / Brand Anchor */}
       <header className="text-center mb-8 w-full max-w-3xl">
         <h1 className="text-4xl md:text-[48px] font-bold tracking-tight text-primary mb-2 flex items-center justify-center gap-3 font-heading">
-          <Logo size={40} priority />
+          <Logo size={56} priority />
           TradeConnect
         </h1>
         <p className="text-base text-on-surface-variant">Institutional Export Terminal Initialization</p>

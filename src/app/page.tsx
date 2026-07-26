@@ -126,7 +126,7 @@ export default function LandingPage() {
       <header className="sticky top-0 z-30 border-b border-outline-variant/50 bg-background/70 backdrop-blur-xl">
         <div className="max-w-6xl mx-auto px-5 md:px-8 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 font-semibold text-lg tracking-tight">
-            <Logo size={28} priority /> TradeConnect
+            <Logo size={40} priority /> TradeConnect
           </Link>
           <nav className="hidden md:flex items-center gap-8 text-sm text-on-surface-variant">
             <a href="#features" className="hover:text-on-surface transition-colors">Fitur</a>
@@ -351,7 +351,7 @@ export default function LandingPage() {
       {/* FOOTER */}
       <footer className="border-t border-outline-variant/50">
         <div className="max-w-6xl mx-auto px-5 md:px-8 py-10 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-on-surface-variant">
-          <div className="flex items-center gap-2 font-semibold text-on-surface"><Logo size={22} /> TradeConnect</div>
+          <div className="flex items-center gap-2 font-semibold text-on-surface"><Logo size={32} /> TradeConnect</div>
           <nav className="flex items-center gap-6">
             <a href="#features" className="hover:text-on-surface transition-colors">Fitur</a>
             <a href="#pricing" className="hover:text-on-surface transition-colors">Harga</a>
