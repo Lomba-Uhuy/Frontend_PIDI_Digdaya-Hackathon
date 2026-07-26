@@ -85,7 +85,26 @@ export async function ensureUmkmAndProduct(
     }
     if (typeof window !== "undefined") localStorage.setItem(UMKM_ID_KEY, umkm.id);
 
-    // ── Product (get-or-create) ───────────────────────────────────────────
+    // ── Product (get-or-update-or-create) ─────────────────────────────────
+    // The product is the source of truth for the HS code and everything derived
+    // from it (AI consultation, market intelligence, negotiation). It must always
+    // reflect the CURRENT onboarding input — so if a product already exists (a
+    // previous onboarding or a seed), we UPDATE it rather than silently reusing
+    // the old one. The backend re-runs HS classification when name/description
+    // change, keeping the HS code in sync with the new product.
+    const description =
+      (profile.productDesc && profile.productDesc.length >= 10
+        ? profile.productDesc
+        : `${profile.productName} — produk ekspor unggulan.`).slice(0, 5000);
+    const productPayload = {
+      name: profile.productName || "Produk Ekspor",
+      description,
+      moq: parseIntLoose(profile.moq, 1000),
+      monthlyCapacity: parseIntLoose(profile.capacity, 10000),
+      priceMin: Number(profile.floorPriceUsd) || 1,
+      priceMax: Number(profile.askingPriceUsd) || Number(profile.floorPriceUsd) || 2,
+    };
+
     let product: ProductResponse | null = null;
     try {
       const products = await apiGet<ProductResponse[]>(`/umkm/${umkm.id}/products`);
@@ -94,18 +113,21 @@ export async function ensureUmkmAndProduct(
       // ignore — will create below
     }
 
-    if (!product) {
-      const description =
-        (profile.productDesc && profile.productDesc.length >= 10
-          ? profile.productDesc
-          : `${profile.productName} — produk ekspor unggulan.`).slice(0, 5000);
+    if (product) {
+      // Update the existing product with the new onboarding data. This re-triggers
+      // HS classification on the backend when the name/description differ.
+      try {
+        const updated = await apiPatch<ProductResponse>(
+          `/umkm/${umkm.id}/products/${product.id}`,
+          productPayload,
+        );
+        if (updated) product = updated;
+      } catch (e) {
+        console.warn("ensureUmkmAndProduct: product update failed, keeping existing:", e);
+      }
+    } else {
       product = await apiPost<ProductResponse>(`/umkm/${umkm.id}/products`, {
-        name: profile.productName || "Produk Ekspor",
-        description,
-        moq: parseIntLoose(profile.moq, 1000),
-        monthlyCapacity: parseIntLoose(profile.capacity, 10000),
-        priceMin: Number(profile.floorPriceUsd) || 1,
-        priceMax: Number(profile.askingPriceUsd) || Number(profile.floorPriceUsd) || 2,
+        ...productPayload,
         hpp: Number(profile.floorPriceUsd) || 1,
       });
     }

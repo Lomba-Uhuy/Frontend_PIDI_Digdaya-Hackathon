@@ -73,6 +73,10 @@ function infoCardHtml(
       <div style="display:flex;justify-content:space-between;gap:16px;font-size:12px;margin-top:3px">
         <span style="color:#64748b">Pangsa pasar</span><strong style="color:${solid}">${sharePct}%</strong>
       </div>
+      <button id="tc-find-buyers" type="button"
+        style="margin-top:10px;width:100%;display:flex;align-items:center;justify-content:center;gap:6px;padding:7px 10px;border:none;border-radius:8px;background:${solid};color:#fff;font-size:12px;font-weight:600;cursor:pointer">
+        <span style="font-size:13px;line-height:1">🔍</span> Cari Buyer di ${partner}
+      </button>
     </div>`;
 }
 
@@ -155,13 +159,26 @@ function getHeatOverlayClass(google: any): any {
   return HeatOverlayClass;
 }
 
-export function MarketMap({ markets, commodity }: { markets: MapMarket[]; commodity: string }) {
+export function MarketMap({
+  markets,
+  commodity,
+  onFindBuyers,
+}: {
+  markets: MapMarket[];
+  commodity: string;
+  /** Called when the user clicks "Cari Buyer" inside a country's info card. */
+  onFindBuyers?: (country: string) => void;
+}) {
   const divRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<any>(null);
   const googleRef = useRef<any>(null);
   const overlaysRef = useRef<any[]>([]);
   const infoWindowRef = useRef<any>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+  // Keep the latest callback in a ref so renderOverlays doesn't depend on it
+  // (avoids re-creating every marker whenever the parent re-renders).
+  const onFindBuyersRef = useRef(onFindBuyers);
+  onFindBuyersRef.current = onFindBuyers;
 
   const renderOverlays = useCallback((google: any) => {
     const map = mapRef.current;
@@ -221,6 +238,17 @@ export function MarketMap({ markets, commodity }: { markets: MapMarket[]; commod
         if (!iw) return;
         iw.setContent(infoCardHtml(m.partner, commodity, value, share, rgb));
         iw.open({ anchor: marker, map });
+        // The info card is raw HTML — bind the "Cari Buyer" button once its DOM
+        // is mounted. `domready` fires each time content is (re)opened.
+        google.maps.event.addListenerOnce(iw, "domready", () => {
+          const btn = document.getElementById("tc-find-buyers");
+          if (btn) {
+            btn.onclick = () => {
+              iw.close();
+              onFindBuyersRef.current?.(m.partner);
+            };
+          }
+        });
       });
       overlaysRef.current.push(marker);
     });

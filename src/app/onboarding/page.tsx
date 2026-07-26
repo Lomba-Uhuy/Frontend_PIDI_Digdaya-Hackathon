@@ -16,6 +16,7 @@ import {
   ImagePlus,
   Info,
   Lock,
+  LogOut,
   Package,
   ShoppingBasket,
   Sparkles,
@@ -24,7 +25,7 @@ import {
   X,
 } from "lucide-react";
 import { resetState, setStep as setJourneyStep, setFinalPrice } from "../../lib/state";
-import { hasSession } from "../../lib/auth";
+import { hasSession, logout } from "../../lib/auth";
 import { getRole } from "../../lib/entitlements";
 import { ensureUmkmAndProduct } from "../../lib/entities";
 import { Stepper } from "../../components/ui/stepper";
@@ -156,6 +157,14 @@ export default function OnboardingWizard() {
 
   return (
     <main className="w-full max-w-[1440px] mx-auto px-4 md:px-8 py-12 flex flex-col items-center justify-center min-h-screen">
+      {/* Logout — onboarding is post-login; let users switch/exit the account. */}
+      <button
+        onClick={() => logout()}
+        className="fixed top-4 right-4 z-20 inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-on-surface-variant hover:text-on-surface bg-surface-container-lowest/80 backdrop-blur border border-outline-variant rounded-lg hover:bg-surface-container transition-colors"
+      >
+        <LogOut className="size-4" /> Keluar
+      </button>
+
       {/* Header / Brand Anchor */}
       <header className="text-center mb-8 w-full max-w-3xl">
         <h1 className="text-4xl md:text-[48px] font-bold tracking-tight text-primary mb-2 flex items-center justify-center gap-3 font-heading">

@@ -1,10 +1,10 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { getStep, setStep as setJourneyStep, setFinalPrice } from "../../../lib/state";
 import { ChatMessage } from "../../../types";
 import { classifyIntent, generateReply, getPricingBreakdown, PricingBreakdown, DraftReply, checkRedFlag, RedFlagReport } from "../../../lib/api";
-import { getSelectedBuyer, SelectedBuyer } from "../../../lib/selected-buyer";
+import { getSelectedBuyer, peekProposeOffer, clearProposeOffer, SelectedBuyer } from "../../../lib/selected-buyer";
 import { getMessages, sendMessage, requestBuyerReply, getActiveDealId, type DealMessage } from "../../../lib/deals";
 import { getIcon } from "../../../lib/icon-map";
 import { cn } from "../../../lib/utils";
@@ -42,6 +42,10 @@ import {
 import { Avatar } from "../../../components/ui/avatar";
 import { Badge } from "../../../components/ui/badge";
 
+// Module-scoped guard so the one-shot initial-offer draft is generated only once
+// per buyer, even across React StrictMode's dev double-mount.
+const offeredBuyers = new Set<string>();
+
 export default function NegotiationHubPage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState<string>("onboarding");
@@ -63,6 +67,9 @@ export default function NegotiationHubPage() {
   const [isDraftGenerating, setIsDraftGenerating] = useState(false);
   // true when the backend AI drafting service is unavailable (e.g. LLM out of credits)
   const [draftUnavailable, setDraftUnavailable] = useState(false);
+  const [draftUnavailableReason, setDraftUnavailableReason] = useState<"no_product" | "llm" | null>(null);
+  // Buyer awaiting an auto-drafted initial offer (set by "Ajukan Penawaran").
+  const [proposeBuyerId] = useState<string | null>(() => peekProposeOffer());
 
   // States for Mini Export Price Calculator (cost assumptions = user inputs)
   const [hpp, setHpp] = useState(2.00);
@@ -189,10 +196,12 @@ export default function NegotiationHubPage() {
         setIntentConfidence(intentRes.confidence);
       }
 
-      // Floor price checks based on calculated CIF
-      const replyRes = await generateReply(text, productName, cifUnit);
+      // Floor price checks based on calculated CIF. Pass the backend product id
+      // (authoritative) so the draft never fails on a missing localStorage cache.
+      const replyRes = await generateReply(text, productName, cifUnit, product.id);
       setDrafts(replyRes.drafts);
       setDraftUnavailable(Boolean(replyRes.unavailable));
+      setDraftUnavailableReason(replyRes.reason ?? null);
     } catch (err) {
       console.error("Failed to generate drafts & intents:", err);
     } finally {
@@ -277,6 +286,38 @@ export default function NegotiationHubPage() {
   useEffect(() => {
     setSelectedBuyer(getSelectedBuyer());
   }, []);
+
+  // Draft an initial ENGLISH offer to the overseas buyer, grounded in the real
+  // product + pricing context. Framed as the buyer's inquiry so the backend
+  // RAG + LLM produces a ready-to-send offer letter in English.
+  const generateInitialOffer = async (buyer: SelectedBuyer) => {
+    setIsDraftGenerating(true);
+    try {
+      const inquiry =
+        `We are ${buyer.name}, an importer based in ${buyer.country}, interested in importing ` +
+        `${productName || "your product"}${hsCode ? ` (HS Code ${hsCode})` : ""}. ` +
+        `Please share your best export offer including unit price (CIF), minimum order quantity, ` +
+        `Incoterms, payment terms, and estimated lead time.`;
+      const res = await generateReply(inquiry, productName, cifUnit, product.id);
+      setDrafts(res.drafts);
+      setDraftUnavailable(Boolean(res.unavailable));
+      setDraftUnavailableReason(res.reason ?? null);
+    } finally {
+      setIsDraftGenerating(false);
+    }
+  };
+
+  // Fire once when arriving from "Ajukan Penawaran" for this specific buyer,
+  // after the product (pricing context) has loaded so the offer is grounded.
+  useEffect(() => {
+    if (!proposeBuyerId || !selectedBuyer || selectedBuyer.buyer_id !== proposeBuyerId) return;
+    if (offeredBuyers.has(proposeBuyerId)) return;
+    if (!product.id) return; // wait for the backend product to load
+    offeredBuyers.add(proposeBuyerId);
+    clearProposeOffer();
+    void generateInitialOffer(selectedBuyer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [proposeBuyerId, selectedBuyer, product.id]);
 
   // Fetch B2B risk analysis for the selected real buyer (real profile input).
   useEffect(() => {
@@ -939,9 +980,19 @@ export default function NegotiationHubPage() {
                 <span className="text-xs text-on-surface-variant font-medium">Menganalisis RAG & membuat draf...</span>
               </div>
             ) : draftUnavailable ? (
-              <div className="text-center p-6 bg-warning-container/40 border border-warning/40 rounded-xl text-xs text-on-surface font-medium flex flex-col items-center gap-1.5">
+              <div className="text-center p-6 bg-warning-container/40 border border-warning/40 rounded-xl text-xs text-on-surface font-medium flex flex-col items-center gap-2">
                 <AlertTriangle className="size-5 text-warning" />
-                Layanan draf AI sedang tidak tersedia (kuota/kredit LLM habis). Negosiasi tetap berjalan — Anda bisa menulis balasan secara manual.
+                {draftUnavailableReason === "no_product"
+                  ? "Harga ekspor produk belum ditentukan — draf balasan otomatis membutuhkan konteks harga. Negosiasi tetap bisa dilakukan manual."
+                  : "Layanan draf AI sedang sibuk atau tidak tersedia sementara. Negosiasi tetap berjalan — Anda bisa menulis balasan secara manual."}
+                {draftUnavailableReason === "no_product" && (
+                  <button
+                    onClick={() => router.push("/calculator")}
+                    className="mt-1 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-on-primary text-xs font-semibold hover:bg-surface-tint transition-colors"
+                  >
+                    <Calculator className="size-3.5" /> Tentukan Harga Ekspor
+                  </button>
+                )}
               </div>
             ) : drafts.length === 0 ? (
               <div className="text-center p-6 bg-surface-container-lowest border border-outline-variant rounded-xl text-xs text-on-surface-variant font-medium">
